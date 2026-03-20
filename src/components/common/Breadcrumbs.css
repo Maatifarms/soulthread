@@ -1,0 +1,61 @@
+.breadcrumbs-container {
+    padding: 12px 20px;
+    margin: 0 auto;
+    max-width: 1000px;
+    width: 100%;
+}
+
+.breadcrumbs-list {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+    gap: 8px;
+}
+
+.breadcrumb-item {
+    display: flex;
+    align-items: center;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.breadcrumb-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+    color: var(--color-primary);
+}
+
+.breadcrumb-separator {
+    color: var(--color-border);
+    margin: 0 8px;
+    font-weight: 300;
+    user-select: none;
+}
+
+.breadcrumb-current {
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
+/* Tablet and Mobile adjustments */
+@media (max-width: 768px) {
+    .breadcrumbs-container {
+        padding: 8px 16px;
+    }
+    
+    .breadcrumb-item {
+        font-size: 12px;
+    }
+}
+
+.native-app .breadcrumbs-container {
+    display: none; /* Hide on native app as it takes valuable vertical space */
+}

@@ -1,0 +1,309 @@
+/* ── Explore Page Elite Styles ── */
+
+.explore-page {
+    min-height: 100vh;
+    background: var(--color-background);
+    padding-bottom: 120px;
+    overflow-x: hidden;
+}
+
+/* ── Sticky Search Header ── */
+.explore-header {
+    position: sticky;
+    top: 68px; /* Standard Desktop Header Height */
+    z-index: 100;
+    background: var(--color-surface-glass);
+    backdrop-filter: var(--blur-std);
+    -webkit-backdrop-filter: var(--blur-std);
+    padding: 24px 24px 0;
+    border-bottom: 1px solid var(--color-border);
+    transition: var(--transition-std);
+}
+
+.is-native .explore-header {
+    top: env(safe-area-inset-top, 0px);
+}
+
+.search-container {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.search-input-wrapper {
+    flex: 1;
+    position: relative;
+    background: var(--color-surface-soft);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    transition: var(--transition-std);
+    box-shadow: var(--shadow-sm);
+}
+
+.search-input-wrapper:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+.search-input-wrapper input {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    border: none;
+    background: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font-main);
+}
+
+.search-input-wrapper .search-icon {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-primary);
+    display: flex;
+}
+
+/* ── Categories Bar ── */
+.categories-bar {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding: 24px 0;
+    max-width: 800px;
+    margin: 0 auto;
+    scrollbar-width: none;
+}
+
+.categories-bar::-webkit-scrollbar {
+    display: none;
+}
+
+.category-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 22px;
+    border-radius: 14px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: var(--transition-std);
+    font-family: var(--font-display);
+    box-shadow: var(--shadow-sm);
+}
+
+.category-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.category-btn:hover:not(.active) {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+}
+
+.category-icon {
+    font-size: 16px;
+}
+
+/* ── Tab Switcher ── */
+.tab-switcher {
+    display: flex;
+    gap: 8px;
+    max-width: 800px;
+    margin: 0 auto 16px;
+    background: var(--color-surface-soft);
+    padding: 6px;
+    border-radius: 16px;
+    border: 1px solid var(--color-border);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    border-radius: 12px;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition-std);
+    font-family: var(--font-display);
+}
+
+.tab-btn.active {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Souls Grid ── */
+.souls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 24px;
+}
+
+.soul-card {
+    background: var(--color-surface);
+    padding: 32px 24px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-std);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.soul-card:hover {
+    transform: translateY(-6px);
+    border-color: var(--color-primary-soft);
+    box-shadow: var(--shadow-md);
+}
+
+.soul-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 28px;
+    background: var(--grad-main);
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    color: white;
+    font-size: 32px;
+    box-shadow: var(--shadow-glow);
+    font-family: var(--font-display);
+}
+
+.soul-name {
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--color-text-primary);
+    margin-bottom: 6px;
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+}
+
+.soul-role {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    margin-bottom: 24px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.connect-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: var(--color-primary-soft);
+    color: var(--color-primary);
+    font-weight: 800;
+    font-size: 13px;
+    cursor: pointer;
+    transition: var(--transition-std);
+    font-family: var(--font-display);
+}
+
+.connect-btn:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* ── Series Grid ── */
+.series-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 32px;
+}
+
+.series-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition-std);
+}
+
+.series-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary-soft);
+}
+
+.series-thumb {
+    height: 200px;
+    overflow: hidden;
+    background: var(--color-surface-soft);
+}
+
+.series-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.series-card:hover .series-thumb img {
+    transform: scale(1.08);
+}
+
+.series-info {
+    padding: 24px;
+}
+
+.series-tag {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--color-primary);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+}
+
+.series-title {
+    font-weight: 900;
+    font-size: 1.5rem;
+    color: var(--color-text-primary);
+    letter-spacing: -0.03em;
+    font-family: var(--font-display);
+    line-height:1.2;
+}
+
+.series-subtitle {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-top: 10px;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+/* Media Queries */
+@media (max-width: 600px) {
+    .souls-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+}

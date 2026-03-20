@@ -1,0 +1,6 @@
+{
+    "circleId": "test-circle",
+    "userId": "test-user",
+    "paymentId": "pay_123",
+    "status": "captured"
+}

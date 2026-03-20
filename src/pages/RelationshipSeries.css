@@ -1,0 +1,225 @@
+/* RelationshipSeries.css */
+
+:root {
+    --color-heart-bg: #0a0a0d; /* Charcoal Black */
+    --color-heart-primary: #f43f5e; /* Rose / Strawberry */
+    --color-heart-accent: #fbbf24; /* Amber Gold */
+    --color-heart-text: #fff1f2;
+    --color-heart-secondary: #9ca3af;
+}
+
+.relationship-series-page {
+    background: var(--color-heart-bg);
+    color: var(--color-heart-text);
+    min-height: 100vh;
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+}
+
+/* Header */
+.sticky-header-heart {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(10, 10, 13, 0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(244, 63, 94, 0.15);
+    padding: 14px 0;
+}
+
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-heart {
+    font-size: 1.1rem;
+    font-weight: 950;
+    letter-spacing: 0.15em;
+    color: var(--color-heart-primary);
+}
+
+.progress-info {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-heart-accent);
+}
+
+.progress-track {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--color-heart-primary), var(--color-heart-accent));
+    width: 100%;
+    transform-origin: 0%;
+}
+
+/* Hero */
+.hero-heart {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0 24px;
+    position: relative;
+    background: radial-gradient(circle at center, rgba(244, 63, 94, 0.08) 0%, transparent 70%);
+}
+
+.hero-heart h1 {
+    font-size: clamp(3.5rem, 10vw, 7rem);
+    font-weight: 950;
+    line-height: 0.9;
+    letter-spacing: -0.06em;
+    margin-bottom: 24px;
+    background: linear-gradient(to bottom, #fff, #f43f5e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.hero-heart p {
+    font-size: 1.25rem;
+    color: var(--color-heart-secondary);
+    max-width: 600px;
+}
+
+/* Chapters */
+.chapters-timeline {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 100px 24px;
+}
+
+.chapter-block {
+    margin-bottom: 120px;
+    position: relative;
+}
+
+.chapter-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.chapter-id {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: var(--color-heart-accent);
+    padding: 4px 12px;
+    background: rgba(251, 191, 36, 0.1);
+    border-radius: 8px;
+}
+
+.chapter-block h3 {
+    font-size: 2.2rem;
+    font-weight: 950;
+    margin-bottom: 32px;
+}
+
+.chapter-visual {
+    width: 100%;
+    height: 450px;
+    border-radius: 40px;
+    overflow: hidden;
+    margin-bottom: 40px;
+    border: 1px solid rgba(244, 63, 94, 0.2);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+}
+
+.chapter-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.insight-card {
+    background: rgba(244, 63, 94, 0.03);
+    border: 1px solid rgba(244, 63, 94, 0.1);
+    padding: 40px;
+    border-radius: 32px;
+    margin-bottom: 24px;
+}
+
+.insight-card h4 {
+    font-size: 0.75rem;
+    font-weight: 900;
+    color: var(--color-heart-primary);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    letter-spacing: 0.1em;
+}
+
+.insight-card p {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1.4;
+    color: #fff;
+}
+
+.practicum-box {
+    display: flex;
+    gap: 16px;
+    padding: 0 24px;
+}
+
+.practicum-icon { font-size: 1.5rem; }
+
+.practicum-content p {
+    font-weight: 800;
+    color: var(--color-heart-secondary);
+}
+
+/* Paywall */
+.paywall-heart {
+    text-align: center;
+    padding: 100px 24px;
+}
+
+.paywall-inner {
+    background: #14141a;
+    border: 2px solid var(--color-heart-primary);
+    padding: 60px;
+    border-radius: 48px;
+    max-width: 600px;
+    margin: 0 auto;
+    box-shadow: 0 40px 100px rgba(244, 63, 94, 0.2);
+}
+
+.paywall-inner h2 {
+    font-size: 2.5rem;
+    font-weight: 950;
+    margin-bottom: 16px;
+}
+
+.unlock-btn-heart {
+    background: var(--color-heart-primary);
+    color: white;
+    border: none;
+    padding: 16px 48px;
+    font-size: 1.1rem;
+    font-weight: 950;
+    border-radius: 20px;
+    cursor: pointer;
+    margin: 32px 0;
+    transition: all 0.3s;
+}
+
+.unlock-btn-heart:hover {
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px rgba(244, 63, 94, 0.3);
+}
+
+@media (max-width: 600px) {
+    .chapter-visual { height: 280px; }
+    .insight-card p { font-size: 1.1rem; }
+}

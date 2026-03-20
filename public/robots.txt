@@ -1,0 +1,23 @@
+# SoulThread Robots.txt
+User-agent: *
+Allow: /
+Allow: /explore
+Allow: /series
+Allow: /hyperfocus-series
+Allow: /never-finished-series
+Allow: /ego-id-series
+Allow: /prompt-engineering-series
+Allow: /meditation-series
+Allow: /biological-soul-series
+Allow: /relationship-series
+
+# Prevent indexing of auth/admin/profile private-areas
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /settings
+Disallow: /messages
+Disallow: /profile/*/edit
+
+# Host
+Sitemap: https://soulthread.in/sitemap.xml

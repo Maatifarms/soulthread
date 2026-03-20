@@ -1,0 +1,323 @@
+/* ── FeedItem Styles ── */
+.feed-item-article {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 24px;
+  padding: clamp(20px, 4vw, 32px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-std);
+  position: relative;
+  overflow: hidden;
+}
+
+.feed-item-article:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.feed-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.author-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.author-avatar-wrapper {
+  position: relative;
+  padding: 3px;
+  background: var(--grad-premium);
+  border-radius: 18px;
+}
+
+.author-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 15px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: block;
+  background: var(--color-background);
+}
+
+.anon-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 18px;
+  background: var(--grad-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-glow);
+  border: 2px solid var(--color-surface);
+}
+
+.psychologist-badge {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: 8px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+  border: 2px solid var(--color-surface);
+}
+
+.author-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.author-name-link {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.anon-name-text {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--color-primary);
+  letter-spacing: -0.02em;
+  font-family: 'Outfit', sans-serif;
+}
+
+.incognito-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+  padding: 2px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
+.expert-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 12px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  text-transform: uppercase;
+}
+
+.meta-info {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+.anon-meta {
+  color: #8b7ad0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.circle-meta {
+  color: var(--color-primary);
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delete-btn-top {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.delete-btn-top:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  transform: rotate(90deg);
+}
+
+/* ── Guided Reflection ── */
+.guided-reflection-block {
+  margin: 4px 0;
+  padding: 24px;
+  background: var(--color-primary-soft);
+  border-radius: 24px;
+  border: 1.5px solid var(--color-border);
+  position: relative;
+  box-shadow: var(--shadow-inset);
+}
+
+.guidance-label {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+}
+
+.guidance-text {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* ── Content ── */
+.feed-item-content {
+  padding: 0;
+}
+
+.content-text {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  font-weight: 500;
+  font-family: var(--font-main);
+  opacity: 0.95;
+}
+
+.read-more-btn {
+  border: none;
+  background: none;
+  color: var(--color-primary-dark);
+  font-weight: 900;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+/* ── Media ── */
+.feed-item-media {
+  margin-top: 8px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow: var(--shadow-premium);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-2);
+}
+
+.feed-item-video {
+  width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  background: #000;
+  display: block;
+}
+
+.feed-item-img {
+  width: 100%;
+  max-height: 520px;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Action Bar ── */
+.action-bar-divider {
+  border-top: 1px solid var(--color-divider);
+  padding-top: 16px;
+  margin-top: 4px;
+}
+
+.reactions-row {
+  padding-bottom: 12px;
+}
+
+.interaction-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-interaction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: var(--transition-std);
+  font-family: var(--font-display);
+  background: var(--color-surface-soft);
+  color: var(--color-text-primary);
+}
+
+.btn-interaction:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+.btn-comments.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-glow);
+}
+
+.delete-btn-bottom {
+  margin-left: auto;
+  background: var(--color-surface-2);
+  border: none;
+  padding: 10px;
+  border-radius: 14px;
+  cursor: pointer;
+  color: #ef4444;
+}
+
+.comments-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--color-background);
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border);
+  animation: fadeIn 0.3s ease;
+}

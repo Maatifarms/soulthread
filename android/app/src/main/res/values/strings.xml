@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SoulThread</string>
+    <string name="title_activity_main">SoulThread</string>
+    <string name="package_name">in.soulthread.app</string>
+    <string name="custom_url_scheme">in.soulthread.app</string>
+    <string name="default_web_client_id">813685915255-h8ajgn54lvgp0opp12h74e9b2skq93ei.apps.googleusercontent.com</string>
+</resources>

@@ -1,0 +1,486 @@
+/* PsychologistList.css - Sanctuary Support Network Styles */
+
+.psych-list-hero {
+    position: relative;
+    padding: clamp(60px, 12vh, 120px) 24px;
+    text-align: center;
+    background: var(--grad-dark);
+    color: white;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.psych-hero-accent {
+    position: absolute;
+    top: -80px;
+    right: -80px;
+    width: clamp(200px, 30vw, 400px);
+    height: clamp(200px, 30vw, 400px);
+    background: radial-gradient(circle, var(--color-primary-glow) 0%, transparent 70%);
+    opacity: 0.15;
+    pointer-events: none;
+}
+
+.psych-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 24px;
+}
+
+.psych-hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 6vw, 4.2rem);
+    font-weight: 950;
+    line-height: 1;
+    margin-bottom: 24px;
+    letter-spacing: -0.04em;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.psych-hero-subtitle {
+    font-size: clamp(16px, 3vw, 20px);
+    max-width: 620px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+}
+
+/* Crisis Banner */
+.crisis-banner {
+    background: var(--color-surface);
+    border: 2px solid var(--color-error-light);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 24px 0 40px;
+    box-shadow: var(--shadow-sm);
+}
+
+.crisis-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.crisis-icon-red {
+    font-size: 24px;
+}
+
+.crisis-title {
+    color: var(--color-error);
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.crisis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+}
+
+.crisis-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--color-background);
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    transition: var(--transition-std);
+    text-decoration: none;
+}
+
+.crisis-item:hover {
+    border-color: var(--color-error-light);
+    transform: translateY(-2px);
+}
+
+.crisis-line-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-text-muted);
+}
+
+.crisis-line-num {
+    font-size: 20px;
+    font-weight: 950;
+    color: var(--color-error);
+    font-family: var(--font-display);
+}
+
+.crisis-line-note {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+/* Psychologists Grid */
+.psych-grid-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 100px;
+}
+
+.psych-filters-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.psych-count {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 900;
+    margin: 0;
+}
+
+.psych-live-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--color-primary-soft);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+}
+
+.live-ping {
+    width: 8px;
+    height: 8px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    position: relative;
+}
+
+.live-ping::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid var(--color-primary);
+    animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+    75%, 100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
+
+.psych-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+    gap: 20px;
+}
+
+.psych-card {
+    background: var(--grad-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: var(--transition-std);
+    height: 100%;
+}
+
+.psych-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--color-primary-light);
+}
+
+.psych-card-body {
+    padding: 24px;
+    flex: 1;
+}
+
+.psych-profile-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.psych-avatar-box {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.psych-img {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    object-fit: cover;
+    border: 2px solid var(--color-divider);
+    background: var(--grad-primary);
+}
+
+.psych-initial-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+    color: white;
+    font-family: var(--font-display);
+}
+
+.online-dot-badge {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    background: var(--color-success);
+    border: 3px solid var(--color-surface);
+    border-radius: 50%;
+}
+
+.psych-info-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.psych-name {
+    font-size: 18px;
+    font-weight: 900;
+    margin: 0 0 4px;
+    color: var(--color-text-primary);
+}
+
+.psych-qual {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.psych-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+}
+
+.psych-stars {
+    color: #f59e0b;
+    font-size: 12px;
+    display: flex;
+    gap: 2px;
+}
+
+.psych-rating-num {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--color-text-primary);
+}
+
+.psych-sessions-count {
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.psych-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.psych-tag {
+    font-size: 10px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.psych-bio-quote {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    font-style: italic;
+    margin: 0;
+    padding: 0 0 0 16px;
+    border-left: 3px solid var(--color-primary-light);
+}
+
+.psych-card-footer {
+    padding: 18px 24px;
+    background: rgba(0,0,0,0.02);
+    border-top: 1px solid var(--color-divider);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.psych-availability-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.status-active { color: var(--color-success); }
+.status-inactive { color: var(--color-text-muted); }
+
+.status-ping-small {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.book-btn-premium {
+    padding: 10px 24px;
+    border-radius: 999px;
+    background: var(--grad-primary);
+    color: white;
+    border: none;
+    font-size: 14px;
+    font-weight: 850;
+    box-shadow: var(--shadow-glow);
+    transition: var(--transition-fast);
+    cursor: pointer;
+}
+
+.book-btn-premium:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--color-primary-glow);
+}
+
+.book-btn-premium:disabled {
+    background: var(--color-divider);
+    color: var(--color-text-muted);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+/* Modals Modernization */
+.psych-booking-modal {
+    background: var(--color-surface);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    width: 100%;
+    max-width: 480px;
+}
+
+.modal-psych-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.modal-psych-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--grad-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 900;
+    color: white;
+}
+
+/* Slot Selection */
+.slot-select-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.slot-option {
+    padding: 12px 10px;
+    border-radius: 14px;
+    border: 1.5px solid var(--color-divider);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font-size: 13px;
+    font-weight: 750;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.slot-option.selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+}
+
+.slot-option:not(.selected):hover {
+    border-color: var(--color-primary-light);
+}
+
+/* ── Billing Summary Styles ── */
+
+.booking-summary-box {
+    background: var(--color-surface-soft);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--color-border);
+}
+
+.booking-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.booking-summary-row span:first-child {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+}
+
+.session-price-tag {
+    font-size: 1.4rem;
+    font-weight: 950;
+    color: var(--color-primary);
+    font-family: var(--font-display);
+}
+
+.secure-badge {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 800;
+    color: var(--color-text-muted);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}

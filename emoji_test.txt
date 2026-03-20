@@ -1,0 +1,2 @@
+Test emoji: 🛡️
+Non-ascii: ⚠

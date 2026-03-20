@@ -1,0 +1,4 @@
+g:/soulthread/src/pages/Profile.jsx: Clean
+g:/soulthread/src/components/profile/EditProfileModal.jsx: Clean
+g:/soulthread/src/components/layout/Navbar.jsx: Clean
+g:/soulthread/src/components/common/ConnectModal.jsx: Clean

@@ -1,0 +1,14 @@
+/* ═══════════════════════════════════════════════
+   App.css — SoulThread Root Reset
+   ═══════════════════════════════════════════════
+   IMPORTANT: Keep this file minimal.
+   All design tokens and component styles live in index.css.
+   This file must NOT contain padding, text-align, or any
+   layout rules on #root — they override the design system.
+   ═══════════════════════════════════════════════ */
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100svh;
+}

@@ -1,0 +1,391 @@
+/* MeditationSeries.css - The Healing Sanctuary Styles */
+
+.zen-loader {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 950;
+    color: var(--color-primary);
+    background: #fbf9f5; /* Soft Sand Base */
+}
+
+.meditation-page {
+    background: #fbf9f5;
+    min-height: 100vh;
+    padding-bottom: 200px;
+    color: #1a1a1a;
+}
+
+/* Hero Section */
+.meditation-hero {
+    display: flex;
+    padding: 100px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: center;
+    gap: 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    flex: 1;
+    z-index: 10;
+}
+
+.hero-kicker {
+    display: block;
+    font-size: 14px;
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--color-primary);
+    margin-bottom: 24px;
+}
+
+.meditation-hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 950;
+    line-height: 1.1;
+    margin-bottom: 32px;
+    letter-spacing: -0.04em;
+    color: #0b2d1c; /* Deep Forest Green */
+}
+
+.meditation-hero p {
+    font-size: 1.25rem;
+    color: #4a4a4a;
+    max-width: 500px;
+    line-height: 1.6;
+}
+
+.hero-visual {
+    flex: 1.2;
+    height: 600px;
+    border-radius: 48px;
+    overflow: hidden;
+    box-shadow: 0 40px 100px rgba(11, 45, 28, 0.15);
+}
+
+.hero-visual img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media (max-width: 992px) {
+    .meditation-hero {
+        flex-direction: column;
+        padding: 60px 24px;
+        gap: 40px;
+        text-align: center;
+    }
+    .hero-visual {
+        height: 300px;
+        width: 100%;
+    }
+}
+
+/* Levels Grid */
+.levels-section {
+    max-width: 1200px;
+    margin: 80px auto;
+    padding: 0 24px;
+}
+
+.levels-header {
+    text-align: center;
+    margin-bottom: 60px;
+}
+
+.levels-header h2 {
+    font-size: 2.8rem;
+    font-weight: 950;
+    margin-bottom: 16px;
+    font-family: var(--font-display);
+}
+
+.levels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 32px;
+}
+
+.level-card {
+    background: white;
+    padding: 40px;
+    border-radius: 40px;
+    border: 1.5px solid rgba(11, 45, 28, 0.08);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+}
+
+.level-card.active {
+    border-color: var(--color-primary);
+    background: rgba(114, 159, 142, 0.05); /* Soft primary tint */
+}
+
+.level-badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 24px;
+    letter-spacing: 0.05em;
+}
+
+.level-1 { background: #e0f2f1; color: #00796b; }
+.level-2 { background: #fff3e0; color: #e65100; }
+.level-3 { background: #f3e5f5; color: #7b1fa2; }
+
+.level-card h3 {
+    font-size: 1.6rem;
+    font-weight: 950;
+    margin-bottom: 8px;
+}
+
+.level-subtitle {
+    font-weight: 800;
+    color: var(--color-primary);
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+.level-desc {
+    color: #666;
+    line-height: 1.6;
+    font-size: 15px;
+    margin-bottom: 32px;
+    flex: 1;
+}
+
+.level-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.duration {
+    font-size: 13px;
+    font-weight: 850;
+    color: #999;
+}
+
+.play-circle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #0b2d1c;
+    color: white;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Locked State */
+.level-lock {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(4px);
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.level-lock span {
+    background: #0b2d1c;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 900;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Immersive Player */
+.immersive-player-box {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 900px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    padding: 32px;
+    border-radius: 40px;
+    box-shadow: 0 40px 100px rgba(0,0,0,0.15);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    z-index: 1000;
+}
+
+.player-layout {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+}
+
+.breath-guide-container {
+    width: 140px;
+    height: 140px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.breath-circle {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #729f8e 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.breath-text {
+    font-size: 10px;
+    font-weight: 950;
+    color: #0b2d1c;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    text-align: center;
+    z-index: 10;
+    line-height: 1.2;
+}
+
+.player-controls {
+    flex: 1;
+}
+
+.now-playing-info {
+    margin-bottom: 20px;
+}
+
+.now-playing-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 850;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.now-playing-info h4 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 950;
+    font-family: var(--font-display);
+}
+
+.progress-bar-container {
+    height: 8px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.progress-bar {
+    height: 100%;
+    background: var(--color-primary);
+    transition: width 0.1s linear;
+}
+
+.player-btns {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-play-prime {
+    background: #0b2d1c;
+    color: white;
+    border: none;
+    padding: 14px 40px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-play-prime:hover {
+    transform: scale(1.02);
+}
+
+@media (max-width: 600px) {
+    .player-layout {
+        flex-direction: column;
+        text-align: center;
+        gap: 24px;
+    }
+    .player-btns {
+        justify-content: center;
+    }
+    .breath-guide-container {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+/* Upsell Card */
+.meditation-upsell {
+    padding: 100px 24px;
+    text-align: center;
+}
+
+.upsell-card-zen {
+    background: #0b2d1c;
+    color: white;
+    padding: 60px 40px;
+    border-radius: 48px;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 40px 100px rgba(11, 45, 28, 0.25);
+}
+
+.upsell-card-zen h2 {
+    font-family: var(--font-display);
+    font-size: 2.4rem;
+    margin-bottom: 16px;
+    font-weight: 950;
+}
+
+.upsell-card-zen p {
+    font-size: 1.1rem;
+    color: rgba(255,255,255,0.7);
+    max-width: 500px;
+    margin: 0 auto 32px;
+}
+
+.zen-upgrade-btn {
+    background: #729f8e;
+    color: #0b2d1c;
+    border: none;
+    padding: 16px 48px;
+    border-radius: 20px;
+    font-weight: 950;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.zen-upgrade-btn:hover {
+    background: white;
+}

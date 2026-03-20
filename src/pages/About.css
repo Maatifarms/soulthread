@@ -1,0 +1,346 @@
+:root {
+  --about-grad-subtle: linear-gradient(135deg, rgba(159, 197, 193, 0.05) 0%, rgba(139, 122, 208, 0.03) 100%);
+  --about-card-bg: rgba(255, 255, 255, 0.03);
+  --about-border: rgba(159, 197, 193, 0.1);
+}
+
+.about-page-container {
+    min-height: 100vh;
+    padding-top: 100px;
+    background: var(--about-grad-subtle);
+    color: var(--color-text);
+}
+
+.about-hero {
+    padding: 100px 5% 60px;
+    text-align: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.about-hero-content .brand-label {
+    display: inline-block;
+    padding: 8px 16px;
+    background: var(--about-border);
+    border-radius: 40px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 32px;
+}
+
+.about-title {
+    font-size: clamp(2.5rem, 8vw, 4.5rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 24px;
+    letter-spacing: -0.04em;
+    font-family: 'Outfit', sans-serif;
+}
+
+.about-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.7;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.about-main-content {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 60px 5% 120px;
+}
+
+.mission-section {
+    padding: 80px 0;
+    border-bottom: 1px solid var(--about-border);
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+
+.text-block h2 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: var(--color-primary);
+}
+
+.text-block p {
+    font-size: 1.15rem;
+    line-height: 1.8;
+    margin-bottom: 24px;
+}
+
+.stat-card-simple {
+    background: var(--about-card-bg);
+    border: 1px solid var(--about-border);
+    border-radius: 32px;
+    padding: 40px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.stat-value {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.7;
+    margin-top: 12px;
+}
+
+.values-section {
+    padding: 100px 0;
+}
+
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 32px;
+}
+
+.value-card {
+    background: var(--about-card-bg);
+    border: 1px solid var(--about-border);
+    border-radius: 32px;
+    padding: 48px 32px;
+    transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.value-card:hover {
+    transform: translateY(-8px);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.value-icon {
+    font-size: 2.5rem;
+    margin-bottom: 24px;
+}
+
+.value-card h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.value-card p {
+    line-height: 1.6;
+    opacity: 0.8;
+}
+
+.identity-section {
+    padding: 80px 0;
+    border-top: 1px solid var(--about-border);
+    border-bottom: 1px solid var(--about-border);
+}
+
+.content-box {
+    max-width: 800px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.content-box h2 {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+}
+
+.content-box p {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+.about-cta {
+    padding: 120px 0 60px;
+    text-align: center;
+}
+
+.about-cta h2 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    margin-bottom: 40px;
+}
+
+.cta-btns {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 18px 36px;
+    border-radius: 60px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--grad-primary);
+    color: #fff;
+}
+
+.btn-secondary {
+    background: var(--about-card-bg);
+    border: 1.5px solid var(--about-border);
+    color: inherit;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    transform: scale(1.03);
+}
+
+.clinical-section {
+    padding: 120px 0;
+    background: var(--about-card-bg);
+    border-radius: 48px;
+    border: 1.5px solid var(--about-border);
+    margin: 40px 0;
+    text-align: center;
+}
+
+.section-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    margin-bottom: 24px;
+    letter-spacing: 0.15em;
+}
+
+.clinical-features {
+    list-style: none;
+    padding: 0;
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: left;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.clinical-features li {
+    padding: 16px 24px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 16px;
+    border: 1px solid var(--about-border);
+    font-size: 1.05rem;
+}
+
+.clinical-features li strong {
+    color: var(--color-primary);
+}
+
+.pillars-section {
+    padding: 100px 0;
+}
+
+.pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.pillar {
+    padding: 40px;
+    background: transparent;
+    border-left: 2px solid var(--about-border);
+    transition: background 0.3s ease;
+}
+
+.pillar:hover {
+    background: rgba(159, 197, 193, 0.03);
+}
+
+.pillar-num {
+    font-size: 0.8rem;
+    font-weight: 900;
+    color: var(--color-primary);
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.pillar h5 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+}
+
+.pillar p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    opacity: 0.7;
+}
+
+.about-simple-footer {
+    padding: 80px 5% 40px;
+    text-align: center;
+    border-top: 1px solid var(--about-border);
+}
+
+.about-simple-footer p {
+    opacity: 0.5;
+    font-size: 0.85rem;
+    margin-bottom: 24px;
+}
+
+.footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+}
+
+.footer-links a {
+    text-decoration: none;
+    color: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.footer-links a:hover {
+    opacity: 1;
+}
+
+@media (max-width: 900px) {
+    .pillars-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+    .cta-btns {
+        flex-direction: column;
+    }
+    .about-title {
+        font-size: 2.5rem;
+    }
+    .footer-links {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .clinical-section {
+        padding: 60px 20px;
+    }
+}

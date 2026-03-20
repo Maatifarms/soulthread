@@ -1,0 +1,5 @@
+g:/soulthread/src/pages/Profile.jsx: Clean
+g:/soulthread/src/components/profile/EditProfileModal.jsx: Found non-ASCII at indices [13990, 22079, 22080, 22118, 22119, 23993]: ['×', '─', '─', '─', '─', '—']
+g:/soulthread/src/components/layout/Navbar.jsx: Clean
+g:/soulthread/src/components/common/ConnectModal.jsx: Clean
+g:/soulthread/emoji_test.txt: Found non-ASCII at indices [13, 14, 27]: ['🛡', '️', '⚠']

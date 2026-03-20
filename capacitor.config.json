@@ -1,0 +1,14 @@
+{
+  "appId": "in.soulthread.app",
+  "appName": "SoulThread",
+  "webDir": "dist",
+  "plugins": {
+    "FirebaseAuthentication": {
+      "skipNativeAuth": false,
+      "providers": [
+        "google.com"
+      ],
+      "googleClientId": "813685915255-h8ajgn54lvgp0opp12h74e9b2skq93ei.apps.googleusercontent.com"
+    }
+  }
+}

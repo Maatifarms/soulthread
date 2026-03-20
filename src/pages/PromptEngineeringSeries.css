@@ -1,0 +1,66 @@
+@import './HyperfocusSeries.css';
+
+/* ── Prompt Architect (AI/Logic) Overrides ── */
+
+:root {
+    --color-ai: #0ea5e9; /* Premium professional blue/cyan */
+    --color-ai-soft: rgba(14, 165, 233, 0.1);
+}
+
+.prompt-engineering-page .progress-bar {
+    background: var(--color-ai);
+    box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+}
+
+.prompt-engineering-page h1,
+.prompt-engineering-page h2,
+.prompt-engineering-page h3 {
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    font-family: var(--font-display);
+}
+
+.prompt-engineering-page .hero-section h1 {
+    background: linear-gradient(135deg, #fff 30%, #4facfe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.prompt-engineering-page .takeaway-box {
+    border-left: 4px solid var(--color-ai) !important;
+    background: var(--color-ai-soft);
+}
+
+.prompt-engineering-page .start-btn {
+    background: var(--color-ai);
+    color: white;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 30px rgba(14, 165, 233, 0.2);
+}
+
+.prompt-engineering-page .start-btn:hover {
+    background: white;
+    color: var(--color-ai);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 30px rgba(239, 68, 68, 0.1);
+}
+
+.prompt-engineering-page .post-number {
+    color: var(--color-ai);
+    font-weight: 800;
+}
+
+.prompt-engineering-page .nav-btn:hover:not(:disabled) {
+    border-color: var(--color-ai);
+    color: var(--color-ai);
+    background: var(--color-ai-soft);
+}
+
+.prompt-engineering-page .explore-btn {
+    background: var(--color-ai);
+    box-shadow: 0 15px 30px rgba(14, 165, 233, 0.3);
+}
