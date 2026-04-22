@@ -39,3 +39,6 @@
 -keepattributes Signature
 -keepattributes InnerClasses
 -keepattributes EnclosingMethod
+
+# Ignore missing Facebook SDK classes (not used)
+-dontwarn com.facebook.**

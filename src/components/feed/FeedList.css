@@ -5,11 +5,37 @@
 }
 
 .feed-skeleton-card {
+  position: relative;
   background: var(--color-surface);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 12px;
-  animation: feedPulse 1.5s ease-in-out infinite;
+  overflow: hidden;
+}
+
+.feed-skeleton-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 80%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .skeleton-header {
@@ -23,14 +49,14 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: var(--color-border);
+  background: var(--color-surface-2);
 }
 
 .skeleton-title {
   width: 120px;
   height: 12px;
   border-radius: 6px;
-  background: var(--color-border);
+  background: var(--color-surface-2);
   margin-bottom: 6px;
 }
 
@@ -38,13 +64,13 @@
   width: 80px;
   height: 10px;
   border-radius: 6px;
-  background: var(--color-border);
+  background: var(--color-surface-2);
 }
 
 .skeleton-line {
   height: 12px;
   border-radius: 6px;
-  background: var(--color-border);
+  background: var(--color-surface-2);
   margin-bottom: 8px;
 }
 
@@ -58,11 +84,6 @@
 
 .skeleton-line.half {
   width: 50%;
-}
-
-@keyframes feedPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
 }
 
 @keyframes spin {

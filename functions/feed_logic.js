@@ -1,5 +1,11 @@
 const admin = require('firebase-admin');
 
+function getDb() {
+    if (!admin.apps.length) admin.initializeApp();
+    return admin.firestore();
+}
+
+
 // Rate Limiter
 const rateLimitMap = new Map();
 function isRateLimited(userId, action, limitPerHour) {
@@ -25,8 +31,8 @@ exports.handleCreatePost = async (data, context) => {
         throw new functions.https.HttpsError('resource-exhausted', 'Post limit exceeded.');
     }
 
-    const { content, mediaItems, circleId, isAnonymous, isSensitive, hashtags, type, promptId, promptText } = data;
-    const db = admin.firestore();
+    const { content, mediaItems, circleId, isAnonymous, isSensitive, hashtags, type, promptId, promptText, categoryId } = data;
+    const db = getDb();
     const userSnap = await db.collection('users').doc(userId).get();
     const userData = userSnap.exists ? userSnap.data() : {};
 
@@ -40,7 +46,7 @@ exports.handleCreatePost = async (data, context) => {
             mediaUrl: (mediaItems && mediaItems.length > 0) ? mediaItems[0].url : null,
             mediaType: (mediaItems && mediaItems.length > 0) ? mediaItems[0].type : null,
             mediaItems: mediaItems || [], isSensitive: isSensitive || false, hashtags: hashtags || [],
-            type: type || 'normal', promptId: promptId || null, promptText: promptText || null, circleId: circleId || null,
+            categoryId: categoryId || 'general', type: type || 'normal', promptId: promptId || null, promptText: promptText || null, circleId: circleId || null,
             createdAt: admin.firestore.FieldValue.serverTimestamp(), likesCount: 0, commentsCount: 0, status: "processing"
         });
         return { success: true, postId: postRef.id };

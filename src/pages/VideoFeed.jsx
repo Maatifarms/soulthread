@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { collection, query, orderBy, where, getDocs, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import FeedItem from '../components/feed/FeedItem';
+import { Sparkles, Clapperboard, Home, Users, MessageSquare, HeartPulse } from 'lucide-react';
 
 const VideoFeed = () => {
     const [posts, setPosts] = useState([]);
@@ -53,12 +54,14 @@ const VideoFeed = () => {
                 {/* Main Content: Video Feed */}
                 <div className="moments-main">
                     <h2 style={{ marginBottom: '24px', color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span>✨</span> Moments
+                        <Sparkles size={24} /> Moments
                     </h2>
 
                     {posts.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '60px 40px', background: 'var(--color-surface)', borderRadius: '16px', border: '1px solid var(--color-border)' }}>
-                            <div style={{ fontSize: '40px', marginBottom: '16px' }}>🎞️</div>
+                        <div style={{ marginBottom: '16px', color: 'var(--color-text-secondary)' }}>
+                            <Clapperboard size={48} />
+                        </div>
                             <p style={{ color: 'var(--color-text-secondary)', fontSize: '16px' }}>No moments shared yet. Be the first to spark a connection!</p>
                             <Link to="/" className="btn-primary" style={{ marginTop: '20px' }}>Go Home</Link>
                         </div>
@@ -76,10 +79,26 @@ const VideoFeed = () => {
                     <div>
                         <h4 style={{ marginBottom: '16px', fontSize: '18px', color: 'var(--color-text-primary)' }}>Sanctuary Path</h4>
                         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <SidebarLink to="/">🏠 Home</SidebarLink>
-                            <SidebarLink to="/search">🤝 Community</SidebarLink>
-                            <SidebarLink to="/messages">💬 Messages</SidebarLink>
-                            <SidebarLink to="/care">🌿 Find Help</SidebarLink>
+                            <SidebarLink to="/">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Home size={18} /> Home
+                                </div>
+                            </SidebarLink>
+                            <SidebarLink to="/search">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <Users size={18} /> Community
+                                </div>
+                            </SidebarLink>
+                            <SidebarLink to="/messages">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <MessageSquare size={18} /> Messages
+                                </div>
+                            </SidebarLink>
+                            <SidebarLink to="/care">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <HeartPulse size={18} /> Find Help
+                                </div>
+                            </SidebarLink>
                         </nav>
                     </div>
 

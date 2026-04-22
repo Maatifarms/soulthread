@@ -1,13 +1,22 @@
 # ============================================
 # SOULTHREAD - APACHE CONFIGURATION
-# Performance & Security Optimizations
+# Performance & Security - Optimized for SPA + Firebase
 # ============================================
 
 # --------------------------------------------
-# 1. ENABLE GZIP COMPRESSION
+# 1. BROTLI COMPRESSION (preferred over gzip)
+# --------------------------------------------
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css
+  AddOutputFilterByType BROTLI_COMPRESS application/javascript application/json
+  AddOutputFilterByType BROTLI_COMPRESS application/font-woff application/font-woff2
+  AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+</IfModule>
+
+# --------------------------------------------
+# 2. GZIP COMPRESSION (fallback)
 # --------------------------------------------
 <IfModule mod_deflate.c>
-  # Compress HTML, CSS, JavaScript, Text, XML and fonts
   AddOutputFilterByType DEFLATE application/javascript
   AddOutputFilterByType DEFLATE application/json
   AddOutputFilterByType DEFLATE application/rss+xml
@@ -23,6 +32,8 @@
   AddOutputFilterByType DEFLATE font/opentype
   AddOutputFilterByType DEFLATE font/otf
   AddOutputFilterByType DEFLATE font/ttf
+  AddOutputFilterByType DEFLATE font/woff
+  AddOutputFilterByType DEFLATE font/woff2
   AddOutputFilterByType DEFLATE image/svg+xml
   AddOutputFilterByType DEFLATE image/x-icon
   AddOutputFilterByType DEFLATE text/css
@@ -30,21 +41,21 @@
   AddOutputFilterByType DEFLATE text/javascript
   AddOutputFilterByType DEFLATE text/plain
   AddOutputFilterByType DEFLATE text/xml
-  
-  # Remove browser bugs (only needed for really old browsers)
-  BrowserMatch ^Mozilla/4 gzip-only-text/html
-  BrowserMatch ^Mozilla/4\.0[678] no-gzip
-  BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
-  Header append Vary User-Agent
 </IfModule>
 
 # --------------------------------------------
-# 2. BROWSER CACHING
+# 3. BROWSER CACHING — AGGRESSIVE FOR VITE HASHED ASSETS
+# Vite output has content-hashes in filenames → safe for 1-year immutable cache
 # --------------------------------------------
 <IfModule mod_expires.c>
   ExpiresActive On
-  
-  # Images - 1 year
+
+  # Vite hashed assets (JS/CSS with hash in filename) — 1 year immutable
+  <FilesMatch "\-[a-f0-9]{8,}\.(js|css|woff2?|ttf|otf|eot)$">
+    ExpiresDefault "access plus 1 year"
+  </FilesMatch>
+
+  # Images and media — 1 year
   ExpiresByType image/jpg "access plus 1 year"
   ExpiresByType image/jpeg "access plus 1 year"
   ExpiresByType image/gif "access plus 1 year"
@@ -52,102 +63,127 @@
   ExpiresByType image/webp "access plus 1 year"
   ExpiresByType image/svg+xml "access plus 1 year"
   ExpiresByType image/x-icon "access plus 1 year"
-  
-  # Video - 1 year
+
+  # Video — 1 year
   ExpiresByType video/mp4 "access plus 1 year"
   ExpiresByType video/webm "access plus 1 year"
-  
-  # CSS and JavaScript - 1 month
-  ExpiresByType text/css "access plus 1 month"
-  ExpiresByType application/javascript "access plus 1 month"
-  ExpiresByType text/javascript "access plus 1 month"
-  
-  # Fonts - 1 year
+
+  # Fonts — 1 year
   ExpiresByType font/ttf "access plus 1 year"
   ExpiresByType font/otf "access plus 1 year"
   ExpiresByType font/woff "access plus 1 year"
   ExpiresByType font/woff2 "access plus 1 year"
   ExpiresByType application/font-woff "access plus 1 year"
-  
-  # HTML - 1 hour
-  ExpiresByType text/html "access plus 1 hour"
-  
-  # Default - 1 week
+  ExpiresByType application/font-woff2 "access plus 1 year"
+
+  # HTML — no cache, always fetch latest (SPA shell)
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # Default
   ExpiresDefault "access plus 1 week"
 </IfModule>
 
-# Cache-Control Headers
+# --------------------------------------------
+# 4. CACHE-CONTROL HEADERS (precise control)
+# --------------------------------------------
 <IfModule mod_headers.c>
-  # 1 YEAR - Images, Fonts, Videos
-  <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|woff|woff2|ttf|otf|eot|mp4|webm)$">
+  # Vite hashed assets — 1 YEAR IMMUTABLE (content hash guarantees freshness)
+  <FilesMatch "\-[a-f0-9]{8,}\.(js|css|woff2?|ttf|otf|eot)$">
     Header set Cache-Control "max-age=31536000, public, immutable"
   </FilesMatch>
-  
-  # 1 MONTH - CSS, JS
-  <FilesMatch "\.(css|js)$">
-    Header set Cache-Control "max-age=2592000, public"
+
+  # Non-hashed images — 1 YEAR
+  <FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|mp4|webm)$">
+    Header set Cache-Control "max-age=31536000, public, immutable"
   </FilesMatch>
-  
-  # 1 HOUR - HTML
+
+  # HTML shell — NO CACHE so deploys are always fresh
   <FilesMatch "\.(html|htm)$">
-    Header set Cache-Control "max-age=3600, public, must-revalidate"
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </FilesMatch>
+
+  # APK download — cache for 1 week
+  <FilesMatch "\.apk$">
+    Header set Cache-Control "max-age=604800, public"
   </FilesMatch>
 </IfModule>
 
 # --------------------------------------------
-# 3. SECURITY HEADERS
+# 5. SECURITY HEADERS
 # --------------------------------------------
 <IfModule mod_headers.c>
   # Prevent clickjacking
   Header always set X-Frame-Options "SAMEORIGIN"
-  
+
   # XSS Protection
   Header always set X-XSS-Protection "1; mode=block"
-  
+
   # Prevent MIME type sniffing
   Header always set X-Content-Type-Options "nosniff"
-  
+
   # Referrer Policy
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  
-  # Remove X-Powered-By header
+
+  # Remove server fingerprint
   Header unset X-Powered-By
+  Header unset Server
+
+  # Performance hint: enable Keep-Alive
+  Header set Connection "keep-alive"
 </IfModule>
 
 # --------------------------------------------
-# 4. REACT ROUTER - SPA ROUTING
+# 6. REACT ROUTER - SPA ROUTING
 # --------------------------------------------
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
-  
-  # Don't rewrite files or directories
+
+  # Serve pre-compressed brotli if available
+  RewriteCond %{HTTP:Accept-Encoding} br
+  RewriteCond %{REQUEST_FILENAME}.br -f
+  RewriteRule ^(.*)$ $1.br [QSA,L]
+
+  # Don't rewrite actual files or directories
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
-  
-  # Rewrite everything else to index.html
+
+  # Rewrite everything else to index.html (SPA catch-all)
   RewriteRule . /index.html [L]
 </IfModule>
 
 # --------------------------------------------
-# 5. DISABLE DIRECTORY BROWSING
+# 7. KEEP-ALIVE
+# --------------------------------------------
+<IfModule mod_so.c>
+  KeepAlive On
+  MaxKeepAliveRequests 100
+  KeepAliveTimeout 5
+</IfModule>
+
+# --------------------------------------------
+# 8. DISABLE DIRECTORY BROWSING
 # --------------------------------------------
 Options -Indexes
 
 # --------------------------------------------
-# 6. FILE ACCESS RESTRICTIONS
+# 9. FILE ACCESS RESTRICTIONS
 # --------------------------------------------
-# Deny access to sensitive files
 <FilesMatch "^\.">
   Order allow,deny
   Deny from all
 </FilesMatch>
 
-# --------------------------------------------
-# 7. FORCE HTTPS (Optional - uncomment if needed)
-# --------------------------------------------
-# <IfModule mod_rewrite.c>
-#   RewriteEngine On
-#   RewriteCond %{HTTPS} off
-#   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# </IfModule>
+# Protect sensitive config files
+<FilesMatch "\.(env|json|md|lock|log)$">
+  Order allow,deny
+  Deny from all
+</FilesMatch>
+
+# Allow sitemap.xml and robots.txt
+<FilesMatch "^(sitemap\.xml|robots\.txt)$">
+  Order allow,deny
+  Allow from all
+</FilesMatch>

@@ -3,6 +3,7 @@ import { collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, update
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link } from 'react-router-dom';
+import { Trash2 } from 'lucide-react';
 import LoginModal from '../common/LoginModal';
 import { moderateContent } from '../../services/moderation';
 
@@ -121,10 +122,10 @@ const CommentSection = React.memo(({ postId, postAuthorId }) => {
                                     {(currentUser?.uid === comment.authorId || currentUser?.role === 'admin') && (
                                         <button
                                             onClick={() => handleDeleteComment(comment.id)}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '4px' }}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', color: 'var(--color-text-secondary)', padding: '4px' }}
                                             title="Delete Comment"
                                         >
-                                            🗑️
+                                            <Trash2 size={14} />
                                         </button>
                                     )}
                                 </div>

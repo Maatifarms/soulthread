@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
+import { Heart } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -55,7 +56,9 @@ const Footer = () => {
             <div className="footer-bottom">
                 <div className="container bottom-flex">
                     <p>© 2026 SoulThread Sanctuary. All rights reserved.</p>
-                    <span>Built with ❤️ for your mental wellness</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        Built with <Heart size={14} fill="var(--color-primary)" color="var(--color-primary)" /> for your mental wellness
+                    </span>
                 </div>
             </div>
         </footer>

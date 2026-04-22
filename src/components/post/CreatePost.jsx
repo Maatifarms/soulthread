@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { db } from '../../services/firebase';
+import { db, functions } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import LoginModal from '../common/LoginModal';
 import { moderateText, logModerationEvent } from '../../services/aiModeration';
@@ -12,17 +12,53 @@ import { logError } from '../../services/performanceMonitor';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 import { Capacitor } from '@capacitor/core';
+import { CATEGORIES } from '../../data/categories';
 import './CreatePost.css';
+
+import { 
+    PenLine, 
+    HeartPulse, 
+    Wind, 
+    Users, 
+    Brain, 
+    Sprout, 
+    Target, 
+    Sparkles, 
+    Zap,
+    Plus,
+    X,
+    Shield,
+    User as UserIcon,
+    Camera,
+    Info,
+    CheckCircle
+} from 'lucide-react';
 
 const isNativeApp = Capacitor.isNativePlatform();
 
-const CATEGORIES = [
-    { id: 'general', label: 'General', icon: '📝' },
-    { id: 'healing', label: 'Healing', icon: '🌱' },
-    { id: 'anxiety', label: 'Anxiety', icon: '🌊' },
-    { id: 'mindfulness', label: 'Mindfulness', icon: '🧘' },
-    { id: 'growth', label: 'Growth', icon: '📈' },
-    { id: 'community', label: 'Community', icon: '🤝' },
+const ICON_MAP = {
+    PenLine,
+    HeartPulse,
+    Wind,
+    Users,
+    Brain,
+    Sprout,
+    Target,
+    Sparkles,
+    Zap
+};
+
+const POSTING_PROMPTS = [
+    "What's something you've been holding in that needs somewhere to go...",
+    "I feel like I can't tell anyone, but...",
+    "Something that's been weighing on me lately...",
+    "I've been pretending to be okay about this, but...",
+    "Is it normal that I feel this way...",
+    "Nobody knows that I...",
+    "I thought I was over this, but...",
+    "What I really need right now is...",
+    "I came here because I had nowhere else to put this...",
+    "The honest version of how I'm doing is...",
 ];
 
 const CreatePost = ({ circleId = null }) => {
@@ -53,8 +89,17 @@ const CreatePost = ({ circleId = null }) => {
     // STATES
     const [isAnonymous, setIsAnonymous] = useState(currentUser?.isAnonymous || false);
     const [selectedCategory, setSelectedCategory] = useState('general');
+    const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setPlaceholderIndex(prev => (prev + 1) % POSTING_PROMPTS.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, []);
     const [uploadError, setUploadError] = useState(null);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isRefining, setIsRefining] = useState(false);
 
     useEffect(() => {
         try {
@@ -91,6 +136,25 @@ const CreatePost = ({ circleId = null }) => {
             return false;
         }
         return true;
+    };
+
+    const handleRefine = async () => {
+        if (!content.trim() || isRefining) return;
+        if (!handleInteraction()) return;
+
+        setIsRefining(true);
+        try {
+            const refine = httpsCallable(functions, 'refineContent');
+            const result = await refine({ text: content });
+            if (result.data?.refined) {
+                setContent(result.data.refined);
+            }
+        } catch (err) {
+            console.error("AI Refine Error:", err);
+            setUploadError("AI Refinement failed. Please try again.");
+        } finally {
+            setIsRefining(false);
+        }
     };
 
     const handleFileChange = async (e) => {
@@ -257,11 +321,15 @@ const CreatePost = ({ circleId = null }) => {
             <div className="create-post-header">
                 <div className="create-post-branding">
                     <div className="branding-dot" />
-                    <span className="branding-text">SoulThread</span>
+                    <span className="branding-text">Share Your Heart</span>
                 </div>
                 {currentUser && (
-                    <div className="mode-badge">
-                        {isAnonymous ? 'Incognito Mode' : 'Public Persona'}
+                    <div className="mode-badge" onClick={() => setIsAnonymous(!isAnonymous)} style={{ cursor: 'pointer' }}>
+                        {isAnonymous ? (
+                            <><Shield size={14} style={{ marginRight: '6px' }} /> Anonymous Mode</>
+                        ) : (
+                            <><UserIcon size={14} style={{ marginRight: '6px' }} /> Public Mode</>
+                        )}
                     </div>
                 )}
             </div>
@@ -288,7 +356,7 @@ const CreatePost = ({ circleId = null }) => {
                 />
 
                 <textarea
-                    placeholder={currentUser ? "What's on your mind? This is your sanctuary." : "Sign in to share your story..."}
+                    placeholder={currentUser ? POSTING_PROMPTS[placeholderIndex] : "Sign in to share your story with the world..."}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
                     onClick={() => !currentUser && setShowLoginModal(true)}
@@ -305,7 +373,12 @@ const CreatePost = ({ circleId = null }) => {
                                 onClick={() => setSelectedCategory(cat.id)}
                                 className={`category-btn ${selectedCategory === cat.id ? 'active' : ''}`}
                             >
-                                <span className="category-icon">{cat.icon}</span>
+                                <span className="category-icon">
+                                    {(() => {
+                                        const IconComponent = ICON_MAP[cat.icon];
+                                        return IconComponent ? <IconComponent size={16} /> : <PenLine size={16} />;
+                                    })()}
+                                </span>
                                 {cat.label}
                             </button>
                         ))}
@@ -334,7 +407,7 @@ const CreatePost = ({ circleId = null }) => {
                                         onClick={() => clearMedia(index)}
                                         className="media-btn-remove"
                                     >
-                                        X
+                                        <X size={14} />
                                     </button>
                                 </div>
                             </div>
@@ -346,9 +419,7 @@ const CreatePost = ({ circleId = null }) => {
 
                 {showSuccess && (
                     <div className="success-message">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <polyline points="20 6 9 17 4 12" />
-                        </svg>
+                        <CheckCircle size={18} style={{ marginRight: '8px' }} />
                         Post shared successfully!
                     </div>
                 )}
@@ -362,12 +433,18 @@ const CreatePost = ({ circleId = null }) => {
                             disabled={!currentUser}
                             style={{ opacity: !currentUser ? 0.5 : 1 }}
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                <polyline points="21 15 16 10 5 21" />
-                            </svg>
+                            <Camera size={18} style={{ marginRight: '8px' }} />
                             Add Visuals
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={handleRefine}
+                            className={`btn-refine ${isRefining ? 'refining' : ''}`}
+                            disabled={!currentUser || !content.trim() || isRefining}
+                        >
+                            <Sparkles size={16} className={isRefining ? 'spinning' : ''} style={{ marginRight: '6px' }} />
+                            {isRefining ? 'Polishing...' : 'Refine with SoulMaven'}
                         </button>
 
                         <button
@@ -375,16 +452,14 @@ const CreatePost = ({ circleId = null }) => {
                             onClick={() => setIsAnonymous(!isAnonymous)}
                             className={`btn-anonymous ${isAnonymous ? 'active' : ''}`}
                         >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6a4 4 0 1 0 4 4 4 4 0 0 0-4-4z"/>
-                            </svg>
+                            <Shield size={16} style={{ marginRight: '6px' }} />
                             {isAnonymous ? 'Incognito' : 'Named'}
                         </button>
                     </div>
 
                     <button
                         type="submit"
-                        disabled={isSubmitDisabled}
+                        disabled={isSubmitDisabled || isRefining}
                         className="btn-submit-post animate-float"
                     >
                         {loading ? 'Posting...' : 'Share Soul'}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { db } from '../../services/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../../contexts/AuthContext';
+import { CheckCircle } from 'lucide-react';
 
 const REPORT_CATEGORIES = [
     "Harassment or bullying",
@@ -42,7 +43,7 @@ const ReportModal = ({ targetId, targetType = 'post', onClose }) => {
             <div style={styles.modal}>
                 {success ? (
                     <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                        <span style={{ fontSize: '48px' }}>✅</span>
+                        <CheckCircle size={48} color="var(--color-primary)" style={{ marginBottom: '16px' }} />
                         <h3>Report Submitted</h3>
                         <p>Our moderation team is reviewing this case.</p>
                     </div>

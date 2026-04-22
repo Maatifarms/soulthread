@@ -1,19 +1,23 @@
-import React from 'react';
-import { doc, updateDoc } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 
 const ComplianceModal = ({ user, termsVersion, onAccept }) => {
+    const [accepting, setAccepting] = useState(false);
+
     const handleAccept = async () => {
+        setAccepting(true);
+        // Always let the user in immediately — don't block on Firestore
+        onAccept();
         try {
             const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
+            // setDoc with merge is safe even if doc doesn't exist yet
+            await setDoc(userRef, {
                 acceptedVersion: termsVersion,
                 acceptedAt: new Date().toISOString()
-            });
-            onAccept();
+            }, { merge: true });
         } catch (error) {
-            console.error("Terms acceptance failed:", error);
-            alert("Failed to update terms acceptance. Please try again.");
+            console.error("Terms acceptance save failed (non-blocking):", error);
         }
     };
 
@@ -73,6 +77,7 @@ const ComplianceModal = ({ user, termsVersion, onAccept }) => {
 
                 <button
                     onClick={handleAccept}
+                    disabled={accepting}
                     style={{
                         width: '100%',
                         padding: '16px',
@@ -82,11 +87,12 @@ const ComplianceModal = ({ user, termsVersion, onAccept }) => {
                         borderRadius: '12px',
                         fontSize: '18px',
                         fontWeight: '700',
-                        cursor: 'pointer',
+                        cursor: accepting ? 'default' : 'pointer',
+                        opacity: accepting ? 0.8 : 1,
                         transition: 'transform 0.2s'
                     }}
                 >
-                    I Accept & Continue
+                    {accepting ? 'Continuing...' : 'I Accept & Continue'}
                 </button>
             </div>
         </div>

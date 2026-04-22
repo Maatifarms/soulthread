@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { 
+    ShieldCheck, Share2, MessageCircle, UserPlus, Award, 
+    LayoutGrid, List, Bookmark, BookOpen, PenTool, 
+    Image, Rocket, Lock, Link2 
+} from 'lucide-react';
+const ImageIcon = Image;
 import useTheme from '../hooks/useTheme';
 import {
     collection, doc, getDoc, getDocs, setDoc, updateDoc,
@@ -68,9 +74,7 @@ const GridImage = ({ src, content, postStyle, hasMultiple, onClick }) => {
             )}
             {hasMultiple && (
                 <div className="grid-multiple-badge">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z" />
-                    </svg>
+                    <ImageIcon size={14} color="white" />
                 </div>
             )}
         </div>
@@ -422,10 +426,8 @@ const Profile = () => {
     if (userProfile.isAnonymous && !isOwner && !isSuper) {
         return (
             <div className="container" style={{ textAlign: 'center', padding: '100px 20px' }}>
-                <div style={{ fontSize: '48px', marginBottom: '20px' }}>
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-text-secondary)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
+                <div style={{ color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
+                    <Lock size={64} />
                 </div>
                 <h2 style={{ color: 'var(--color-text-primary)', marginBottom: '12px' }}>This profile is private</h2>
                 <p style={{ color: 'var(--color-text-secondary)', maxWidth: '320px', margin: '0 auto 24px', lineHeight: '1.6' }}>
@@ -567,13 +569,13 @@ const Profile = () => {
                             <div className="profile-socials">
                                 {userProfile.website && (
                                     <a href={userProfile.website.startsWith('http') ? userProfile.website : `https://${userProfile.website}`} target="_blank" rel="noopener noreferrer" className="social-link">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                                        <Link2 size={14} />
                                         {userProfile.website.replace(/^https?:\/\//, '').split('/')[0]}
                                     </a>
                                 )}
                                 {userProfile.instagram && (
                                     <a href={`https://instagram.com/${userProfile.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="social-link">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
+                                        <Share2 size={14} />
                                         {userProfile.instagram.startsWith('@') ? userProfile.instagram : `@${userProfile.instagram}`}
                                     </a>
                                 )}
@@ -584,17 +586,21 @@ const Profile = () => {
 
                 <div className="profile-tabs-wrapper">
                     <div className="profile-tabs">
-                        {['POSTS', 'SAVED', 'SERIES'].map((tab) => {
-                            const id = tab.toLowerCase();
-                            if (id === 'saved' && !isOwner) return null;
-                            const isActive = activeTab === id;
+                        {[
+                            { id: 'posts', label: 'POSTS', icon: <LayoutGrid size={18} /> },
+                            { id: 'saved', label: 'SAVED', icon: <Bookmark size={18} /> },
+                            { id: 'series', label: 'SERIES', icon: <BookOpen size={18} /> }
+                        ].map((tab) => {
+                            if (tab.id === 'saved' && !isOwner) return null;
+                            const isActive = activeTab === tab.id;
                             return (
                                 <div
-                                    key={id}
+                                    key={tab.id}
                                     className={`tab-item ${isActive ? 'active' : ''}`}
-                                    onClick={() => setActiveTab(id)}
+                                    onClick={() => setActiveTab(tab.id)}
                                 >
-                                    <span>{tab}</span>
+                                    {tab.icon}
+                                    <span>{tab.label}</span>
                                     {isActive && <div className="active-indicator" />}
                                 </div>
                             );
@@ -611,14 +617,14 @@ const Profile = () => {
                                     onClick={() => setViewMode('grid')}
                                     title="Grid view"
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
+                                    <LayoutGrid size={20} />
                                 </button>
                                 <button 
                                     className={`toggle-btn ${viewMode === 'list' ? 'active' : ''}`} 
                                     onClick={() => setViewMode('list')}
                                     title="List view"
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg>
+                                    <List size={20} />
                                 </button>
                             </div>
 
@@ -678,7 +684,7 @@ const Profile = () => {
                                         })
                                     ) : (
                                         <div className="empty-state">
-                                            <div className="empty-icon">✍️</div>
+                                            <div className="empty-icon"><PenTool size={48} /></div>
                                             <h3>No Posts Yet</h3>
                                             <p>This soul hasn't shared anything yet.</p>
                                         </div>
@@ -702,7 +708,7 @@ const Profile = () => {
                                         ))
                                     ) : (
                                         <div className="empty-state">
-                                            <div className="empty-icon">📸</div>
+                                            <div className="empty-icon"><ImageIcon size={48} /></div>
                                             <h3>No Visuals Yet</h3>
                                             <p>When you share photos, they will appear here.</p>
                                         </div>
@@ -726,7 +732,9 @@ const Profile = () => {
                                 ))
                             ) : (
                                 <div className="empty-state">
-                                    <div className="empty-icon">🔖</div>
+                                    <div className="empty-icon">
+                                        <Bookmark size={48} />
+                                    </div>
                                     <h3>Nothing Saved</h3>
                                     <p>Save posts you want to revisit later.</p>
                                 </div>
@@ -767,7 +775,9 @@ const Profile = () => {
                                 })
                             ) : (
                                 <div className="empty-state">
-                                    <div className="empty-icon">🚀</div>
+                                    <div className="empty-icon">
+                                        <Rocket size={48} />
+                                    </div>
                                     <h3>Start Your Journey</h3>
                                     <button onClick={() => navigate('/explore')} className="profile-btn-primary" style={{marginTop:'16px'}}>Explore Series</button>
                                 </div>

@@ -9,6 +9,8 @@ import Breadcrumbs from '../components/common/Breadcrumbs';
 
 import { paymentService } from '../services/paymentService';
 
+import { CheckCircle2 } from 'lucide-react';
+
 const Pricing = () => {
     const { currentUser } = useAuth();
     const [loadingTier, setLoadingTier] = useState(null);
@@ -169,18 +171,7 @@ const Pricing = () => {
                                                     color: 'var(--color-text-secondary)',
                                                     fontSize: '0.95rem'
                                                 }}>
-                                                    <div style={{
-                                                        width: '20px',
-                                                        height: '20px',
-                                                        borderRadius: '50%',
-                                                        background: 'var(--color-primary-soft)',
-                                                        color: 'var(--color-primary)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        fontSize: '12px',
-                                                        fontWeight: 'bold'
-                                                    }}>✓</div>
+                                                    <CheckCircle2 size={18} className="text-primary" style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
                                                     {benefit}
                                                 </li>
                                             ))}

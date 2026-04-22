@@ -1,0 +1,149 @@
+.series-paywall-overlay {
+    padding: 60px 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed var(--color-border);
+    border-radius: 24px;
+    margin: 40px auto;
+    max-width: 500px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.lock-icon-container {
+    margin-bottom: 24px;
+}
+
+.lock-icon {
+    font-size: 40px;
+    filter: drop-shadow(0 0 15px var(--color-primary-soft));
+}
+
+.paywall-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 24px;
+    margin-bottom: 12px;
+    color: var(--color-text-bright);
+}
+
+.paywall-desc {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--color-text-dim);
+    margin-bottom: 32px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.paywall-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.btn-pay-unlock {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Outfit', sans-serif;
+}
+
+.btn-pay-unlock:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--color-primary-soft);
+}
+
+.btn-free-unlock-trigger {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary-soft);
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-free-unlock-trigger:hover {
+    background: var(--color-primary-soft-bg);
+}
+
+.secure-hint {
+    font-size: 12px;
+    color: var(--color-text-dim);
+    opacity: 0.6;
+}
+
+.payment-error-text {
+    color: #ff4d4d;
+    font-size: 14px;
+    margin-bottom: 16px;
+    font-weight: 500;
+}
+
+/* Free Form */
+.free-unlock-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 16px;
+    color: white;
+    font-family: inherit;
+    font-size: 15px;
+    margin-bottom: 24px;
+    resize: vertical;
+}
+
+.free-unlock-textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.free-form-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-back {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text-dim);
+    padding: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.btn-submit-free {
+    flex: 2;
+    background: white;
+    color: black;
+    border: none;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-submit-free:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.success-message {
+    padding: 20px;
+}
+
+.check-icon {
+    font-size: 48px;
+    color: #4CAF50;
+    margin-bottom: 16px;
+}

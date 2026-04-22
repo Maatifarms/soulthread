@@ -1,272 +1,289 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { collection, query, where, limit, getDocs, getCountFromServer } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
 import FeedList from '../components/feed/FeedList';
 import CreatePost from '../components/post/CreatePost';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, limit, getDocs, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { Capacitor } from '@capacitor/core';
-import { useStreak } from '../hooks/useStreak';
-import ReflectionWall from '../components/home/ReflectionWall';
-import './Home.css';
-
-// Extracted components
 import HeroSection from '../components/home/HeroSection';
+import SanctuaryPillars from '../components/home/SanctuaryPillars';
 import DailyPrompt from '../components/home/DailyPrompt';
-import MoodCheckIn from '../components/home/MoodCheckIn';
 import SEO from '../components/common/SEO';
+import { CATEGORIES } from '../data/categories';
+import { 
+    Sparkles,
+    HeartPulse,
+    Volume2,
+    Wrench,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout,
+    Layout,
+    MessageCircle,
+    Brain,
+    ShieldCheck,
+    Search,
+    Sun,
+    Moon,
+    Bell,
+    User,
+    LogOut,
+    Wind,
+    Fingerprint,
+    Download
+} from 'lucide-react';
+
+const ICON_MAP = {
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout,
+    Layout,
+    ShieldCheck,
+    MessageCircle
+};
+import './Home.css';
 
 const isNativeApp = Capacitor.isNativePlatform();
 
-const TOPIC_FILTERS = [
-    { id: 'all', label: 'All' },
-    { id: 'Mindset', label: 'Mindset' },
-    { id: 'Anxiety', label: 'Anxiety' },
-    { id: 'Growth', label: 'Growth' },
-    { id: 'Focus', label: 'Focus' },
-    { id: 'Relationships', label: 'Relationships' },
-    { id: 'Spirituality', label: 'Spirituality' },
-    { id: 'Self-discipline', label: 'Self-discipline' },
-    { id: 'Motivation', label: 'Motivation' }
-];
+const HOME_CATEGORIES = [{ id: 'all', label: 'All', icon: 'Layout' }, ...CATEGORIES];
 
 const Home = () => {
     const { currentUser } = useAuth();
-    const navigate = useNavigate();
-    const streak = useStreak();
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState(currentUser?.feedFocus !== 'all' ? currentUser?.feedFocus : null);
     const [dailyPrompt, setDailyPrompt] = useState(null);
-    const [hasSubmittedMood, setHasSubmittedMood] = useState(true);
-    const [selectedMood, setSelectedMood] = useState(null);
+    const [livePostCount, setLivePostCount] = useState(null);
 
     const todayDateStr = new Date().toISOString().split('T')[0];
 
     useEffect(() => {
-        const init = async () => {
-            const tasks = [fetchDailyPrompt()];
-            if (currentUser) tasks.push(checkUserMood());
-            else setHasSubmittedMood(true);
-            await Promise.all(tasks);
+        // Defer secondary data (count & prompt) to prioritize the post feed
+        const loadSecondary = () => {
+            fetchDailyPrompt();
+            fetchPostCount();
         };
-        init();
-    }, [currentUser, todayDateStr]);
+
+        const idleId = window.requestIdleCallback ? requestIdleCallback(loadSecondary) : setTimeout(loadSecondary, 2000);
+        return () => window.cancelIdleCallback ? cancelIdleCallback(idleId) : clearTimeout(idleId);
+    }, [todayDateStr]);
+
+    const fetchPostCount = async () => {
+        try {
+            const snap = await getCountFromServer(collection(db, 'posts'));
+            setLivePostCount(snap.data().count);
+        } catch (e) {
+            // silently fail
+        }
+    };
 
     const fetchDailyPrompt = async () => {
         try {
-            const q = query(collection(db, 'daily_prompts'), 
-                where('isActive', '==', true), 
-                where('activeDate', '==', todayDateStr), 
+            const q = query(
+                collection(db, 'daily_prompts'),
+                where('isActive', '==', true),
+                where('activeDate', '==', todayDateStr),
                 limit(1)
             );
             const snap = await getDocs(q);
             if (!snap.empty) {
                 setDailyPrompt({ id: snap.docs[0].id, ...snap.docs[0].data() });
             }
-        } catch (e) { 
-            console.error('Error fetching daily prompt:', e); 
-        }
-    };
-
-    const checkUserMood = async () => {
-        try {
-            const q = query(collection(db, 'daily_moods'), 
-                where('userId', '==', currentUser.uid), 
-                where('date', '==', todayDateStr), 
-                limit(1)
-            );
-            const snap = await getDocs(q);
-            setHasSubmittedMood(!snap.empty);
-        } catch (e) { 
-            console.error('Error checking mood:', e); 
-        }
-    };
-
-    const handleMoodSelect = async (mood) => {
-        try {
-            setSelectedMood(mood);
-            const moodId = `${currentUser.uid}_${todayDateStr}`;
-            await setDoc(doc(db, 'daily_moods', moodId), { 
-                userId: currentUser.uid, 
-                mood, 
-                date: todayDateStr, 
-                createdAt: serverTimestamp() 
-            });
-            setTimeout(() => setHasSubmittedMood(true), 800);
-        } catch (e) { 
-            console.error('Mood save failed:', e);
-            alert('Mood save failed: ' + e.message); 
+        } catch (e) {
+            console.error('Error fetching daily prompt:', e);
         }
     };
 
     return (
         <div className="home-container">
-            <SEO 
-                title={currentUser ? "Peace of Mind | SoulThread Sanctuary" : "SoulThread: Mental Health Support Community & Anonymous Sanctuary"}
-                description="The leading anonymous peer support community for mental health, anxiety relief, and psychological growth. Share stories, learn from experts, and find digital peace."
+            <SEO
+                title={currentUser ? 'Peace of Mind | SoulThread Sanctuary' : 'Anonymous Emotional Support & Safe Space | SoulThread'}
+                description="Need a safe space to talk anonymously? Join SoulThread, the leading online venting platform for emotional support, anxiety relief, and mental wellness conversations."
                 image="https://soulthread.in/assets/seo/home_share.png"
                 url="https://soulthread.in/"
-                keywords="mental health support, anonymous therapy alternative, anxiety relief india, peer support community, mindset training, freud hindi, david goggins series"
+                keywords="anonymous emotional support, venting platform, safe space to talk anonymously, find emotional support online, mental health community, anonymous therapy alternative"
                 schema={{
-                    "@context": "https://schema.org",
-                    "@graph": [
+                    '@context': 'https://schema.org',
+                    '@graph': [
                         {
-                            "@type": "WebSite",
-                            "name": "SoulThread",
-                            "url": "https://soulthread.in/",
-                            "potentialAction": {
-                                "@type": "SearchAction",
-                                "target": "https://soulthread.in/explore?q={search_term_string}",
-                                "query-input": "required name=search_term_string"
+                            '@type': 'WebSite',
+                            name: 'SoulThread',
+                            url: 'https://soulthread.in/',
+                            potentialAction: {
+                                '@type': 'SearchAction',
+                                target: 'https://soulthread.in/explore?q={search_term_string}',
+                                'query-input': 'required name=search_term_string'
                             }
                         },
                         {
-                            "@type": "Organization",
-                            "name": "SoulThread",
-                            "url": "https://soulthread.in/",
-                            "logo": "https://soulthread.in/logo.jpg",
-                            "description": "A compassionate sanctuary for mental wellness and community storytelling.",
-                            "contactPoint": {
-                                "@type": "ContactPoint",
-                                "contactType": "customer support",
-                                "email": "support@soulthread.in"
+                            '@type': 'Organization',
+                            name: 'SoulThread',
+                            url: 'https://soulthread.in/',
+                            logo: 'https://soulthread.in/logo.jpg',
+                            description: 'A compassionate sanctuary for mental wellness and community storytelling.',
+                            contactPoint: {
+                                '@type': 'ContactPoint',
+                                contactType: 'customer support',
+                                email: 'support@soulthread.in'
                             }
+                        },
+                        {
+                            '@type': 'FAQPage',
+                            'mainEntity': [
+                                {
+                                    '@type': 'Question',
+                                    'name': 'Is SoulThread truly anonymous?',
+                                    'acceptedAnswer': {
+                                        '@type': 'Answer',
+                                        'text': 'Yes, SoulThread is designed from the ground up to be a safe, anonymous space. You can share your story without revealing your identity.'
+                                    }
+                                },
+                                {
+                                    '@type': 'Question',
+                                    'name': 'How can I get emotional support online?',
+                                    'acceptedAnswer': {
+                                        '@type': 'Answer',
+                                        'text': 'You can join the SoulThread community to share your journey anonymously and receive support from peers and experts in a safe sanctuary.'
+                                    }
+                                },
+                                {
+                                    '@type': 'Question',
+                                    'name': 'Is there a cost to use SoulThread?',
+                                    'acceptedAnswer': {
+                                        '@type': 'Answer',
+                                        'text': 'SoulThread offers many free community features including anonymous posting and peer support. We also offer premium expert-led series and sessions.'
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }}
             />
-            {/* ── Hero (logged out) ── */}
-            {!currentUser && <HeroSection isNativeApp={isNativeApp} />}
 
-            {/* ── Main Layout Wrapper ── */}
-            <div className="feed-content">
-                <div className="feed-column">
+            {!currentUser ? (
+                /* ── GUEST DISCOVERY JOURNEY ── */
+                <div className="guest-hero-shell">
+                    <HeroSection isNativeApp={isNativeApp} />
+                    
+                    {!isNativeApp && (
+                        <>
+                            <div className="stats-bar-integrated">
+                                <div className="stats-grid">
+                                    {[
+                                        { 
+                                            num: livePostCount ? `${livePostCount.toLocaleString()}+` : '12k+', 
+                                            label: 'Safe Narratives', 
+                                            icon: <MessageCircle size={22} color="var(--color-primary)" /> 
+                                        },
+                                        { 
+                                            num: '50+', 
+                                            label: 'Verified Clinicians', 
+                                            icon: <Brain size={22} color="var(--color-primary)" /> 
+                                        },
+                                        { 
+                                            num: '100%', 
+                                            label: 'Privacy Protocol', 
+                                            icon: <ShieldCheck size={22} color="var(--color-primary)" /> 
+                                        },
+                                    ].map((stat) => (
+                                        <div key={stat.label} className="stat-pill">
+                                            <div className="stat-pill-icon">{stat.icon}</div>
+                                            <div className="stat-pill-info">
+                                                <span className="stat-pill-num">{stat.num}</span>
+                                                <span className="stat-pill-label">{stat.label}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
 
-                    {/* Logged-in Welcome Bar - Desktop Only */}
-                    {currentUser && !isNativeApp && (
-                        <div className="welcome-bar animate-fade-in">
+                            <SanctuaryPillars />
+                        </>
+                    )}
+                </div>
+            ) : (
+                /* ── MEMBER EXECUTIVE HUB ── */
+                <div className="member-welcome-shell">
+                    {!isNativeApp && (
+                        <div className="welcome-header">
                             <div>
-                                <h1 className="welcome-title">
+                                <div className="discovery-section-label" style={{ textAlign: 'left', marginBottom: '8px' }}>Active Sanctuary</div>
+                                <h1 className="welcome-headline">
                                     Peace of Mind{currentUser.displayName ? `, ${currentUser.displayName.split(' ')[0]}` : ''}
                                 </h1>
-                                <p className="welcome-subtitle">
-                                    Explore the shared wisdom of our community today. 
-                                    {streak > 1 && (
-                                        <span className="streak-badge animate-pulse" style={{ 
-                                            marginLeft: '12px', background: 'var(--color-accent)', 
-                                            color: 'white', padding: '2px 10px', borderRadius: '12px',
-                                            fontSize: '0.75rem', fontWeight: '900'
-                                        }}>
-                                            🔥 {streak} DAY STREAK
-                                        </span>
-                                    )}
-                                </p>
+                                <p className="welcome-subline">Continue your narrative within the circle.</p>
                             </div>
-                            <div className="welcome-actions">
-                                <Link to="/crisis" className="premium-btn-link">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                                    </svg>
-                                    Expert Support
-                                </Link>
-                            </div>
+                            <Link to="/crisis" className="premium-action-btn">
+                                <Sparkles size={16} />
+                                <span>Expert Support</span>
+                            </Link>
                         </div>
                     )}
-
-                    {/* Daily Prompt - Desktop Only */}
-                    {currentUser && dailyPrompt && !isNativeApp && (
-                        <DailyPrompt dailyPrompt={dailyPrompt} />
-                    )}
-
-                    {/* Mood Check-in - Desktop Only */}
-                    {currentUser && !hasSubmittedMood && !isNativeApp && (
-                        <MoodCheckIn handleMoodSelect={handleMoodSelect} selectedMood={selectedMood} />
-                    )}
-
-                    {/* Topic Filters - Show on Native App and Mobile Web/Tablet */}
-                    {(isNativeApp || (!isNativeApp && window.innerWidth <= 1024)) && (
-                        <div className="topic-filters-scroll hide-scrollbar">
-                            {TOPIC_FILTERS.map(topic => (
-                                <button
-                                    key={topic.id}
-                                    onClick={() => setSelectedCategory(topic.id === 'all' ? null : topic.id)}
-                                    className={`topic-filter-btn ${(selectedCategory === topic.id || (topic.id === 'all' && !selectedCategory)) ? 'active' : ''}`}
-                                >
-                                    {topic.label}
-                                </button>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Post Composer - Top for ALL platforms (desktop, mobile web, APK) */}
-                    <CreatePost />
-
-                    {/* ── GLOBAL REFLECTION WALL (Phase 7) ── */}
-                    <ReflectionWall />
-
-                    {/* Main Posts Feed */}
-                    <FeedList filterCategory={selectedCategory} />
+                    <div className="hero-post-box-container">
+                        <CreatePost />
+                    </div>
                 </div>
+            )}
+
+            <div className="home-content-body">
+                <div className="discovery-section-label">Rising Narratives</div>
+                
+                <div className="home-topic-filter-shell">
+                    <div className="topic-filters-scroll hide-scrollbar">
+                        {HOME_CATEGORIES.map((topic) => (
+                            <button
+                                key={topic.id}
+                                onClick={() => setSelectedCategory(topic.id === 'all' ? 'all' : topic.id)}
+                                className={`topic-filter-btn ${(selectedCategory === topic.id || (topic.id === 'all' && !selectedCategory)) ? 'active' : ''}`}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                                {topic.icon && ICON_MAP[topic.icon] && React.createElement(ICON_MAP[topic.icon], { size: 14 })}
+                                <span>{topic.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <FeedList filterCategory={selectedCategory} />
             </div>
 
-            {/* ── Footer Sections (Web Only) ── */}
-            {!isNativeApp && (
-                <div style={{ marginTop: '40px' }}>
-                    {/* Stats Bar */}
-                    {!currentUser && (
-                        <div className="stats-bar">
-                            <div className="stats-grid">
-                                {[
-                                    { num: '10,000+', label: 'Stories Shared', icon: '💬' },
-                                    { num: '50+', label: 'Psychologists', icon: '🧠' },
-                                    { num: '100%', label: 'Confidential', icon: '🔒' },
-                                ].map(stat => (
-                                    <div key={stat.label}>
-                                        <div className="stat-item-icon">{stat.icon}</div>
-                                        <div className="stat-item-num">{stat.num}</div>
-                                        <div className="stat-item-label">{stat.label}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+            <div className="secondary-content-section">
+                {dailyPrompt && !isNativeApp && (
+                    <div style={{ marginTop: '20px' }}>
+                        <DailyPrompt dailyPrompt={dailyPrompt} isGuest={!currentUser} />
+                    </div>
+                )}
+            </div>
 
-                    {/* App Download Banner */}
+            {!isNativeApp && (
+                <div className="home-footer-content">
+
                     <div className="app-download-banner">
                         <div className="download-content">
                             <div style={{ flex: 1, minWidth: '260px' }}>
-                                <h2 className="download-title">Carry SoulThread in Your Pocket</h2>
-                                <p className="download-text">Get the native Android app for a better mobile experience.</p>
+                                <h2 className="download-title">Executive Access Anytime.</h2>
+                                <p className="download-text">Secure the native Android sanctuary for a seamless, encrypted mobile experience.</p>
                                 <a href="/download/soulthread.apk" download="SoulThread.apk" className="download-link">
-                                    Android APK Download
+                                    <Download size={20} />
+                                    <span>Download SoulThread Early Access</span>
                                 </a>
                             </div>
                         </div>
                     </div>
-
-                    {/* ── SEARCH ENGINE DOMINANCE FOOTER (Phase 8: Brand-Anchoring) ── */}
-                    <footer className="seo-optimized-footer">
-                        <div className="seo-footer-content">
-                            <h3>SoulThread India – The Anonymous Mental Health Sanctuary</h3>
-                            <p>
-                                SoulThread (soulthread.in) is the leading anonymous peer support community for mental wellness in India. 
-                                Our mission is to provide an anxiety-relief sanctuary for souls looking for growth, psychological peace, 
-                                and mindset training. We are a specialized mental health community platform established to help Indians share 
-                                stories of resilience, not a clothing or gym wear brand. Explore our "Never Finished" series, 
-                                "Hyperfocus Architect" toolkit, and "Ego vs Id" psychology series today.
-                            </p>
-                            <nav className="seo-links">
-                                <Link to="/hyperfocus-series">Hyperfocus Training</Link>
-                                <Link to="/never-finished-series">Goggins Mental Toughness</Link>
-                                <Link to="/ego-id-series">Freud & Psychology India</Link>
-                                <a href="https://www.instagram.com/soulthread_community/" target="_blank" rel="noopener noreferrer">Community Stories</a>
-                                <Link to="/explore">Anonymous Feed</Link>
-                            </nav>
-                        </div>
-                    </footer>
                 </div>
             )}
         </div>
     );
 };
 
-export default Home;
+export default React.memo(Home);

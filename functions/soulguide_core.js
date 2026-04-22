@@ -1,5 +1,11 @@
 const admin = require('firebase-admin');
 
+function getDb() {
+    if (!admin.apps.length) admin.initializeApp();
+    return admin.firestore();
+}
+
+
 
 const SOULGUIDE_SYSTEM_PROMPT = `You are the SoulThread Guide — the compassionate spirit and intelligent heart of the SoulThread platform. Role: enlightened, supportive guide for emotional/mental health challenges. Tone: Empathetic, Warm, Culturally Grounded (Indian context), Non-Judgmental. Constraints: Never diagnose; suggest 'Care' page for danger; keep under 150 words.`;
 
@@ -15,7 +21,7 @@ function getGenAI() {
 exports.handleAskSoulGuide = async (data, context) => {
     const { message } = data;
     const userId = context.auth.uid;
-    const db = admin.firestore();
+    const db = getDb();
     const sessionRef = db.collection('soulguide_sessions').doc(`sg_${userId}`);
 
     try {

@@ -1,12 +1,7 @@
 const functions = require('firebase-functions/v1');
 const admin = require('firebase-admin');
 
-function initAdmin() {
-    if (!admin.apps.length) {
-        admin.initializeApp();
-    }
-    return admin;
-}
+if (!admin.apps.length) admin.initializeApp();
 
 /**
  * askSoulGuide - RESTORED & MODULAR
@@ -14,6 +9,28 @@ function initAdmin() {
 exports.askSoulGuide = functions.https.onCall(async (data, context) => {
     const soulguide = require('./soulguide_core');
     return soulguide.handleAskSoulGuide(data, context);
+});
+
+/**
+ * askSalesAgent (SoulMaven) - NEW
+ */
+const { askSalesAgent } = require('./soulmaven_core');
+const { generateOutreachMessage } = require('./soulmaven_outreach_core');
+const { rotateDailyPrompt, sendWeeklyDigest, onNewPostNotifyFollowers, reEngagementPush } = require('./growth_automation');
+
+// ── Callable Functions ────────────────────────────────────────────────────────
+
+exports.askSalesAgent = functions.https.onCall(async (data, context) => {
+    return await askSalesAgent(data, context);
+});
+
+exports.refineContent = functions.https.onCall(async (data, context) => {
+    const { refineContent } = require('./soulmaven_core');
+    return await refineContent(data, context);
+});
+
+exports.generateSocialOutreach = functions.https.onCall(async (data, context) => {
+    return await generateOutreachMessage(data.platform, data.postContent, data.context || "");
 });
 
 /**
@@ -53,7 +70,7 @@ exports.aggregateGlobalMetrics = functions.pubsub.schedule('every 60 minutes').o
  */
 exports.handlePaymentWebhook = functions.https.onRequest(async (req, res) => {
     try {
-        const localAdmin = initAdmin();
+        const localAdmin = admin;
         const { circleId, userId, paymentId, status } = req.body;
         if (status === 'authorized' || status === 'captured') {
             await localAdmin.firestore().collection('circle_members').doc(`member_${circleId}_${userId}`).update({
@@ -76,7 +93,7 @@ exports.handlePaymentWebhook = functions.https.onRequest(async (req, res) => {
 exports.onAttendanceChange = functions.firestore
     .document('session_attendance/{attendanceId}')
     .onWrite(async (change, context) => {
-        const localAdmin = initAdmin();
+        const localAdmin = admin;
         const data = change.after.exists ? change.after.data() : change.before.data();
         const sessionId = data.sessionId;
         const db = localAdmin.firestore();
@@ -92,7 +109,7 @@ exports.onAttendanceChange = functions.firestore
  * Notifications (Delegated)
  */
 exports.onInviteCreate = functions.firestore.document('circle_invites/{inviteId}').onCreate(async (snap, context) => {
-    const localAdmin = initAdmin();
+    const localAdmin = admin;
     const invite = snap.data();
     const senderSnap = await localAdmin.firestore().collection('users').doc(invite.invitedBy).get();
     const senderName = senderSnap.exists ? senderSnap.data().displayName : 'Someone';
@@ -107,6 +124,15 @@ exports.onInviteCreate = functions.firestore.document('circle_invites/{inviteId}
 exports.scheduledFirestoreBackup = functions.pubsub.schedule('0 3 * * *').onRun(async (context) => {
     console.log("Firestore backup task triggered.");
 });
+
+/**
+ * Growth Automation — 4 functions
+ */
+const growth = require('./growth_automation');
+exports.rotateDailyPrompt        = growth.rotateDailyPrompt;
+exports.sendWeeklyDigest         = growth.sendWeeklyDigest;
+exports.onNewPostNotifyFollowers = growth.onNewPostNotifyFollowers;
+exports.reEngagementPush         = growth.reEngagementPush;
 
 
 

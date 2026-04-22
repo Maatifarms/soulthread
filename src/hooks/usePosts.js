@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { collection, query, orderBy, onSnapshot, limit, where } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { getCachedPosts, cachePosts, hasCachedPosts } from '../services/feedCache';
+import { CATEGORIES } from '../data/categories';
 
 /**
  * usePosts — Intelligent Personalized Feed with IndexedDB cache
@@ -20,20 +21,19 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
     const [error, setError] = useState(null);
     const cacheLoadedRef = useRef(false);
     const prevLimitCountRef = useRef(limitCount);
-    
-    // Maintain a stable set of IDs for the current session to prevent jumping
-    const sessionOrderRef = useRef([]); 
+    const unsubscribeRef = useRef(null);
 
     // ── Step 1: Load from IndexedDB cache IMMEDIATELY ──────────────────────
     useEffect(() => {
         let cancelled = false;
         const loadCache = async () => {
+            // Cache only applies to the global un-filtered feed
             if (searchTerm.trim() || circleId || (filterCategory && filterCategory !== 'all')) return;
             const hasCache = await hasCachedPosts();
             if (!hasCache || cancelled) return;
             const cached = await getCachedPosts();
             if (cancelled || cached.length === 0) return;
-            
+
             const visible = cached.filter(p => !p.circleId);
             if (visible.length > 0) {
                 setPosts(current => {
@@ -46,35 +46,78 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
         };
         loadCache();
         return () => { cancelled = true; };
-    }, [filterCategory, circleId, searchTerm]); 
+    }, [filterCategory, circleId, searchTerm]);
 
     // ── Step 2: Firestore real-time listener ──────────────────────────────
+    // Wrap in useCallback to make the dependency array stable
+    const buildQuery = useCallback(() => {
+        if (searchTerm.trim()) {
+            return query(
+                collection(db, 'posts'),
+                orderBy('createdAt', 'desc'),
+                limit(100)
+            );
+        }
+        if (circleId) {
+            return query(
+                collection(db, 'posts'),
+                where('circleId', '==', circleId),
+                orderBy('createdAt', 'desc'),
+                limit(limitCount)
+            );
+        }
+        if (filterCategory && filterCategory !== 'all') {
+            // Dynamically derive aliases from categories data
+            const catInfo = CATEGORIES.find(c => c.id === filterCategory);
+            const queryCategories = [filterCategory, ...(catInfo?.legacyAliases || [])];
+
+            if (queryCategories.length > 1) {
+                return query(
+                    collection(db, 'posts'),
+                    where('categoryId', 'in', queryCategories),
+                    orderBy('createdAt', 'desc'),
+                    limit(limitCount)
+                );
+            }
+            return query(
+                collection(db, 'posts'),
+                where('categoryId', '==', filterCategory),
+                orderBy('createdAt', 'desc'),
+                limit(limitCount)
+            );
+        }
+        // Global feed — reduce from 100 to 25 for massive speed boost
+        return query(
+            collection(db, 'posts'),
+            orderBy('createdAt', 'desc'),
+            limit(Math.max(limitCount, 25))
+        );
+    }, [limitCount, filterCategory, circleId, searchTerm]);
+
     useEffect(() => {
         const isPagination = limitCount > prevLimitCountRef.current;
-        const isFilterSearchChange = posts.length === 0 || (prevLimitCountRef.current === limitCount && (searchTerm.trim() || filterCategory));
-        
-        if (isFilterSearchChange) {
-            setPosts([]); 
+        const isFilterOrSearchChange =
+            posts.length === 0 ||
+            (prevLimitCountRef.current === limitCount && (searchTerm.trim() || filterCategory));
+
+        if (isFilterOrSearchChange && !isPagination) {
+            setPosts([]);
             setLoading(true);
         } else if (isPagination) {
             setLoadingMore(true);
         }
 
-        let q;
-        if (searchTerm.trim()) {
-            q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(100));
-        } else if (circleId) {
-            q = query(collection(db, 'posts'), where('circleId', '==', circleId), orderBy('createdAt', 'desc'), limit(limitCount));
-        } else if (filterCategory && filterCategory !== 'all') {
-            q = query(collection(db, 'posts'), where('categoryId', '==', filterCategory), orderBy('createdAt', 'desc'), limit(limitCount));
-        } else {
-            // Fetch more posts than needed to allow for randomization/preference sorting
-            q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(Math.max(limitCount, 100)));
+        // Tear down previous listener before creating a new one
+        if (unsubscribeRef.current) {
+            unsubscribeRef.current();
+            unsubscribeRef.current = null;
         }
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        const q = buildQuery();
+
+        const unsubscribe = onSnapshot(q, { includeMetadataChanges: false }, (snapshot) => {
             const freshPosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
+
             let filtered = [...freshPosts];
             if (searchTerm.trim()) {
                 const term = searchTerm.toLowerCase();
@@ -93,10 +136,10 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
                     if (!ts) return 0;
                     if (ts?.seconds) return ts.seconds;
                     if (ts instanceof Date) return ts.getTime() / 1000;
-                    try { return new Date(ts).getTime() / 1000; } catch(e) { return 0; }
+                    try { return new Date(ts).getTime() / 1000; } catch (e) { return 0; }
                 };
 
-                // Helper to shuffle an array
+                // Shuffle helper — used for preference-aware randomization
                 const shuffle = (arr) => {
                     const res = [...arr];
                     for (let i = res.length - 1; i > 0; i--) {
@@ -106,19 +149,20 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
                     return res;
                 };
 
-                // Helper to sort by preference and then shuffle
                 const applySmartOrder = (items) => {
-                    const userInterests = currentUser?.interests || [];
-                    const userFocus = currentUser?.feedFocus;
-                    
-                    const favored = items.filter(p => 
-                        userInterests.includes(p.categoryId) || 
-                        userInterests.includes(p.categoryName) ||
-                        (userFocus && (p.categoryId === userFocus || p.categoryName === userFocus))
-                    );
-                    const others = items.filter(p => !favored.includes(p));
+                    const userInterests = (currentUser?.interests || []).map(i => i.toLowerCase());
+                    const userFocus = currentUser?.feedFocus?.toLowerCase();
 
-                    // Randomize within groups to satisfy "random" requirement
+                    const favored = items.filter(p => {
+                        const catId = p.categoryId?.toLowerCase();
+                        const catName = p.categoryName?.toLowerCase();
+                        return (
+                            userInterests.includes(catId) ||
+                            userInterests.includes(catName) ||
+                            (userFocus && userFocus !== 'all' && (catId === userFocus || catName === userFocus))
+                        );
+                    });
+                    const others = items.filter(p => !favored.includes(p));
                     return [...shuffle(favored), ...shuffle(others)];
                 };
 
@@ -128,10 +172,6 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
 
                 const currentIds = new Set(current.map(p => p.id));
                 const novel = filtered.filter(f => !currentIds.has(f.id));
-                
-                // For new posts coming in, we also want them to be mixed in somewhat randomly
-                // but keep them at the top if they are fresh. 
-                // However, the user asked for random/preference, so we'll just smart-sort the novel ones too.
                 const sortedNovel = applySmartOrder(novel);
 
                 const updatedCurrent = current.map(c => {
@@ -140,12 +180,9 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
                 });
 
                 if (isPagination) {
-                    // When loading more, we take the novel ones (which are "older" because we fetch by desc date)
-                    // and shuffle them into the bottom.
                     return [...updatedCurrent, ...sortedNovel].slice(0, limitCount);
                 }
 
-                // If new posts arrive from listener, prepend them
                 if (novel.length > 0) {
                     return [...sortedNovel, ...updatedCurrent].slice(0, limitCount);
                 }
@@ -155,8 +192,9 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
 
             setLoading(false);
             setLoadingMore(false);
-            prevLimitCountRef.current = limitCount; // Update stability marker AFTER processing
+            prevLimitCountRef.current = limitCount;
 
+            // Only cache the global feed to keep IndexedDB lean
             if (!searchTerm.trim() && !circleId && (!filterCategory || filterCategory === 'all')) {
                 cachePosts(freshPosts).catch(() => { });
             }
@@ -167,8 +205,15 @@ export function usePosts(limitCount = 15, filterCategory = null, currentUser = n
             setLoadingMore(false);
         });
 
-        return () => unsubscribe();
-    }, [limitCount, filterCategory, circleId, searchTerm]);
+        unsubscribeRef.current = unsubscribe;
+
+        return () => {
+            if (unsubscribeRef.current) {
+                unsubscribeRef.current();
+                unsubscribeRef.current = null;
+            }
+        };
+    }, [buildQuery, limitCount]);
 
     return { posts, loading, loadingMore, error };
 }

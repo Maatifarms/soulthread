@@ -98,46 +98,100 @@ const PhoneLogin = () => {
         }
     };
 
+    const containerVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: {
+                duration: 0.6,
+                staggerChildren: 0.1,
+                when: "beforeChildren"
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -10 },
+        visible: { opacity: 1, x: 0 }
+    };
+
+    useEffect(() => {
+        if (step === 'otp') {
+            otpRefs.current[0]?.focus();
+        }
+    }, [step]);
+
     return (
         <div className="auth-page">
             <div id="recaptcha-container"></div>
             
             <div className="auth-logo-section">
                 <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.8 }}
+                    initial={{ scale: 0.8, opacity: 0, rotate: -15 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
                 >
                     <svg width="80" height="70" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '12px' }}>
                         <path d="M60 80 C60 80 20 55 20 32 C20 20 29 12 40 12 C48 12 55 17 60 23 C65 17 72 12 80 12 C91 12 100 20 100 32 C100 55 60 80 60 80Z" fill="white" />
-                        <path d="M38 28 C38 28 42 20 50 24 C58 28 52 36 58 38 C64 40 68 34 72 32" stroke="#3d7a72" strokeWidth="3.5" strokeLinecap="round" fill="none" />
+                        <motion.path 
+                            d="M38 28 C38 28 42 20 50 24 C58 28 52 36 58 38 C64 40 68 34 72 32" 
+                            stroke="#3d7a72" 
+                            strokeWidth="3.5" 
+                            strokeLinecap="round" 
+                            fill="none"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: 1 }}
+                            transition={{ duration: 1.5, delay: 0.5 }}
+                        />
                     </svg>
                 </motion.div>
-                <h1 className="auth-logo-title" style={{ fontSize: '30px' }}>Phone Entry</h1>
-                <p className="auth-logo-subtitle">Secure access to your sanctuary</p>
+                <motion.h1 
+                    className="auth-logo-title" 
+                    style={{ fontSize: '30px' }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                >
+                    Phone Entry
+                </motion.h1>
+                <motion.p 
+                    className="auth-logo-subtitle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                >
+                    Secure access to your sanctuary
+                </motion.p>
             </div>
 
-            <main className="auth-container" style={{ maxWidth: '440px' }}>
+            <motion.main 
+                className="auth-container" 
+                style={{ maxWidth: '440px' }}
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+            >
                 <div className="auth-handle-bar" />
 
-                <h2 className="auth-title">
+                <motion.h2 variants={itemVariants} className="auth-title">
                     {step === 'phone' ? 'Login with Number' : 'Verify Identity'}
-                </h2>
-                <p className="auth-subtitle">
+                </motion.h2>
+                <motion.p variants={itemVariants} className="auth-subtitle">
                     {step === 'phone' 
                         ? 'We\'ll send a one-time passcode to your mobile.' 
-                        : `Enter the code sent to +91 ${phone}`}
-                </p>
+                        : `Enter the code sent to ${phone.slice(0, 5)} ${phone.slice(5)}`}
+                </motion.p>
 
                 {error && (
-                    <div className="auth-alert auth-alert-error">
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="auth-alert auth-alert-error">
                         <span>⚠️</span> {error}
-                    </div>
+                    </motion.div>
                 )}
 
                 {step === 'phone' ? (
                     <form onSubmit={handleSendOTP} className="auth-form">
-                        <div className="auth-input-group">
+                        <motion.div variants={itemVariants} className="auth-input-group">
                             <label className="auth-label">Mobile Number</label>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <div style={{ 
@@ -163,20 +217,27 @@ const PhoneLogin = () => {
                                     }}
                                     maxLength={10}
                                     required
+                                    disabled={loading}
                                 />
                             </div>
-                        </div>
-                        <button 
+                        </motion.div>
+                        <motion.button 
+                            variants={itemVariants}
                             type="submit" 
                             disabled={loading || phone.length !== 10} 
                             className="auth-submit-btn"
+                            whileTap={{ scale: 0.98 }}
                         >
-                            {loading ? 'Sending Code...' : 'Request Code →'}
-                        </button>
+                            {loading ? (
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <span className="spinner-small" /> Sending...
+                                </span>
+                            ) : 'Request Code →'}
+                        </motion.button>
                     </form>
                 ) : (
                     <form onSubmit={handleVerifyOTP} className="auth-form">
-                        <div className="auth-input-group" style={{ marginBottom: '12px' }}>
+                        <motion.div variants={itemVariants} className="auth-input-group" style={{ marginBottom: '12px' }}>
                             <label className="auth-label" style={{ textAlign: 'center', display: 'block' }}>Enter 6-Digit Code</label>
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>
                                 {otp.map((digit, idx) => (
@@ -189,6 +250,7 @@ const PhoneLogin = () => {
                                         onChange={e => handleOtpChange(idx, e.target.value)}
                                         onKeyDown={e => handleOtpKeyDown(idx, e)}
                                         className="auth-input"
+                                        disabled={loading}
                                         style={{ 
                                             width: '46px', 
                                             height: '56px', 
@@ -202,34 +264,41 @@ const PhoneLogin = () => {
                                     />
                                 ))}
                             </div>
-                        </div>
+                        </motion.div>
                         
-                        <button 
+                        <motion.button 
+                            variants={itemVariants}
                             type="submit" 
                             disabled={loading || otp.join('').length !== 6} 
                             className="auth-submit-btn"
+                            whileTap={{ scale: 0.98 }}
                         >
-                            {loading ? 'Verifying...' : 'Complete Access ✓'}
-                        </button>
+                            {loading ? (
+                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                    <span className="spinner-small" /> Verifying...
+                                </span>
+                            ) : 'Complete Access ✓'}
+                        </motion.button>
 
-                        <button
+                        <motion.button
+                            variants={itemVariants}
                             type="button"
-                            disabled={countdown > 0}
+                            disabled={countdown > 0 || loading}
                             onClick={() => { setOtp(['', '', '', '', '', '']); setStep('phone'); setError(''); }}
                             className="auth-forgot-link"
-                            style={{ alignSelf: 'center', marginTop: '16px' }}
+                            style={{ alignSelf: 'center', marginTop: '16px', opacity: countdown > 0 ? 0.7 : 1 }}
                         >
                             {countdown > 0 ? `Resend available in ${countdown}s` : 'Try again / Resend Code'}
-                        </button>
+                        </motion.button>
                     </form>
                 )}
 
-                <div className="auth-footer" style={{ marginTop: '32px' }}>
+                <motion.div variants={itemVariants} className="auth-footer" style={{ marginTop: '32px' }}>
                     <Link to="/login" className="auth-footer-link" style={{ fontSize: '14px' }}>
                         ← Back to other options
                     </Link>
-                </div>
-            </main>
+                </motion.div>
+            </motion.main>
         </div>
     );
 };

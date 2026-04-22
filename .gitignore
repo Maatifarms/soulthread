@@ -37,7 +37,13 @@ ui-debug.log
 android/app/build/
 android/.gradle/
 android/local.properties
-public/download/*.apk
+public/*.apk
+setup_new_laptop.md
+transfer_guide.md
+transcript*.txt
+tmp/
+**/node_modules
+**/.env
 
 # Sensitive Files
 google-services.json

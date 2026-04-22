@@ -16,16 +16,24 @@ const NotificationSettings = () => {
         quietHoursEnd: '08:00',
         muteConversations: false
     });
+    const [emailDigest, setEmailDigest] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
 
     useEffect(() => {
         if (!currentUser) return;
         const loadSettings = async () => {
             try {
                 const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (userDoc.exists() && userDoc.data().notificationPrefs) {
-                    setSettings(prev => ({ ...prev, ...userDoc.data().notificationPrefs }));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    if (data.notificationPrefs) {
+                        setSettings(prev => ({ ...prev, ...data.notificationPrefs }));
+                    }
+                    if (typeof data.emailDigest === 'boolean') {
+                        setEmailDigest(data.emailDigest);
+                    }
                 }
             } catch (err) {
                 console.error("Failed to load notification settings", err);
@@ -45,9 +53,11 @@ const NotificationSettings = () => {
         setSaving(true);
         try {
             await updateDoc(doc(db, 'users', currentUser.uid), {
-                notificationPrefs: settings
+                notificationPrefs: settings,
+                emailDigest,           // top-level field — queried by weekly digest function
             });
-            alert('Settings saved successfully!');
+            setSaved(true);
+            setTimeout(() => setSaved(false), 2500);
         } catch (err) {
             console.error("Failed to save settings", err);
             alert('Failed to save settings');
@@ -92,6 +102,27 @@ const NotificationSettings = () => {
             </div>
 
             <div style={styles.section}>
+                <h3>Email Preferences</h3>
+                <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>
+                    Sent to your account email. Unsubscribe any time.
+                </p>
+                <div style={styles.toggleRow}>
+                    <div>
+                        <div style={{ fontWeight: 600 }}>Weekly Digest</div>
+                        <div style={{ fontSize: '12px', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
+                            Top posts from your community, every Sunday morning
+                        </div>
+                    </div>
+                    <input
+                        type="checkbox"
+                        checked={emailDigest}
+                        onChange={(e) => setEmailDigest(e.target.checked)}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                    />
+                </div>
+            </div>
+
+            <div style={styles.section}>
                 <h3>Focus & Privacy</h3>
                 <div style={styles.toggleRow}>
                     <span>Mute All Chat Conversations</span>
@@ -110,8 +141,12 @@ const NotificationSettings = () => {
                 )}
             </div>
 
-            <button onClick={handleSave} disabled={saving} style={styles.saveBtn}>
-                {saving ? 'Saving...' : 'Save Preferences'}
+            <button onClick={handleSave} disabled={saving} style={{
+                ...styles.saveBtn,
+                background: saved ? '#16a34a' : 'var(--color-primary)',
+                transition: 'background 0.3s ease'
+            }}>
+                {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Preferences'}
             </button>
         </div>
     );

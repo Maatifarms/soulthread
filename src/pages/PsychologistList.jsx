@@ -9,6 +9,7 @@ import LoginModal from '../components/common/LoginModal';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import { Heart, UserPlus, LifeBuoy, Star, Lock, Check, ArrowRight } from 'lucide-react';
 
 import './PsychologistList.css';
 
@@ -52,20 +53,22 @@ const PsychologistList = () => {
                 });
 
                 Object.values(userPsychs).forEach(user => {
+                    // Allow specific accounts or ignore placeholders
                     if (user.displayName === 'Unfiltered Rupesh' || user.id === 'WHEs8Ur2rohjTgNg51VP56KiDwH3') return;
                     merged.push({
                         ...user,
                         name: user.displayName || user.name || "A Sanctuary Guide",
-                        isCalendarOpen: false
+                        isCalendarOpen: user.isCalendarOpen || false
                     });
                 });
 
-                if (merged.length < 2) {
-                    const existingNames = new Set(merged.map(m => m.name.toLowerCase()));
-                    MOCK_PSYCHOLOGISTS.forEach(m => {
-                        if (!existingNames.has(m.name.toLowerCase())) merged.push(m);
-                    });
-                }
+                // ALWAYS ensure primary mock counselors are present if they don't have a live profile yet
+                const existingNames = new Set(merged.map(m => m.name.toLowerCase()));
+                MOCK_PSYCHOLOGISTS.forEach(m => {
+                    if (!existingNames.has(m.name.toLowerCase())) {
+                        merged.push(m);
+                    }
+                });
 
                 setPsychologists(merged);
             } catch (error) {
@@ -137,11 +140,7 @@ const PsychologistList = () => {
                 setSelectedSlot(null);
                 setSelectedPsychologist(null);
             }
-        } catch (error) {
-            console.error("Booking failed:", error);
-            alert("Payment could not be completed or booking was cancelled. Please try again.");
         } finally {
-            setIsSubmitting(true);
             setIsSubmitting(false);
         }
     };
@@ -176,13 +175,13 @@ const PsychologistList = () => {
             
             <div className="psych-list-hero animate-fade-in">
                 <div className="psych-hero-accent" />
-                <div className="psych-badge">💚 Sanctuary Guides</div>
+                <div className="psych-badge"><Heart size={14} fill="currentColor" /> Sanctuary Guides</div>
                 <h1 className="psych-hero-title">Talk to a Psychologist</h1>
                 <p className="psych-hero-subtitle">
                     Real, trained professionals ready to listen — confidentially, kindly, and without judgment.
                 </p>
-                <Link to="/join-counselor" className="premium-btn-link" style={{ background: 'white', color: 'var(--color-primary-dark)' }}>
-                    👩‍⚕️ Join as a Guide
+                <Link to="/join-counselor" className="premium-btn-link" style={{ background: 'white', color: 'var(--color-primary-dark)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <UserPlus size={18} /> Join as a Guide
                 </Link>
             </div>
 
@@ -192,7 +191,7 @@ const PsychologistList = () => {
                 {/* Crisis Section */}
                 <div className="crisis-banner">
                     <div className="crisis-header">
-                        <span className="crisis-icon-red">🆘</span>
+                        <span className="crisis-icon-red"><LifeBuoy size={20} /></span>
                         <h3 className="crisis-title">In Crisis? Immediate Help</h3>
                     </div>
                     <div className="crisis-grid">
@@ -233,7 +232,9 @@ const PsychologistList = () => {
                                         <h3 className="psych-name">{psych.name}</h3>
                                         <div className="psych-qual">{psych.experience || 'Licensed Psychologist'}</div>
                                         <div className="psych-rating-row">
-                                            <div className="psych-stars">★★★★★</div>
+                                            <div className="psych-stars" style={{ display: 'flex', gap: '2px', color: '#fbbf24' }}>
+                                                {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+                                            </div>
                                             <span className="psych-rating-num">{psych.rating || '5.0'}</span>
                                             <span className="psych-sessions-count">· {psych.totalSessions || '50+'} sessions</span>
                                         </div>
@@ -257,8 +258,9 @@ const PsychologistList = () => {
                                     className="book-btn-premium"
                                     disabled={!(psych.isCalendarOpen || psych.isMock)}
                                     onClick={() => handleBookSession(psych)}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                                 >
-                                    💚 Book Session
+                                    <Heart size={16} fill="white" /> Book Session
                                 </button>
                             </div>
                         </div>
@@ -269,8 +271,8 @@ const PsychologistList = () => {
                 <div className="upsell-section" style={{ marginTop: '60px', borderRadius: 'var(--radius-xl)' }}>
                     <h2 className="upsell-title">Become a Sanctuary Guide</h2>
                     <p className="upsell-text">Join our community of compassionate professionals helping people find peace.</p>
-                    <Link to="/join-counselor" className="upsell-btn">
-                        Apply as a Guide →
+                    <Link to="/join-counselor" className="upsell-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        Apply as a Guide <ArrowRight size={18} />
                     </Link>
                 </div>
             </div>
@@ -306,10 +308,10 @@ const PsychologistList = () => {
                                 <span>Professional Session Fee</span>
                                 <span className="session-price-tag">₹999</span>
                             </div>
-                            <p className="secure-badge">🔒 Secure Payment via Razorpay</p>
+                            <p className="secure-badge"><Lock size={12} /> Secure Payment via Razorpay</p>
                         </div>
-                        <button className="auth-submit-btn" disabled={!selectedSlot} onClick={confirmBooking}>
-                            {isSubmitting ? 'Connecting to Payment...' : 'Secure Session ✓'}
+                        <button className="auth-submit-btn" disabled={!selectedSlot} onClick={confirmBooking} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                            {isSubmitting ? 'Connecting to Payment...' : <><span style={{ marginRight: '8px' }}>Secure Session</span> <Check size={18} /></>}
                         </button>
                     </div>
                 </div>

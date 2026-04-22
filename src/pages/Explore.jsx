@@ -11,6 +11,17 @@ import { Capacitor } from '@capacitor/core';
 import useTheme from '../hooks/useTheme';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import { 
+    Sparkles, 
+    PenLine, 
+    Sprout, 
+    Wind, 
+    Heart, 
+    Moon, 
+    Flame, 
+    Users, 
+    BookOpen 
+} from 'lucide-react';
 
 import './Explore.css';
 
@@ -123,13 +134,15 @@ const Explore = () => {
     }, []);
 
     const categories = [
-        { id: 'all', label: 'All', icon: '🌟' },
-        { id: 'healing', label: 'Healing', icon: '🌱' },
-        { id: 'anxiety', label: 'Anxiety', icon: '🌊' },
-        { id: 'mindfulness', label: 'Mindfulness', icon: '🧘' },
-        { id: 'growth', label: 'Growth', icon: '🚀' },
-        { id: 'community', label: 'Community', icon: '🤝' },
-        { id: 'series', label: 'Series', icon: '📚' }
+        { id: 'all', label: 'All', icon: <Sparkles size={16} /> },
+        { id: 'general', label: 'General', icon: <PenLine size={16} /> },
+        { id: 'healing', label: 'Healing', icon: <Sprout size={16} /> },
+        { id: 'anxiety', label: 'Anxiety', icon: <Wind size={16} /> },
+        { id: 'relationships', label: 'Relationships', icon: <Heart size={16} /> },
+        { id: 'mindfulness', label: 'Mindfulness', icon: <Moon size={16} /> },
+        { id: 'growth', label: 'Growth', icon: <Flame size={16} /> },
+        { id: 'community', label: 'Community', icon: <Users size={16} /> },
+        { id: 'series', label: 'Series', icon: <BookOpen size={16} /> }
     ];
 
     const seriesData = [
@@ -164,9 +177,10 @@ const Explore = () => {
             <div className={`explore-page ${isNativeApp ? 'is-native' : ''}`}>
                 <Breadcrumbs />
                 <SEO 
-                    title="Explore Souls & Insights"
-                    description="Discover authentic stories, connect with like-minded souls, and explore a variety of mental health insights on SoulThread."
+                    title="Find Emotional Support & Mental Health Stories | Explore"
+                    description="Explore an anonymous venting platform filled with relatable mental health stories, anxiety relief tips, and supportive connections on SoulThread."
                     url="https://soulthread.in/explore"
+                    keywords="venting platform, mental health stories, find emotional support, anxiety relief tips, anonymous community, psychological growth"
                 />
                 
                 {/* Header / Search Area */}

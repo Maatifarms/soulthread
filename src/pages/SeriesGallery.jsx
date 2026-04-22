@@ -8,6 +8,7 @@ import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import { ArrowRight } from 'lucide-react';
 
 const SeriesProgressBar = ({ seriesId, total }) => {
     const { getCompletionRate } = useSeriesProgress(seriesId);
@@ -26,7 +27,7 @@ const SeriesProgressBar = ({ seriesId, total }) => {
     );
 };
 
-const seriesData = [
+export const SERIES_DATA = [
     {
         id: 'hyperfocus-architect',
         title: 'Hyperfocus Architect',
@@ -36,6 +37,16 @@ const seriesData = [
         path: '/hyperfocus-series',
         tag: 'Neuroscience',
         count: '30 Posts'
+    },
+    {
+        id: 'memory-architect',
+        title: 'Memory Architect',
+        subtitle: 'Science-Based Recall Mastery.',
+        description: 'Reprogram your brain’s recall mechanisms using 30 days of neurobiology-backed protocols for retention and growth.',
+        image: '/assets/memory/series_cover.png',
+        path: '/memory-series',
+        tag: 'Neuroscience',
+        count: '30 Chapters'
     },
     {
         id: 'never-finished',
@@ -100,6 +111,17 @@ const seriesData = [
         tag: 'Psychology',
         count: '10 Chapters',
         requiredTier: 'soul_basic'
+    },
+    {
+        id: 'lust-decoded',
+        title: 'Lust Decoded',
+        subtitle: 'Intimacy & Attraction.',
+        description: 'Understand the quiet shifts in intimacy, the patterns of attraction, and how to decode desire (18+).',
+        image: '/assets/hyperfocus/post_01.png',
+        path: '/lust-decoded',
+        tag: 'Relationships',
+        count: '17 Posts',
+        requiredTier: 'soul_basic'
     }
 ];
 
@@ -107,14 +129,19 @@ const SeriesGallery = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
 
-    const handleSeriesClick = async (e, series) => {
-        if (series.requiredTier && series.requiredTier !== 'free') {
-            const hasAccess = await sustainability.verifyAccess(currentUser, series.requiredTier);
-            if (!hasAccess) {
-                e.preventDefault();
-                navigate('/pricing');
-            }
+    const handleSeriesClick = (e, series) => {
+        if (series.isLocked) {
+            e.preventDefault();
+            return; // Still coming soon
         }
+
+        // Navigate using the predefined path from the series object
+        analytics.logEvent('series_view', { 
+            series_id: series.id,
+            series_title: series.title 
+        });
+        
+        navigate(series.path);
     };
 
     return (
@@ -127,7 +154,7 @@ const SeriesGallery = () => {
                 schema={{
                     "@context": "https://schema.org",
                     "@type": "ItemList",
-                    "itemListElement": seriesData.map((series, index) => ({
+                    "itemListElement": SERIES_DATA.map((series, index) => ({
                         "@type": "ListItem",
                         "position": index + 1,
                         "item": {
@@ -159,6 +186,20 @@ const SeriesGallery = () => {
                 margin: '0 auto'
             }}>
                 <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+                    <span style={{
+                        display: 'inline-block',
+                        padding: '6px 18px',
+                        background: 'var(--color-primary-soft)',
+                        color: 'var(--color-primary)',
+                        borderRadius: '20px',
+                        fontSize: '13px',
+                        fontWeight: '800',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        marginBottom: '20px'
+                    }}>
+                        Transformation Library
+                    </span>
                     <h1 style={{
                         fontSize: '3.5rem',
                         fontWeight: '900',
@@ -166,19 +207,53 @@ const SeriesGallery = () => {
                         background: 'var(--grad-primary)',
                         WebkitBackgroundClip: 'text',
                         WebkitTextFillColor: 'transparent',
-                        marginBottom: '16px'
+                        marginBottom: '16px',
+                        lineHeight: 1.1
                     }}>
-                        The Library
+                        Change Your Life.<br />One Series at a Time.
                     </h1>
                     <p style={{
                         fontSize: '1.2rem',
                         color: 'var(--color-text-secondary)',
                         maxWidth: '600px',
-                        margin: '0 auto',
-                        fontWeight: '500'
+                        margin: '0 auto 40px',
+                        fontWeight: '500',
+                        lineHeight: 1.6
                     }}>
-                        Curated wisdom. Deep focus. Your journey into human and machine intelligence.
+                        Neuroscience. Psychology. Focus. Relationships. Each series is a structured journey — not just content, but a blueprint for lasting change.
                     </p>
+
+                    {/* Stats bar */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap: '48px',
+                        flexWrap: 'wrap',
+                        padding: '24px 32px',
+                        background: 'var(--color-surface)',
+                        borderRadius: '20px',
+                        border: '1.5px solid var(--color-border)',
+                        maxWidth: '600px',
+                        margin: '0 auto'
+                    }}>
+                        {[
+                            { value: '8', label: 'Series' },
+                            { value: '150+', label: 'Lessons' },
+                            { value: '30 Days', label: 'To Transform' }
+                        ].map(stat => (
+                            <div key={stat.label} style={{ textAlign: 'center' }}>
+                                <div style={{
+                                    fontSize: '2rem',
+                                    fontWeight: '900',
+                                    background: 'var(--grad-primary)',
+                                    WebkitBackgroundClip: 'text',
+                                    WebkitTextFillColor: 'transparent',
+                                    lineHeight: 1
+                                }}>{stat.value}</div>
+                                <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: '600', marginTop: '4px' }}>{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <div style={{
@@ -186,13 +261,14 @@ const SeriesGallery = () => {
                     gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
                     gap: '32px'
                 }}>
-                    {seriesData.map((series) => (
+                    {SERIES_DATA.map((series) => (
                         <motion.div
                             key={series.id}
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.6 }}
+                            whileHover={{ y: -6, boxShadow: 'var(--shadow-xl)' }}
                             style={{
                                 background: 'var(--color-surface)',
                                 borderRadius: '32px',
@@ -201,7 +277,9 @@ const SeriesGallery = () => {
                                 boxShadow: 'var(--shadow-lg)',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                position: 'relative'
+                                position: 'relative',
+                                cursor: 'pointer',
+                                transition: 'border-color 0.3s ease'
                             }}
                         >
                             <Link 
@@ -263,7 +341,7 @@ const SeriesGallery = () => {
                                     {/* Removed individual tier badges per user request to keep feed-like cards clean */}
                                     {/* Progress Bar (Phase 6 Retention) */}
                                     {series.count && (
-                                        <SeriesProgressBar seriesId={series.id} total={parseInt(series.count)} />
+                                        <SeriesProgressBar seriesId={series.id} total={parseInt(series.count, 10) || 0} />
                                     )}
                                 </div>
                                 <div style={{ padding: '32px', flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -304,9 +382,7 @@ const SeriesGallery = () => {
                                         fontSize: '1.1rem'
                                     }}>
                                         <span>Start Journey</span>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                                            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                                        </svg>
+                                        <ArrowRight size={20} strokeWidth={3} />
                                     </div>
                                 </div>
                             </Link>
@@ -359,9 +435,7 @@ const SeriesGallery = () => {
                         onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                     >
                         <span>Upgrade Your Sanctuary</span>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-                        </svg>
+                        <ArrowRight size={20} strokeWidth={2.5} />
                     </Link>
                 </div>
             </div>

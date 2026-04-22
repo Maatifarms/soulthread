@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Clock, Play, Pause, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
@@ -6,6 +8,7 @@ import { paymentService } from '../services/paymentService';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
+import SeriesPaywall from '../components/series/SeriesPaywall';
 import './MeditationSeries.css';
 
 const meditationTracks = [
@@ -40,18 +43,47 @@ const meditationTracks = [
 
 const MeditationSeries = () => {
     const { currentUser } = useAuth();
-    const [isPro, setIsPro] = useState(false);
+    const navigate = useNavigate();
+    const [isPremium, setIsPremium] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
     const [loading, setLoading] = useState(true);
     const [activeTrack, setActiveTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
     const audioRef = useRef(new Audio());
 
+    const handleUnlock = async (isFree = false) => {
+        if (isFree) {
+            setIsFreeUnlocked(true);
+            return;
+        }
+
+        setPaymentError('');
+        if (!currentUser) {
+            navigate('/login');
+            return;
+        }
+
+        setIsProcessing(true);
+        try {
+            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
+            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            setIsPremium(true);
+        } catch (error) {
+            console.error("Unlock failed:", error);
+            setPaymentError('Payment was cancelled or failed. Please try again.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     useEffect(() => {
         const checkAccess = async () => {
             if (currentUser) {
-                const hasPro = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.PRO);
-                setIsPro(hasPro);
+                const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+                setIsPremium(hasAccess);
             }
             setLoading(false);
         };
@@ -64,7 +96,10 @@ const MeditationSeries = () => {
     }, [currentUser]);
 
     const handlePlayTrack = (track) => {
-        if (!isPro) return;
+        const midPoint = Math.floor(meditationTracks.length / 2);
+        const isLocked = track.level > (midPoint + 1) && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
+        
+        if (isLocked) return;
         
         if (activeTrack?.level === track.level) {
             if (isPlaying) {
@@ -106,7 +141,6 @@ const MeditationSeries = () => {
             <Breadcrumbs />
             
             <div className="meditation-page">
-                {/* Hero Header */}
                 <motion.header 
                     className="meditation-hero"
                     initial={{ opacity: 0 }}
@@ -119,12 +153,11 @@ const MeditationSeries = () => {
                         <p>A guided sensory experience for the restless mind.</p>
                     </div>
                     <div className="hero-visual">
-                        <img src="file:///C:/Users/acer/.gemini/antigravity/brain/ae86f859-48ac-4dd2-a4db-e994a781d018/seoul_to_zen_journey_1773946340115.png" alt="Seoul to Zen Journey" />
+                        <img src="https://images.unsplash.com/photo-1545389336-cf090694435e?auto=format&fit=crop&q=80&w=1200" alt="Seoul to Zen Journey" />
                     </div>
                 </motion.header>
 
                 <div className="meditation-main">
-                    {/* Levels Section */}
                     <section className="levels-section">
                         <div className="levels-header">
                             <h2>The Resilience Path</h2>
@@ -132,35 +165,40 @@ const MeditationSeries = () => {
                         </div>
 
                         <div className="levels-grid">
-                            {meditationTracks.map((track) => (
-                                <motion.div 
-                                    key={track.level}
-                                    className={`level-card ${activeTrack?.level === track.level ? 'active' : ''}`}
-                                    whileHover={{ scale: 1.02 }}
-                                    onClick={() => handlePlayTrack(track)}
-                                >
-                                    <div className={`level-badge level-${track.level}`}>LEVEL {track.level}</div>
-                                    <h3>{track.title}</h3>
-                                    <p className="level-subtitle">{track.subtitle}</p>
-                                    <p className="level-desc">{track.description}</p>
-                                    <div className="level-footer">
-                                        <span className="duration">⏳ {track.duration}</span>
-                                        <button className="play-circle-btn">
-                                            {activeTrack?.level === track.level && isPlaying ? '⏸' : '▶'}
-                                        </button>
-                                    </div>
-                                    
-                                    {!isPro && (
-                                        <div className="level-lock">
-                                            <span>🛡️ Pro Member Exclusive</span>
+                            {meditationTracks.map((track) => {
+                                const midPoint = Math.floor(meditationTracks.length / 2);
+                                const isLocked = track.level > (midPoint + 1) && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
+                                return (
+                                    <motion.div 
+                                        key={track.level}
+                                        className={`level-card ${activeTrack?.level === track.level ? 'active' : ''} ${isLocked ? 'locked' : ''}`}
+                                        whileHover={{ scale: 1.02 }}
+                                        onClick={() => handlePlayTrack(track)}
+                                    >
+                                        <div className={`level-badge level-${track.level}`}>LEVEL {track.level}</div>
+                                        <h3>{track.title}</h3>
+                                        <p className="level-subtitle">{track.subtitle}</p>
+                                        <p className="level-desc">{track.description}</p>
+                                        <div className="level-footer">
+                                            <span className="duration" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Clock size={14} /> {track.duration}
+                                            </span>
+                                            <button className="play-circle-btn" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                {activeTrack?.level === track.level && isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}
+                                            </button>
                                         </div>
-                                    )}
-                                </motion.div>
-                            ))}
+                                        
+                                        {isLocked && (
+                                            <div className="level-lock" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <ShieldCheck size={16} /> <span>Pro Member Exclusive</span>
+                                            </div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
                         </div>
                     </section>
 
-                    {/* Immersive Player / Breath Guide */}
                     <AnimatePresence>
                         {activeTrack && (
                             <motion.section 
@@ -171,21 +209,37 @@ const MeditationSeries = () => {
                             >
                                 <div className="player-layout">
                                     <div className="breath-guide-container">
-                                        <motion.div 
-                                            className="breath-circle"
-                                            animate={{
-                                                scale: isPlaying ? [1, 1.4, 1] : 1,
-                                                opacity: isPlaying ? [0.4, 0.8, 0.4] : 0.4
-                                            }}
-                                            transition={{
-                                                duration: 8,
-                                                repeat: Infinity,
-                                                ease: "easeInOut"
-                                            }}
-                                        />
-                                        <div className="breath-text">
-                                            {isPlaying ? 'Breathe with the light' : 'Awaken the seed'}
-                                        </div>
+                                        {(() => {
+                                            const midPoint = Math.floor(meditationTracks.length / 2);
+                                            const isLocked = activeTrack.level > (midPoint + 1) && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
+                                            return isLocked ? (
+                                                <SeriesPaywall
+                                                    seriesId="the-void-meditation"
+                                                    seriesTitle="The Void: Advanced Meditation"
+                                                    onUnlock={handleUnlock}
+                                                    isProcessing={isProcessing}
+                                                    paymentError={paymentError}
+                                                />
+                                            ) : (
+                                                <>
+                                                    <motion.div 
+                                                        className="breath-circle"
+                                                        animate={{
+                                                            scale: isPlaying ? [1, 1.4, 1] : 1,
+                                                            opacity: isPlaying ? [0.4, 0.8, 0.4] : 0.4
+                                                        }}
+                                                        transition={{
+                                                            duration: 8,
+                                                            repeat: Infinity,
+                                                            ease: "easeInOut"
+                                                        }}
+                                                    />
+                                                    <div className="breath-text">
+                                                        {isPlaying ? 'Breathe with the light' : 'Awaken the seed'}
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="player-controls">
@@ -210,13 +264,13 @@ const MeditationSeries = () => {
                         )}
                     </AnimatePresence>
 
-                    {!isPro && (
+                    {!isPremium && !isFreeUnlocked && (
                         <div className="meditation-upsell">
                             <div className="upsell-card-zen">
                                 <h2>Unlock the Full Bloom</h2>
                                 <p>Deep meditation tracks, expert circles, and unlimited growth series—all in one membership.</p>
-                                <button className="zen-upgrade-btn" onClick={() => window.location.href='/pricing'}>
-                                    Upgrade to Soul Pro — ₹499/mo
+                                <button className="zen-upgrade-btn" onClick={handleUnlock}>
+                                    Upgrade to Soul Basic — ₹199/mo
                                 </button>
                             </div>
                         </div>

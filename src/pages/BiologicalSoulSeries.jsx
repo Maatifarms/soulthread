@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
@@ -8,7 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
 import { paymentService } from '../services/paymentService';
 import SEO from '../components/common/SEO';
-import Breadcrumbs from '../components/common/Breadcrumbs';
+import SeriesPaywall from '../components/series/SeriesPaywall';
 import './BiologicalSoulSeries.css';
 
 const chapters = [
@@ -210,26 +211,39 @@ const chapters = [
         title: "Individual Variation",
         insight: "The most robust finding in all of biology is variation. There is no 'normal'. There is only a distribution.",
         takeaway: "Embrace the 'outliers' in your community. They are the engine of evolutionary adaptation.",
-        image: "file:///C:/Users/acer/.gemini/antigravity/brain/ae86f859-48ac-4dd2-a4db-e994a781d018/biological_soul_triptych_1773947480205.png"
+        image: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=1200"
     }
 ];
 
 const BiologicalSoulSeries = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [isPro, setIsPro] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
     const [loading, setLoading] = useState(true);
 
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
     useEffect(() => {
-        window.scrollTo(0, 0);
         const checkAccess = async () => {
             const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.PRO);
             setIsPro(hasAccess);
             setLoading(false);
+
+            // Fetch progress
+            if (currentUser) {
+                try {
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    const snap = await getDoc(userRef);
+                    if (snap.exists() && snap.data().seriesProgress?.['biological_soul'] > 1) {
+                         // progress loaded
+                    }
+                } catch (e) { }
+            }
         };
         checkAccess();
 
@@ -268,13 +282,21 @@ const BiologicalSoulSeries = () => {
     const scrollToPost = (index) => {
         const posts = document.querySelectorAll('.post-block');
         if (posts[index]) {
-            posts[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const top = posts[index].getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
         }
     };
 
-    const handleUpgrade = async () => {
+    const handleUpgrade = async (isFree = false) => {
+        if (isFree) {
+            setIsFreeUnlocked(true);
+            analytics.logEvent('series_unlock_free', { series: 'biological_soul' });
+            return;
+        }
+
+        setPaymentError('');
         if (!currentUser) {
-            alert("Please login to access the Biological Soul curriculum.");
+            navigate('/login');
             return;
         }
         setIsProcessing(true);
@@ -284,6 +306,7 @@ const BiologicalSoulSeries = () => {
             setIsPro(true);
         } catch (error) {
             console.error("Upgrade failed:", error);
+            setPaymentError('Payment was cancelled or failed. Please try again.');
         } finally {
             setIsProcessing(false);
         }
@@ -297,7 +320,6 @@ const BiologicalSoulSeries = () => {
                 title="The Biological Soul: Human Nature Decoded | Robert Sapolsky Series"
                 description="Explore the biology of behavior, genetics, and neuroscience in this 25-chapter series based on Robert Sapolsky's Stanford lectures."
             />
-            <Breadcrumbs />
             <header className="sticky-header">
                 <div className="header-content">
                     <Link to="/" className="logo-link"><span className="logo-text">SOULTHREAD</span></Link>
@@ -309,7 +331,7 @@ const BiologicalSoulSeries = () => {
 
             <section className="hero-section">
                 <div className="hero-visual-box">
-                    <img src="file:///C:/Users/acer/.gemini/antigravity/brain/ae86f859-48ac-4dd2-a4db-e994a781d018/biological_soul_hero_1773947457343.png" alt="Biological Soul" className="hero-img-main" />
+                    <img src="https://images.unsplash.com/photo-1507413245164-6160d8298b31?auto=format&fit=crop&q=80&w=1200" alt="Biological Soul" className="hero-img-main" />
                 </div>
                 <h1>The Biological Soul</h1>
                 <p>Decoding the human machine through the lens of Stanford’s Robert Sapolsky. 25 Lectures on why we do what we do.</p>
@@ -323,7 +345,10 @@ const BiologicalSoulSeries = () => {
                 </div>
 
                 {chapters.map((chapter, index) => {
-                    const isLocked = index >= 3 && !isPro; // First 3 are free
+                    const midPoint = Math.floor(chapters.length / 2);
+                    const isLocked = index >= midPoint && !isPro && !isFreeUnlocked && !currentUser?.isAdmin;
+                    
+                    if (isLocked && index > midPoint) return null;
 
                     return (
                         <motion.div 
@@ -334,16 +359,13 @@ const BiologicalSoulSeries = () => {
                             viewport={{ once: true }}
                         >
                             {isLocked ? (
-                                <div className="locked-overlay">
-                                    <div className="paywall-card">
-                                        <h4>Research Restricted</h4>
-                                        <p>Accessing Chapters 4-25 of 'The Biological Soul' requires a <strong>Soul Pro</strong> membership. This is our most advanced academic curriculum.</p>
-                                        <button className="unlock-btn" onClick={handleUpgrade} disabled={isProcessing}>
-                                            {isProcessing ? 'Connecting...' : 'Upgrade to Soul Pro — ₹499'}
-                                        </button>
-                                        <p className="secure-text">Unlocks all series and expert-led circles.</p>
-                                    </div>
-                                </div>
+                                <SeriesPaywall
+                                    seriesId="biological-soul"
+                                    seriesTitle="The Biological Soul"
+                                    onUnlock={handleUpgrade}
+                                    isProcessing={isProcessing}
+                                    paymentError={paymentError}
+                                />
                             ) : (
                                 <>
                                     <div className="post-header">
@@ -364,7 +386,9 @@ const BiologicalSoulSeries = () => {
                                         </div>
                                     </div>
                                     <div className="post-navigation-footer">
-                                        <button className="btn-nav" onClick={() => scrollToPost(index + 1)}>CONTINUE STUDY →</button>
+                                        <button className="btn-nav" onClick={() => scrollToPost(index + 1)}>
+                                            CONTINUE STUDY <ArrowRight size={16} style={{ marginLeft: '8px' }} />
+                                        </button>
                                     </div>
                                 </>
                             )}
@@ -377,7 +401,9 @@ const BiologicalSoulSeries = () => {
             <section className="bottom-cta" style={{ textAlign: 'center', padding: '100px 24px', background: 'rgba(5, 26, 17, 0.5)' }}>
                 <h2>The Buck Stops Nowhere</h2>
                 <p>Behavior is an emergent property of millions of years of history and milliseconds of hormones.</p>
-                <Link to="/series" className="start-btn" style={{ textDecoration: 'none', display: 'inline-block', marginTop: '32px' }}>Browse More Mastery</Link>
+                <Link to="/series" className="start-btn" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', marginTop: '32px' }}>
+                    Browse More Mastery <ArrowRight size={16} style={{ marginLeft: '8px' }} />
+                </Link>
             </section>
         </div>
     );

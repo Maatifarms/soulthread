@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Reactions from './Reactions';
 import CommentSection from './CommentSection';
@@ -7,7 +8,44 @@ import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { trackCategoryInteraction } from '../../services/trackingService';
+import { CATEGORY_MAP } from '../../data/categories';
+import { 
+    Lock, 
+    Trash2, 
+    Share2, 
+    MessageSquare, 
+    Flag, 
+    ShieldCheck, 
+    Star, 
+    Circle, 
+    X,
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout
+} from 'lucide-react';
 import './FeedItem.css';
+
+const ICON_MAP = {
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout
+};
 
 const FeedItem = React.memo(({ post, onDelete }) => {
     const { currentUser } = useAuth();
@@ -55,10 +93,7 @@ const FeedItem = React.memo(({ post, onDelete }) => {
     const isAnon = isPostIncognito || isAccountAnon;
 
     const authorInitial = isAnon ? (
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
+        <Lock size={18} />
     ) : (post.authorName ? post.authorName.charAt(0) : 'F');
 
     const authorName = isAnon ? 'Anonymous' : (post.authorName || 'A Friend');
@@ -109,6 +144,10 @@ const FeedItem = React.memo(({ post, onDelete }) => {
                                     src={post.authorPhotoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${post.authorId || 'soulthread'}`}
                                     alt={authorName}
                                     className="author-avatar-img"
+                                    loading="lazy"
+                                    decoding="async"
+                                    width="44"
+                                    height="44"
                                     onError={e => {
                                         if (!e.target.src.includes('anonymous')) {
                                             e.target.src = 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous';
@@ -123,9 +162,7 @@ const FeedItem = React.memo(({ post, onDelete }) => {
                         )}
                         {post.authorRole === 'psychologist' && (
                             <div className="psychologist-badge">
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-                                </svg>
+                                <Star size={10} fill="currentColor" />
                             </div>
                         )}
                     </div>
@@ -143,9 +180,10 @@ const FeedItem = React.memo(({ post, onDelete }) => {
                             )}
 
                             {post.authorRole === 'psychologist' && (
-                                <span className="expert-badge">
-                                    VERIFIED EXPERT
-                                </span>
+                                <div className="expert-badge-premium">
+                                    <ShieldCheck size={12} fill="var(--color-primary)" stroke="white" />
+                                    <span>Verified Expert</span>
+                                </div>
                             )}
 
                             {post.isIncognito && (currentUser?.role === 'admin' || currentUser?.role === 'psychologist') && (
@@ -157,15 +195,19 @@ const FeedItem = React.memo(({ post, onDelete }) => {
                         {(isAnon || post.circleId) && (
                             <div className="meta-info">
                                 {isAnon && <span className="anon-meta">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                    </svg>
+                                    <Lock size={12} />
                                     Anonymous Presence
                                 </span>}
-                                {post.circleId && <span className="circle-meta" style={{ marginLeft: isAnon ? '8px' : '0' }}>
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                        <circle cx="12" cy="12" r="10" /><path d="M8 12h8" />
-                                    </svg>
+                                    <span className="category-pill">
+                                        {(() => {
+                                            const cat = CATEGORY_MAP[post.categoryId];
+                                            const IconComp = ICON_MAP[cat.icon];
+                                            return IconComp ? <IconComp size={12} style={{ marginRight: '4px' }} /> : null;
+                                        })()}
+                                        {CATEGORY_MAP[post.categoryId].label}
+                                    </span>
+                                {post.circleId && <span className="circle-meta" style={{ marginLeft: isAnon ? '12px' : '0' }}>
+                                    <Circle size={12} />
                                     Private Circle
                                 </span>}
                             </div>
@@ -175,7 +217,7 @@ const FeedItem = React.memo(({ post, onDelete }) => {
 
                 {canDelete && (
                     <button onClick={handleDelete} className="delete-btn-top" title="Delete post">
-                        ×
+                        <X size={18} />
                     </button>
                 )}
             </div>
@@ -190,24 +232,31 @@ const FeedItem = React.memo(({ post, onDelete }) => {
 
             {/* Content */}
             <div className="feed-item-content">
-                <div className="content-text">
-                    {expanded ? post.content : (
-                        <>
-                            {post.content && post.content.length > 250
-                                ? `${post.content.substring(0, 250)}`
-                                : post.content}
-                            {post.content && post.content.length > 250 && (
-                                <button
-                                    onClick={() => {
-                                        setExpanded(true);
-                                        if (post.categoryId) trackCategoryInteraction(post.categoryId, 'click');
-                                    }}
-                                    className="read-more-btn"
-                                >
-                                    ... Read more
-                                </button>
-                            )}
-                        </>
+                <div className="content-text-wrapper" style={{ position: 'relative' }}>
+                    <motion.div 
+                        layout 
+                        initial={false}
+                        animate={{ height: expanded ? 'auto' : '100px' }}
+                        style={{ overflow: 'hidden', position: 'relative' }}
+                        className="content-text"
+                    >
+                        {post.content}
+                        
+                        {!expanded && post.content && post.content.length > 200 && (
+                            <div className="content-fade-overlay" />
+                        )}
+                    </motion.div>
+
+                    {!expanded && post.content && post.content.length > 200 && (
+                        <button
+                            onClick={() => {
+                                setExpanded(true);
+                                if (post.categoryId) trackCategoryInteraction(post.categoryId, 'click');
+                            }}
+                            className="read-more-btn-v2"
+                        >
+                            Read more
+                        </button>
                     )}
                 </div>
             </div>
@@ -237,53 +286,43 @@ const FeedItem = React.memo(({ post, onDelete }) => {
                 </div>
             )}
 
-            {/* Action Bar */}
-            <div className="action-bar-divider">
-                <div className="reactions-row">
+            {/* Unified Action Bar */}
+            <div className="action-bar-unified">
+                <div className="social-interactions">
                     <Reactions postId={post.id} postAuthorId={post.authorId} initialCounts={post.reactionCounts || {}} />
-                </div>
-
-                <div className="interaction-row">
+                    
                     <button
                         onClick={() => setShowComments(!showComments)}
-                        className={`btn-interaction btn-comments ${showComments ? 'active' : ''}`}
+                        className={`btn-action-text ${showComments ? 'active' : ''}`}
                     >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
-                        <span>{showComments ? 'Hide Comments' : `Reflections ${post.commentsCount > 0 ? `(${post.commentsCount})` : ''}`}</span>
+                        <MessageSquare size={18} />
+                        <span>{showComments ? 'Hide' : (post.commentsCount > 0 ? `${post.commentsCount}` : 'Reflect')}</span>
                     </button>
 
-                    <button
-                        onClick={handleShare}
-                        className="btn-interaction btn-share"
-                    >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
-                        </svg>
-                        Share
+                    <button onClick={handleShare} className="btn-action-text">
+                        <Share2 size={18} />
+                        <span>Share</span>
                     </button>
+                </div>
+
+                <div className="utility-interactions">
                     {!canDelete && currentUser && (
-                        <button onClick={handleReport} className="btn-interaction btn-report" title="Report post">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
-                            </svg>
-                            Report
+                        <button onClick={handleReport} className="btn-icon-soft" title="Report post">
+                        <Flag size={18} />
                         </button>
                     )}
                     {canDelete && (
-                        <button onClick={handleDelete} className="delete-btn-bottom">
-                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        <button onClick={handleDelete} className="btn-icon-soft delete" title="Delete post">
+                             <Trash2 size={18} />
                         </button>
                     )}
                 </div>
-
-                {showComments && (
-                    <div className="comments-container">
-                        <CommentSection postId={post.id} postAuthorId={post.authorId} />
-                    </div>
-                )}
             </div>
+            {showComments && (
+                <div className="comments-container">
+                    <CommentSection postId={post.id} postAuthorId={post.authorId} />
+                </div>
+            )}
         </article>
     );
 });

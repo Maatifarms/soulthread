@@ -7,12 +7,21 @@ import React, { useState } from 'react';
  * reflection timelines securely tracked natively.
  */
 
+import { 
+    Sparkles, 
+    Leaf, 
+    Wind, 
+    Zap, 
+    CloudRain,
+    CheckCircle2
+} from 'lucide-react';
+
 const MoodOptions = [
-    { label: 'Radiant', emoji: '✨', score: 5, color: '#10b981' },
-    { label: 'Calm', emoji: '🌿', score: 4, color: '#3b82f6' },
-    { label: 'Numb', emoji: '☁️', score: 3, color: '#9ca3af' },
-    { label: 'Anxious', emoji: '🌪️', score: 2, color: '#f97316' },
-    { label: 'Overwhelmed', emoji: '🌧️', score: 1, color: '#ef4444' }
+    { label: 'Radiant', icon: <Sparkles size={24} />, score: 5, color: '#f59e0b' },
+    { label: 'Calm', icon: <Leaf size={24} />, score: 4, color: '#10b981' },
+    { label: 'Numb', icon: <Wind size={24} />, score: 3, color: '#94a3b8' },
+    { label: 'Anxious', icon: <Zap size={24} />, score: 2, color: '#f97316' },
+    { label: 'Overwhelmed', icon: <CloudRain size={24} />, score: 1, color: '#ef4444' }
 ];
 
 const WellnessTracker = () => {
@@ -22,8 +31,8 @@ const WellnessTracker = () => {
 
     // Mock Timeline
     const pastEntries = [
-        { date: 'Yesterday', moodScore: 4, emoji: '🌿', reflection: 'Spent some time offline today.' },
-        { date: 'Monday', moodScore: 2, emoji: '🌪️', reflection: 'Heavy workload pressure.' }
+        { date: 'Yesterday', moodScore: 4, icon: <Leaf size={20} />, reflection: 'Spent some time offline today.' },
+        { date: 'Monday', moodScore: 2, icon: <Zap size={20} />, reflection: 'Heavy workload pressure.' }
     ];
 
     const handleSubmit = (e) => {
@@ -53,8 +62,8 @@ const WellnessTracker = () => {
                                     background: selectedMood?.label === mood.label ? 'rgba(0,0,0,0.05)' : 'var(--color-surface)'
                                 }}
                             >
-                                <span style={{ fontSize: '32px' }}>{mood.emoji}</span>
-                                <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{mood.label}</span>
+                                <span style={{ color: mood.color, marginBottom: '8px', display: 'flex', alignItems: 'center' }}>{mood.icon}</span>
+                                <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{mood.label}</span>
                             </div>
                         ))}
                     </div>
@@ -72,9 +81,12 @@ const WellnessTracker = () => {
                     </button>
                 </form>
             ) : (
-                <div style={{ ...styles.card, textAlign: 'center', padding: '40px' }}>
-                    <h2 style={{ color: 'var(--color-primary)' }}>Entry Saved 🌱</h2>
-                    <p>Your timeline has been updated.</p>
+                <div style={{ ...styles.card, textAlign: 'center', padding: '48px 24px' }}>
+                    <div style={{ width: '64px', height: '64px', background: 'var(--color-primary-soft)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--color-primary)' }}>
+                        <CheckCircle2 size={32} />
+                    </div>
+                    <h2 style={{ color: 'var(--color-primary)', fontWeight: '900', letterSpacing: '-0.02em' }}>Entry Secured</h2>
+                    <p style={{ color: 'var(--color-text-secondary)' }}>Your emotional timeline has been updated with clinical precision.</p>
                 </div>
             )}
 
@@ -83,7 +95,7 @@ const WellnessTracker = () => {
                 <div style={styles.timeline}>
                     {pastEntries.map((e, idx) => (
                         <div key={idx} style={styles.timelineItem}>
-                            <div style={styles.timelineIcon}>{e.emoji}</div>
+                            <div style={{ ...styles.timelineIcon, color: 'var(--color-text-muted)' }}>{e.icon}</div>
                             <div style={styles.timelineContent}>
                                 <h4 style={{ margin: 0, fontSize: '14px' }}>{e.date}</h4>
                                 <p style={{ margin: '4px 0 0', fontSize: '13px', color: 'var(--color-text-secondary)' }}>{e.reflection}</p>
@@ -106,7 +118,7 @@ const styles = {
     submitBtn: { width: '100%', padding: '12px', borderRadius: '8px', background: 'var(--color-primary)', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' },
     timeline: { display: 'flex', flexDirection: 'column', gap: '16px', borderLeft: '2px solid var(--color-border)', marginLeft: '12px', paddingLeft: '20px' },
     timelineItem: { display: 'flex', alignItems: 'flex-start', position: 'relative' },
-    timelineIcon: { position: 'absolute', left: '-36px', top: '0px', fontSize: '20px', background: 'var(--color-background)', borderRadius: '50%' },
+    timelineIcon: { position: 'absolute', left: '-36px', top: '12px', background: 'var(--color-background)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     timelineContent: { background: 'var(--color-surface)', padding: '12px', borderRadius: '8px', width: '100%', border: '1px solid var(--color-border)' }
 };
 

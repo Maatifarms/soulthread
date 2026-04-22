@@ -31,7 +31,7 @@ Use these when sharing on X (Twitter), Instagram, or LinkedIn.
 
 ## 3. Technical Off-Page Signals
 *   **Open Graph Integrity**: We've optimized `SEO.jsx`. Every time you share a link, it will fetch a beautiful preview. Always use the full `https://soulthread.in` URL.
-*   **Referral Tracking**: Use `?utm_source=reddit` or `?utm_source=twitter` to track which off-page efforts are working in Google Analytics.
+*   **Referral Tracking**: Use `?utm_source=reddit` or `?utm_source=twitter` to track which od ff-page efforts are working in Google Analytics.
 
 ## 4. Local SEO (For Clinicians)
 *   Ensure the **Organization Schema** we added (Name, Logo, URL) matches your Google Business Profile if you decide to create one.

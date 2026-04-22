@@ -120,7 +120,7 @@ async function finalizeFallback(storyId) {
         if (!snap.exists()) return;
 
         await updateDoc(postRef, {
-            categoryId: 'healing-recovery-stories', // Default fallback
+            categoryId: 'healing', // Default fallback
             confidenceScore: 0,
             status: "published",
             modelVersion: "fallback-v1",

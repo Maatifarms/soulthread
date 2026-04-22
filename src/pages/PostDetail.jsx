@@ -69,17 +69,41 @@ const PostDetail = () => {
             paddingBottom: '80px'
         }}>
             <SEO 
-                title={post ? `Shared by ${post.authorName || 'Anonymous'}` : "SoulThread Stories"}
-                description={post?.content ? post.content.substring(0, 160) : "Connect and share in the SoulThread sanctuary."}
-                image={post?.mediaUrl || post?.mediaItems?.[0]?.url}
+                title={post && post.content ? `Anonymous Story: "${post.content.substring(0, 40)}..."` : "Anonymous Story & Support | SoulThread"}
+                description={post?.content ? `${post.content.substring(0, 160)}... Read and support this anonymous story on SoulThread.` : "Connect and share in the SoulThread sanctuary."}
+                image={post?.mediaUrl || post?.mediaItems?.[0]?.url || "https://soulthread.in/logo.jpg"}
                 url={`https://soulthread.in/post/${postId}`}
                 schema={{
                     "@context": "https://schema.org",
-                    "@type": "BreadcrumbList",
-                    "itemListElement": [
-                        { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://soulthread.in/" },
-                        { "@type": "ListItem", "position": 2, "name": "Direct Link", "item": `https://soulthread.in/post/${postId}` }
-                    ]
+                    "@graph": [
+                        {
+                            "@type": "BreadcrumbList",
+                            "itemListElement": [
+                                { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://soulthread.in/" },
+                                { "@type": "ListItem", "position": 2, "name": "Anonymous Post", "item": `https://soulthread.in/post/${postId}` }
+                            ]
+                        },
+                        post ? {
+                            "@type": "BlogPosting",
+                            "headline": post.content ? post.content.substring(0, 110) : "Anonymous Message",
+                            "description": post.content ? post.content.substring(0, 160) : "Anonymous Story",
+                            "image": post.mediaUrl || post.mediaItems?.[0]?.url || "https://soulthread.in/logo.jpg",
+                            "author": {
+                                "@type": "Person",
+                                "name": "Anonymous",
+                                "url": "https://soulthread.in/"
+                            },
+                            "publisher": {
+                                "@type": "Organization",
+                                "name": "SoulThread",
+                                "logo": {
+                                    "@type": "ImageObject",
+                                    "url": "https://soulthread.in/logo.jpg"
+                                }
+                            },
+                            "datePublished": post.createdAt?.seconds ? new Date(post.createdAt.seconds * 1000).toISOString() : new Date().toISOString()
+                        } : null
+                    ].filter(Boolean)
                 }}
             />
             <div className="container" style={{ maxWidth: '680px', margin: '0 auto', padding: '0 16px' }}>

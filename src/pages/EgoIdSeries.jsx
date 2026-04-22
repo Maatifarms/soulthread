@@ -1,12 +1,15 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
+import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
-import Breadcrumbs from '../components/common/Breadcrumbs';
+import SeriesPaywall from '../components/series/SeriesPaywall';
+import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
 import './EgoIdSeries.css';
 
 const episodes = [
@@ -20,6 +23,7 @@ const episodes = [
             "कुछ विचार गायब हो जाते हैं और बाद में वापस आते हैं।",
             "मन जानबूझकर कुछ विचारों को दबा देता है (Repression)।"
         ],
+        practicum: "आज दिन भर में अपने किसी एक विचार को पकड़ें और सोचें: क्या यह मेरी इच्छा है या किसी और का प्रभाव?",
         image: "/assets/egoid/post_01.png"
     },
     {
@@ -33,6 +37,7 @@ const episodes = [
             "अनकॉन्शियस: जो गहराई में दबा हुआ है।",
             "हर दबा हुआ विचार अनकॉन्शियस होता है।"
         ],
+        practicum: "एक डायरी लें और उन 3 बातों को लिखें जो आपको अभी याद नहीं आ रही थीं, लेकिन थोड़ा सोचने पर याद आ गईं।",
         image: "/assets/egoid/post_02.png"
     },
     {
@@ -45,6 +50,7 @@ const episodes = [
             "यह वास्तविकता और इच्छाओं के बीच संतुलन बनाता है।",
             "चौंकाने वाली बात ये है कि ईगो का भी एक हिस्सा अनकॉन्शियस होता है।"
         ],
+        practicum: "आज किसी कठिन निर्णय के समय रुकें और पूछें: क्या मैं अपनी इच्छा से कर रहा हूँ या परिस्थिति के दबाव में?",
         image: "/assets/egoid/post_03.png"
     },
     {
@@ -57,6 +63,7 @@ const episodes = [
             "यह भावनात्मक और बेकाबू होता है।",
             "ईगो और इड का रिश्ता सवार और घोड़े जैसा है (घोड़ा = इड)।"
         ],
+        practicum: "जब भी आपको तुरंत कुछ करने की तीव्र इच्छा हो, 10 सेकंड रुकें। यह 'इड' को शांत करने का अभ्यास है।",
         image: "/assets/egoid/post_04.png"
     },
     {
@@ -69,6 +76,7 @@ const episodes = [
             "यही हमें गिल्ट (ग्लानि) महसूस करवाता है।",
             "यह एक आदर्श व्यक्तित्व की छवि बनाए रखता है।"
         ],
+        practicum: "सोचें कि आप जो 'सही' काम कर रहे हैं, क्या वो वाकई आपका है या किसी और के डर से कर रहे हैं?",
         image: "/assets/egoid/post_05.png"
     },
     {
@@ -81,6 +89,7 @@ const episodes = [
             "यह स्थिति व्यक्तित्व की नींव रखती है।",
             "इसे समझना हमारे रिश्तों के पैटर्न को समझने जैसा है।"
         ],
+        practicum: "अपने बचपन की किसी एक ऐसी आदत को पहचानें जो आपके माता-पिता से मिलती-जुलती है।",
         image: "/assets/egoid/post_06.png"
     },
     {
@@ -93,6 +102,7 @@ const episodes = [
             "आत्म-आलोचना और गिल्ट की जड़ें यहीं हैं।",
             "सामाजिक नैतिकता का आंतरिक रूप।"
         ],
+        practicum: "आज खुद को किसी बात के लिए दोष न दें। समझें कि यह आपका सुपर ईगो है जो बहुत सख्त हो रहा है।",
         image: "/assets/egoid/post_07.png"
     },
     {
@@ -105,6 +115,7 @@ const episodes = [
             "Death Instinct: विनाश और आक्रामकता की प्रवृत्ति।",
             "मानव जीवन इन दोनों के बीच एक निरंतर संघर्ष है।"
         ],
+        practicum: "आज कोई एक रचनात्मक काम करें (लिखना, पेंटिंग, या कुछ नया सीखना) जो 'Eros' को बढ़ावा दे।",
         image: "/assets/egoid/post_08.png"
     },
     {
@@ -118,6 +129,7 @@ const episodes = [
             "सुपर ईगो की सख्त नैतिकता।",
             "यही रस्साकशी 'एंग्जायटी' का कारण बनती है।"
         ],
+        practicum: "जब तनाव महसूस हो, तो लिखें कि कौन सा 'मालिक' (इड, सुपर ईगो या दुनिया) सबसे ज्यादा दबाव डाल रहा है।",
         image: "/assets/egoid/post_09.png"
     },
     {
@@ -131,6 +143,7 @@ const episodes = [
             "सुपर ईगो: नैतिक जज।",
             "असंतुलन ही मानसिक समस्याओं की जड़ है।"
         ],
+        practicum: "आज के दिन का अवलोकन करें: क्या आपने तीनों के बीच संतुलन बनाया? एक छोटी सी जीत नोट करें।",
         image: "/assets/egoid/post_10.png"
     }
 ];
@@ -139,15 +152,50 @@ const EgoIdSeries = () => {
     const { currentUser } = useAuth();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isCompleted, setIsCompleted] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const { markAsRead, isRead } = useSeriesProgress('ego-id');
+    const [isPremium, setIsPremium] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState(null);
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30 });
 
+    const totalEpisodes = episodes.length;
+    const freeThreshold = Math.floor(totalEpisodes / 2); // 50% free
+
     useEffect(() => {
-        window.scrollTo(0, 0);
+        const checkAccess = async () => {
+            if (currentUser) {
+                const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+                setIsPremium(hasAccess);
+            }
+            setLoading(false);
+        };
+        checkAccess();
+    }, [currentUser]);
+
+    const handleUnlock = async () => {
+        setIsProcessing(true);
+        setPaymentError(null);
+        try {
+            const success = await sustainability.processPayment(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            if (success) {
+                setIsPremium(true);
+                analytics.logEvent('subscription_success', { tier: 'soul_basic', series: 'ego_id' });
+            }
+        } catch (err) {
+            setPaymentError(err.message);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    useEffect(() => {
         analytics.logEvent('series_start', { series: 'ego_id_hindi' });
         document.body.classList.add('hyperfocus-mode');
         return () => document.body.classList.remove('hyperfocus-mode');
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -181,7 +229,10 @@ const EgoIdSeries = () => {
 
     const scrollToIdx = (idx) => {
         const blocks = document.querySelectorAll('.post-block');
-        if (blocks[idx]) blocks[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (blocks[idx]) {
+            const top = blocks[idx].getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
+        }
     };
 
     return (
@@ -204,7 +255,6 @@ const EgoIdSeries = () => {
                     }
                 }}
             />
-            <Breadcrumbs />
             <header className="sticky-header">
                 <div className="header-content">
                     <Link to="/" className="logo-link">
@@ -232,47 +282,89 @@ const EgoIdSeries = () => {
                 </div>
 
                 <div className="posts-list">
-                    {episodes.map((ep, idx) => (
-                        <motion.div 
-                            key={ep.id} 
-                            className="post-block"
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                        >
-                            <div className="episode-header">
-                                <span className="topic-label">{ep.topic}</span>
-                                <span className="episode-number">EPISODE {ep.id}</span>
-                            </div>
-                            <h3>{ep.title}</h3>
+                    {episodes.map((ep, idx) => {
+                        const isLocked = idx >= freeThreshold && !isPremium && !isFreeUnlocked;
+                        if (isLocked && idx > freeThreshold) return null;
 
-                            <div className="post-image-container">
-                                <img 
-                                    src={ep.image} 
-                                    alt={`The Ego and the Id: ${ep.title} - Psychology Explainer Hindi`} 
-                                    className="psych-image" 
-                                    loading="lazy"
-                                />
-                            </div>
-
-                            <div className="post-content">
-                                <p className="main-thought">{ep.mainThought}</p>
-                                <div className="psych-insight-box">
-                                    {ep.highlights.map((item, i) => (
-                                        <div key={i} className="learn-item">
-                                            <span className="learn-bullet">✦</span>
-                                            <span>{item}</span>
-                                        </div>
-                                    ))}
+                        return (
+                            <motion.div 
+                                key={ep.id} 
+                                className={`post-block ${isLocked ? 'content-locked' : ''}`}
+                                initial={{ opacity: 0, y: 50 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                            >
+                                <div className="episode-header">
+                                    <span className="topic-label">{ep.topic}</span>
+                                    <span className="episode-number">EPISODE {ep.id}</span>
                                 </div>
-                            </div>
+                                <h3>{ep.title}</h3>
 
-                            <div className="post-navigation">
-                                <button className="nav-btn prev" disabled={idx === 0} onClick={() => scrollToIdx(idx - 1)}>Prev</button>
-                                <button className="nav-btn next" disabled={idx === episodes.length - 1} onClick={() => scrollToIdx(idx + 1)}>Next</button>
-                            </div>
-                        </motion.div>
-                    ))}
+                                {isLocked ? (
+                                    <SeriesPaywall 
+                                        seriesId="ego-id"
+                                        seriesTitle="The Ego and the Id"
+                                        onUnlock={() => setIsFreeUnlocked(true)}
+                                        isProcessing={isProcessing}
+                                        paymentError={paymentError}
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="post-image-container">
+                                            <img 
+                                                src={ep.image} 
+                                                alt={`The Ego and the Id: ${ep.title} - Psychology Explainer Hindi`} 
+                                                className="psych-image" 
+                                                loading="lazy"
+                                            />
+                                        </div>
+
+                                        <div className="post-content">
+                                            <p className="main-thought">{ep.mainThought}</p>
+                                            <div className="psych-insight-box">
+                                                {ep.highlights.map((item, i) => (
+                                                    <div key={i} className="learn-item">
+                                                        <span className="learn-bullet">✦</span>
+                                                        <span>{item}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="practicum-box" style={{ background: 'rgba(255,255,255,0.03)', padding: '24px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' }}>
+                                                <h4 style={{ color: 'var(--color-accent)', marginBottom: '12px' }}>ACTION PLAN</h4>
+                                                <p>{ep.practicum}</p>
+                                                <div className="action-footer" style={{ marginTop: '24px' }}>
+                                                    {!isRead(ep.title) ? (
+                                                        <button 
+                                                            className="mark-done-btn" 
+                                                            onClick={() => markAsRead(ep.title)}
+                                                            style={{ background: 'var(--color-accent)', color: '#000', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: '800', cursor: 'pointer' }}
+                                                        >
+                                                            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
+                                                                पूर्ण हुआ <Check size={18} />
+                                                             </span>
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ color: 'var(--color-accent)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <Check size={18} /> आप सफल हैं
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="post-navigation">
+                                            <button className="nav-btn prev" disabled={idx === 0} onClick={() => scrollToIdx(idx - 1)}>
+                                                <ArrowLeft size={16} style={{ marginRight: '8px' }} /> Prev
+                                            </button>
+                                            <button className="nav-btn next" disabled={idx === episodes.length - 1} onClick={() => scrollToIdx(idx + 1)}>
+                                                Next <ArrowRight size={16} style={{ marginLeft: '8px' }} />
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </main>
 
@@ -281,7 +373,7 @@ const EgoIdSeries = () => {
                     <p style={{ opacity: 0.7, marginBottom: '12px' }}>Understanding the human mind? Now understand the artificial one.</p>
                     <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Master AI Engineering</h2>
                     <Link to="/prompt-engineering-series" className="explore-btn" style={{ background: '#3b82f6', color: 'white', border: 'none' }}>
-                        Start The Prompt Architect →
+                        Start The Prompt Architect <ArrowRight size={16} style={{ marginLeft: '8px' }} />
                     </Link>
                 </div>
                 <div style={{ marginTop: '40px' }}>

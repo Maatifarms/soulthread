@@ -8,6 +8,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
+import { Users, ShieldCheck, Calendar } from 'lucide-react';
 import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
 import { paymentService } from '../services/paymentService';
 import { analytics } from '../services/analytics';
@@ -259,7 +260,7 @@ const Circles = () => {
     if (!currentUser) return (
         <DesktopLayoutWrapper>
             <div className="circles-container animate-fade-in" style={{ textAlign: 'center', paddingTop: '100px' }}>
-                <div className="empty-icon">🤝</div>
+                <div className="empty-icon"><Users size={48} /></div>
                 <h2 className="empty-title">Welcome Home</h2>
                 <p className="empty-desc">Please login to join your private healing spaces.</p>
                 <Link to="/login" className="premium-btn">Login to Continue</Link>
@@ -298,7 +299,7 @@ const Circles = () => {
                             {loading && <div className="chat-loading-shimmer" style={{ height: '100px', borderRadius: '24px' }} />}
                             {!loading && myCircles.length === 0 && (
                                 <div className="circles-empty-state">
-                                    <span className="empty-icon">🤝</span>
+                                    <span className="empty-icon"><Users size={48} /></span>
                                     <h3 className="empty-title">Deep Healing Starts Here</h3>
                                     <p className="empty-desc">
                                         Circles are intimate, invite-only sanctuaries of up to 15 members.
@@ -314,7 +315,7 @@ const Circles = () => {
                                     <div className="circle-info-main">
                                         <h4>{c.name}</h4>
                                         <p className="circle-meta">
-                                            👥 {c.memberCount || 0}/15 members · {c.circleType === 'counselor' ? '🛡️ Soul Pro Circle' : 'Community'}
+                                            <Users size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> {c.memberCount || 0}/15 members · {c.circleType === 'counselor' ? <><ShieldCheck size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> Soul Pro Circle</> : 'Community'}
                                         </p>
                                     </div>
                                     <span className="enter-arrow">Enter Space →</span>
@@ -375,7 +376,7 @@ const Circles = () => {
                         {activeCircle.circleType === 'counselor' && !isPro && 
                          currentUser.uid !== activeCircle.counselorId && (
                             <div className="locked-overlay">
-                                <span style={{ fontSize: '48px', marginBottom: '16px' }}>🛡️</span>
+                                <span style={{ marginBottom: '16px' }}><ShieldCheck size={48} /></span>
                                 <h3 className="empty-title">Soul Pro Sanctuary</h3>
                                 <p className="empty-desc" style={{ maxWidth: '400px', margin: '0 auto 24px' }}>
                                     This expert-led circle is exclusive to <strong>Soul Pro</strong> members. 
@@ -430,7 +431,7 @@ const Circles = () => {
                                             <div className="session-header">
                                                 <h4>{s.title}</h4>
                                                 <div className="session-time-badge">
-                                                    📅 {s.scheduledAt?.toDate().toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                    <Calendar size={14} style={{ marginRight: '6px' }} /> {s.scheduledAt?.toDate().toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                                 </div>
                                                 <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', margin: '0 0 16px' }}>{s.description}</p>
                                             </div>

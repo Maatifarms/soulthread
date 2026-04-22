@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
@@ -6,7 +7,9 @@ import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import SEO from '../components/common/SEO';
-import Breadcrumbs from '../components/common/Breadcrumbs';
+import SeriesPaywall from '../components/series/SeriesPaywall';
+import { useSeriesProgress } from '../hooks/useSeriesProgress';
+import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
 import './PromptEngineeringSeries.css';
 
 const postsData = [
@@ -85,7 +88,13 @@ const postsData = [
 const PromptEngineeringSeries = () => {
     const { currentUser } = useAuth();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const { markAsRead, isRead } = useSeriesProgress('prompt-engineering');
     const [completed, setCompleted] = useState(false);
+    const [isPremium, setIsPremium] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState(null);
     const seriesRef = useRef(null);
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
@@ -94,8 +103,36 @@ const PromptEngineeringSeries = () => {
         restDelta: 0.001
     });
 
+    const totalLessons = postsData.length;
+    const freeThreshold = Math.floor(totalLessons / 2); // 50% free
+
     useEffect(() => {
-        window.scrollTo(0, 0);
+        const checkAccess = async () => {
+            if (currentUser) {
+                const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+                setIsPremium(hasAccess);
+            }
+        };
+        checkAccess();
+    }, [currentUser]);
+
+    const handleUnlock = async () => {
+        setIsProcessing(true);
+        setPaymentError(null);
+        try {
+            const success = await sustainability.processPayment(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            if (success) {
+                setIsPremium(true);
+                analytics.logEvent('subscription_success', { tier: 'soul_basic', series: 'prompt_engineering' });
+            }
+        } catch (err) {
+            setPaymentError(err.message);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    useEffect(() => {
         // Track Start
         analytics.logEvent('series_start', { series: 'prompt_engineering' });
 
@@ -103,7 +140,7 @@ const PromptEngineeringSeries = () => {
         return () => {
             document.body.classList.remove('hyperfocus-mode');
         };
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -151,7 +188,8 @@ const PromptEngineeringSeries = () => {
     const scrollToPost = (index) => {
         const posts = document.querySelectorAll('.post-block');
         if (posts[index]) {
-            posts[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const top = posts[index].getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
         }
     };
 
@@ -175,7 +213,6 @@ const PromptEngineeringSeries = () => {
                     }
                 }}
             />
-            <Breadcrumbs />
             <header className="sticky-header">
                 <div className="header-content">
                     <Link to="/" className="logo-link">
@@ -228,56 +265,88 @@ const PromptEngineeringSeries = () => {
                 </div>
 
                 <div className="posts-list">
-                    {postsData.map((post, index) => (
-                        <motion.div
-                            key={post.id}
-                            className="post-block"
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-100px" }}
-                            transition={{ duration: 0.6 }}
-                        >
-                            <div className="post-header">
-                                <span className="post-number">LESSON {post.id} / {postsData.length}</span>
-                                <h3>{post.title}</h3>
-                            </div>
+                    {postsData.map((post, index) => {
+                        const isLocked = index >= freeThreshold && !isPremium && !isFreeUnlocked;
+                        if (isLocked && index > freeThreshold) return null;
 
-                            <div className="post-image-container">
-                                <img
-                                    src={post.image}
-                                    alt={`The Prompt Architect: ${post.title} - AI Engineering Lesson`}
-                                    className="post-image"
-                                    loading="lazy"
-                                />
-                            </div>
-
-                            <div className="post-content">
-                                <p className="insight">{post.insight}</p>
-                                <div className="takeaway-box prompt-action">
-                                    <p className="takeaway">{post.takeaway}</p>
+                        return (
+                            <motion.div
+                                key={post.id}
+                                className={`post-block ${isLocked ? 'content-locked' : ''}`}
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: "-100px" }}
+                                transition={{ duration: 0.6 }}
+                            >
+                                <div className="post-header">
+                                    <span className="post-number">LESSON {post.id} / {postsData.length}</span>
+                                    <h3>{post.title}</h3>
                                 </div>
-                            </div>
 
-                            <div className="post-navigation">
-                                <button
-                                    className="nav-btn prev"
-                                    disabled={index === 0}
-                                    onClick={() => scrollToPost(index - 1)}
-                                >
-                                    ← Previous Lesson
-                                </button>
-                                <button
-                                    className="nav-btn next"
-                                    disabled={index === postsData.length - 1}
-                                    onClick={() => scrollToPost(index + 1)}
-                                >
-                                    Next Lesson →
-                                </button>
-                            </div>
+                                {isLocked ? (
+                                    <SeriesPaywall 
+                                        seriesId="prompt-architect"
+                                        seriesTitle="The Prompt Architect"
+                                        onUnlock={() => setIsFreeUnlocked(true)}
+                                        isProcessing={isProcessing}
+                                        paymentError={paymentError}
+                                    />
+                                ) : (
+                                    <>
+                                        <div className="post-image-container">
+                                            <img
+                                                src={post.image}
+                                                alt={`The Prompt Architect: ${post.title} - AI Engineering Lesson`}
+                                                className="post-image"
+                                                loading="lazy"
+                                            />
+                                        </div>
 
-                            {index < postsData.length - 1 && <div className="post-divider" />}
-                        </motion.div>
-                    ))}
+                                        <div className="post-content">
+                                            <p className="insight">{post.insight}</p>
+                                            <div className="takeaway-box prompt-action">
+                                                <p className="takeaway">{post.takeaway}</p>
+                                                <div className="action-footer" style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px' }}>
+                                                    {!isRead(post.title) ? (
+                                                        <button 
+                                                            className="mark-done-btn"
+                                                            onClick={() => markAsRead(post.title)}
+                                                            style={{ background: '#7ecdc4', color: '#102220', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: '800', cursor: 'pointer', fontSize: '0.75rem' }}
+                                                        >
+                                                            MARK COMPLETE
+                                                        </button>
+                                                    ) : (
+                                                        <span style={{ color: '#7ecdc4', fontSize: '0.8rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <Check size={16} /> SUCCESS
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="post-navigation">
+                                            <button
+                                                className="nav-btn prev"
+                                                disabled={index === 0}
+                                                onClick={() => scrollToPost(index - 1)}
+                                            >
+                                                <ArrowLeft size={16} style={{ marginRight: '8px' }} /> Previous Lesson
+                                            </button>
+                                            <button
+                                                className="nav-btn next"
+                                                disabled={index === postsData.length - 1}
+                                                onClick={() => scrollToPost(index + 1)}
+                                            >
+                                                Next Lesson <ArrowRight size={16} style={{ marginLeft: '8px' }} />
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
+
+                                {index < postsData.length - 1 && <div className="post-divider" />}
+                            </motion.div>
+                        );
+                    })}
                 </div>
             </main>
 
@@ -286,7 +355,7 @@ const PromptEngineeringSeries = () => {
                     <p style={{ opacity: 0.7, marginBottom: '12px' }}>Sharpened your engineering? Now sharpen your attention.</p>
                     <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Deep Attention Training</h2>
                     <Link to="/hyperfocus-series" className="explore-btn" style={{ background: '#7ecdc4', color: '#102220', border: 'none', fontWeight: '800' }}>
-                        Architect Your Hyperfocus →
+                        Architect Your Hyperfocus <ArrowRight size={16} style={{ marginLeft: '8px' }} />
                     </Link>
                 </div>
                 <div style={{ marginTop: '40px' }}>

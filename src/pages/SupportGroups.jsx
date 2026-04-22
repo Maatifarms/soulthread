@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../services/firebase';
 import { collection, query, limit, getDocs } from 'firebase/firestore';
+import { Sprout, Heart, Briefcase, Moon } from 'lucide-react';
 
 /**
  * SupportGroups.jsx — Group Support Spaces (Task 62)
@@ -18,10 +19,10 @@ const SupportGroups = () => {
             try {
                 // Mocking global groups, this usually queries 'support_spaces'
                 const mockGroups = [
-                    { id: 'anx_01', title: 'Anxiety & Overthinking', memberCount: 1420, theme: '🌿', description: 'Strategies to ground yourself instantly.' },
-                    { id: 'rel_02', title: 'Relationship Support', memberCount: 980, theme: '❤️', description: 'Navigating breakups and boundary setting.' },
-                    { id: 'car_03', title: 'Career Burnout Recovery', memberCount: 2200, theme: '💼', description: 'Finding balance and dealing with imposter syndrome.' },
-                    { id: 'iso_04', title: 'Navigating Loneliness', memberCount: 310, theme: '🌙', description: 'You are never truly alone. Find your thread.' }
+                    { id: 'anx_01', title: 'Anxiety & Overthinking', memberCount: 1420, theme: <Sprout size={32} color="var(--color-primary)" />, description: 'Strategies to ground yourself instantly.' },
+                    { id: 'rel_02', title: 'Relationship Support', memberCount: 980, theme: <Heart size={32} color="#f43f5e" />, description: 'Navigating breakups and boundary setting.' },
+                    { id: 'car_03', title: 'Career Burnout Recovery', memberCount: 2200, theme: <Briefcase size={32} color="#6366f1" />, description: 'Finding balance and dealing with imposter syndrome.' },
+                    { id: 'iso_04', title: 'Navigating Loneliness', memberCount: 310, theme: <Moon size={32} color="#fbbf24" />, description: 'You are never truly alone. Find your thread.' }
                 ];
                 setGroups(mockGroups);
             } catch (e) {
@@ -70,7 +71,7 @@ const styles = {
     grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '24px' },
     groupCard: { background: 'var(--color-surface)', borderRadius: '16px', padding: '20px', border: '1px solid var(--color-border)', boxShadow: 'var(--shadow-sm)' },
     cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-    themeIcon: { fontSize: '32px' },
+    themeIcon: { display: 'flex', alignItems: 'center', justifyContent: 'center' },
     memberBadge: { background: 'rgba(139, 169, 137, 0.1)', color: 'var(--color-primary)', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' },
     buttonGroup: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
     joinBtn: { flex: 1, padding: '10px 16px', borderRadius: '8px', background: 'var(--color-primary)', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' },

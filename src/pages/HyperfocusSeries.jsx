@@ -1,13 +1,20 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { useAuth } from '../contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
 import { paymentService } from '../services/paymentService';
+import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
-import Breadcrumbs from '../components/common/Breadcrumbs';
+import { 
+    Check, 
+    ArrowLeft, 
+    ArrowRight 
+} from 'lucide-react';
+import SeriesPaywall from '../components/series/SeriesPaywall';
 import './HyperfocusSeries.css';
 
 const postsData = [
@@ -225,11 +232,15 @@ const postsData = [
 
 const HyperfocusSeries = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [completed, setCompleted] = useState(false);
     const [isPremium, setIsPremium] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
     const seriesRef = useRef(null);
+    const { markAsRead, isRead } = useSeriesProgress('hyperfocus-architect');
 
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, {
@@ -239,21 +250,33 @@ const HyperfocusSeries = () => {
     });
 
     useEffect(() => {
-        window.scrollTo(0, 0);
-
         const checkAccess = async () => {
             const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
             setIsPremium(hasAccess);
+
+            // Resume progress from Firestore
+            if (currentUser) {
+                try {
+                    const userRef = doc(db, 'users', currentUser.uid);
+                    const snap = await getDoc(userRef);
+                    if (snap.exists()) {
+                        const savedProgress = snap.data().seriesProgress?.['hyperfocus-architect'];
+                        if (savedProgress && savedProgress > 1) {
+                            // Optionally auto-scroll to last progress
+                            // scrollToPost(savedProgress - 1); 
+                        }
+                    }
+                } catch (e) { }
+            }
         };
         checkAccess();
 
         analytics.logEvent('series_start', { series: 'hyperfocus_architect' });
-
         document.body.classList.add('hyperfocus-mode');
         return () => {
             document.body.classList.remove('hyperfocus-mode');
         };
-    }, []);
+    }, [currentUser]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -301,13 +324,21 @@ const HyperfocusSeries = () => {
     const scrollToPost = (index) => {
         const posts = document.querySelectorAll('.post-block');
         if (posts[index]) {
-            posts[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const top = posts[index].getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
         }
     };
 
-    const handleUnlock = async () => {
+    const handleUnlock = async (isFree = false) => {
+        if (isFree) {
+            setIsFreeUnlocked(true);
+            analytics.logEvent('series_unlock_free', { series: 'hyperfocus_architect' });
+            return;
+        }
+
+        setPaymentError('');
         if (!currentUser) {
-            alert("Please login to unlock full training.");
+            navigate('/login');
             return;
         }
 
@@ -319,7 +350,7 @@ const HyperfocusSeries = () => {
             analytics.logEvent('series_unlock_success', { series: 'hyperfocus_architect' });
         } catch (error) {
             console.error("Unlock failed:", error);
-            alert("Payment failed or cancelled. Please try again.");
+            setPaymentError('Payment was cancelled or failed. Please try again.');
         } finally {
             setIsProcessing(false);
         }
@@ -345,7 +376,6 @@ const HyperfocusSeries = () => {
                     }
                 }}
             />
-            <Breadcrumbs />
             <header className="sticky-header">
                 <div className="header-content">
                     <Link to="/" className="logo-link">
@@ -398,89 +428,67 @@ const HyperfocusSeries = () => {
 
                 <div className="posts-list">
                     {postsData.map((post, index) => {
-                        const isLocked = index >= 5 && !isPremium;
+                        const midPoint = Math.floor(postsData.length / 2);
+                        const isLocked = index >= midPoint && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
+                        
+                        if (isLocked && index > midPoint) return null;
+
+                        const done = isRead(post.title);
 
                         return (
                             <motion.div
                                 key={post.id}
-                                className={`post-block ${isLocked ? 'locked-block' : ''}`}
-                                initial={{ opacity: 0, y: 30 }}
+                                className={`post-block ${isLocked ? 'locked-block' : ''} ${done ? 'post-done' : ''}`}
+                                initial={{ opacity: 0, y: 40 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: "-100px" }}
-                                transition={{ duration: 0.6 }}
+                                viewport={{ once: true, margin: "-80px" }}
+                                transition={{ duration: 0.5 }}
                             >
                                 {isLocked ? (
-                                    <div className="locked-overlay">
-                                        <div className="lock-content">
-                                            <div className="lock-icon">🔒</div>
-                                            <span className="post-number">POST {post.id} / 30</span>
-                                            <h3 className="blurred-text">{post.title}</h3>
-                                            <div className="paywall-card">
-                                                <h4>Training Restricted</h4>
-                                                <p>To access Chapters 6-30 of the Hyperfocus Architect curriculum, you need a <strong>Soul Basic</strong> membership.</p>
-                                                <ul className="premium-perks">
-                                                    <li>Full access to all 30 Chapters</li>
-                                                    <li>Unlock Never Finished & Ego-ID Series</li>
-                                                    <li>Exclusive Wellness Tools</li>
-                                                </ul>
-                                                <button 
-                                                    className="unlock-btn" 
-                                                    onClick={handleUnlock}
-                                                    disabled={isProcessing}
-                                                >
-                                                    {isProcessing ? 'Connecting...' : 'Upgrade To Unlock — ₹199'}
-                                                </button>
-                                                <p className="secure-text">Secure 256-bit encrypted payment via Razorpay</p>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <SeriesPaywall
+                                        seriesId="hyperfocus-architect"
+                                        seriesTitle="Hyperfocus Architect"
+                                        onUnlock={handleUnlock}
+                                        isProcessing={isProcessing}
+                                        paymentError={paymentError}
+                                    />
                                 ) : (
                                     <>
-                                        <div className="post-header">
-                                            <span className="post-number">POST {post.id} / 30</span>
-                                            <h3>{post.title}</h3>
+                                        <div className="post-day-label">
+                                            <span className="day-badge">Day {post.id}</span>
+                                            <span className="day-total">of 30</span>
+                                            {done && <span className="done-badge" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={14} /> Done</span>}
                                         </div>
+
+                                        <h3 className="post-title">{post.title}</h3>
 
                                         <div className="post-image-container">
-                                            <img
-                                                src={post.image}
-                                                alt={post.title}
-                                                loading="lazy"
-                                                className="post-image"
-                                            />
+                                            <img src={post.image} alt={post.title} loading="lazy" className="post-image" />
                                         </div>
 
-                                        <div className="post-content">
-                                            <p className="insight">{post.insight}</p>
-                                            <div className="takeaway-box">
-                                                <p className="takeaway">{post.takeaway}</p>
-                                            </div>
-                                            <p className="caption-text">
-                                                This is Post {post.id}/30 of the Hyperfocus Architect Series. Finish one post per day for maximum neural rewiring.
-                                            </p>
+                                        <blockquote className="insight-quote">
+                                            {post.insight}
+                                        </blockquote>
+
+                                        <div className="challenge-card">
+                                            <div className="challenge-label">Today's Challenge</div>
+                                            <p className="challenge-text">{post.takeaway.replace('Action: ', '')}</p>
+                                            {!done && (
+                                                <button className="mark-done-btn" onClick={() => markAsRead(post.title)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                    <Check size={18} /> Mark as Complete
+                                                </button>
+                                            )}
+                                            {done && (
+                                                <div className="done-msg">Challenge completed — keep the streak alive.</div>
+                                            )}
                                         </div>
 
                                         <div className="post-navigation">
-                                            <button
-                                                className="nav-btn prev"
-                                                disabled={index === 0}
-                                                onClick={() => scrollToPost(index - 1)}
-                                            >
-                                                ← Previously
+                                            <button className="nav-btn prev" disabled={index === 0} onClick={() => scrollToPost(index - 1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <ArrowLeft size={16} /> Day {post.id - 1}
                                             </button>
-                                            <button
-                                                className="nav-btn next"
-                                                disabled={index === postsData.length - 1}
-                                                onClick={() => {
-                                                    if (index === 4 && !isPremium) {
-                                                        alert("The next phase of training is restricted to Soul Basic members.");
-                                                        scrollToPost(5);
-                                                    } else {
-                                                        scrollToPost(index + 1);
-                                                    }
-                                                }}
-                                            >
-                                                Continue →
+                                            <button className="nav-btn next" disabled={index === postsData.length - 1} onClick={() => scrollToPost(index + 1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                Day {post.id + 1} <ArrowRight size={16} />
                                             </button>
                                         </div>
                                     </>
@@ -497,8 +505,8 @@ const HyperfocusSeries = () => {
                 <div style={{ marginBottom: '32px' }}>
                     <p style={{ opacity: 0.7, marginBottom: '12px' }}>Mastered your attention? Now master your mind.</p>
                     <h2 style={{ fontSize: '2rem', marginBottom: '24px' }}>Continue with Mental Toughness</h2>
-                    <Link to="/never-finished-series" className="explore-btn" style={{ background: 'var(--color-primary)', color: 'white', border: 'none' }}>
-                        Start Never Finished Bootamp →
+                    <Link to="/never-finished-series" className="explore-btn" style={{ background: 'var(--color-primary)', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '8px', width: 'fit-content', margin: '0 auto' }}>
+                        Start Never Finished Bootcamp <ArrowRight size={18} />
                     </Link>
                 </div>
                 <div style={{ marginTop: '40px' }}>

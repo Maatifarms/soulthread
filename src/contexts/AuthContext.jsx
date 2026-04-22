@@ -19,7 +19,7 @@ import {
     indexedDBLocalPersistence
 } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
-import { doc, setDoc, getDoc, addDoc, collection, onSnapshot, updateDoc, serverTimestamp, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, setDoc, getDoc, addDoc, collection, onSnapshot, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import ComplianceModal from '../components/auth/ComplianceModal';
 
@@ -83,20 +83,33 @@ export function AuthProvider({ children }) {
 
                 return new Promise((resolve, reject) => {
                     let resolved = false;
+                    let listenerCodeSentPromise;
+                    let listenerFailedPromise;
 
-                    const codeSent = FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
+                    const cleanup = async () => {
+                        try {
+                            const codeSentHandle = await listenerCodeSentPromise;
+                            if (codeSentHandle) codeSentHandle.remove();
+                            const failedHandle = await listenerFailedPromise;
+                            if (failedHandle) failedHandle.remove();
+                        } catch (e) { }
+                    };
+
+                    listenerCodeSentPromise = FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
                         console.log('✅ Native phone code sent:', event.verificationId);
                         setConfirmationResult({ isNative: true, verificationId: event.verificationId });
                         if (!resolved) {
                             resolved = true;
+                            cleanup();
                             resolve({ isNative: true, verificationId: event.verificationId });
                         }
                     });
 
-                    const failed = FirebaseAuthentication.addListener('phoneVerificationFailed', (event) => {
+                    listenerFailedPromise = FirebaseAuthentication.addListener('phoneVerificationFailed', (event) => {
                         console.error('❌ Native phone verification failed:', event.message);
                         if (!resolved) {
                             resolved = true;
+                            cleanup();
                             reject(new Error(event.message));
                         }
                     });
@@ -108,6 +121,7 @@ export function AuthProvider({ children }) {
                         console.error('❌ Native sign in failed', error);
                         if (!resolved) {
                             resolved = true;
+                            cleanup();
                             reject(error);
                         }
                     });
@@ -208,7 +222,7 @@ export function AuthProvider({ children }) {
             if (isNative) {
                 const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
                 const webClientId = "813685915255-h8ajgn54lvgp0opp12h74e9b2skq93ei.apps.googleusercontent.com";
-                
+
                 const result = await FirebaseAuthentication.signInWithGoogle({
                     scopes: ["email", "profile"],
                     webClientId: webClientId,
@@ -226,11 +240,32 @@ export function AuthProvider({ children }) {
                 await _saveGoogleUserProfile(finalResult.user);
                 return finalResult;
             } else {
+                // Use popup — signInWithRedirect is broken in modern browsers
+                // due to third-party cookie restrictions (Safari, Chrome, Firefox).
                 const provider = new GoogleAuthProvider();
                 provider.addScope('email');
                 provider.addScope('profile');
-                await signInWithRedirect(auth, provider);
-                return;
+                provider.setCustomParameters({ prompt: 'select_account' });
+
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    // Save profile in background — must NOT block or throw into the auth flow
+                    _saveGoogleUserProfile(result.user).catch(e =>
+                        console.warn('Profile save after Google login failed (non-critical):', e)
+                    );
+                    return result;
+                } catch (popupError) {
+                    // Popup closed by user — silent, nothing to do
+                    if (popupError.code === 'auth/popup-closed-by-user') {
+                        return;
+                    }
+                    // Popup was blocked — fall back to redirect
+                    if (popupError.code === 'auth/popup-blocked') {
+                        await signInWithRedirect(auth, provider);
+                        return;
+                    }
+                    throw popupError;
+                }
             }
         } catch (error) {
             console.error("❌ Google Login failed:", error);
@@ -318,6 +353,21 @@ export function AuthProvider({ children }) {
 
     async function logout() {
         localStorage.removeItem('soul_user_cache');
+        
+        const isNative = typeof window !== 'undefined' &&
+            (Capacitor.isNativePlatform() ||
+                window.location.protocol === 'capacitor:' ||
+                window.location.protocol === 'ionic:');
+                
+        if (isNative) {
+            try {
+                const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
+                await FirebaseAuthentication.signOut();
+            } catch (e) {
+                console.error('Native sign-out error:', e);
+            }
+        }
+        
         return signOut(auth);
     }
 
@@ -347,6 +397,15 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         const isNative = Capacitor.isNativePlatform();
         
+        // Safety timeout to prevent infinite splash screen hang
+        const initTimeout = setTimeout(() => {
+            if (loading && !authInitialized) {
+                console.warn("Auth initialization timeout - unblocking UI");
+                setLoading(false);
+                setAuthInitialized(true);
+            }
+        }, 7000);
+
         const initializeAuthSystem = async () => {
             try {
                 const persistenceType = (isNative || !('indexedDB' in window)) 
@@ -381,6 +440,7 @@ export function AuthProvider({ children }) {
                 const userRef = doc(db, 'users', user.uid);
 
                 unsubUserDoc = onSnapshot(userRef, (docSnap) => {
+                    clearTimeout(initTimeout);
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
                         setCurrentUser(prev => ({
@@ -390,20 +450,23 @@ export function AuthProvider({ children }) {
                             email: user.email,
                             photoURL: userData.photoURL || user.photoURL
                         }));
-                        setShowCompliance(userData.acceptedVersion < TERMS_VERSION || !userData.acceptedVersion);
+                        setShowCompliance(!userData.acceptedVersion || userData.acceptedVersion < TERMS_VERSION);
                     } else {
-                        _saveGoogleUserProfile(user);
+                        setCurrentUser(prev => prev || user);
                     }
                     setLoading(false);
                     setAuthInitialized(true);
                 }, (err) => {
                     console.error("Profile Snapshot Error:", err);
+                    clearTimeout(initTimeout);
+                    setCurrentUser(prev => prev || user);
                     setLoading(false);
                     setAuthInitialized(true);
                 });
 
                 requestFCMToken(user.uid);
             } else {
+                clearTimeout(initTimeout);
                 setCurrentUser(null);
                 setLoading(false);
                 setAuthInitialized(true);
@@ -413,6 +476,7 @@ export function AuthProvider({ children }) {
         return () => {
             unsubscribeAuth();
             if (unsubUserDoc) unsubUserDoc();
+            clearTimeout(initTimeout);
         };
     }, []);
 

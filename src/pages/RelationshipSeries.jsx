@@ -1,14 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Check, ArrowRight } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
+import { useSeriesProgress } from '../hooks/useSeriesProgress';
+import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
 import { paymentService } from '../services/paymentService';
 import SEO from '../components/common/SEO';
-import Breadcrumbs from '../components/common/Breadcrumbs';
+import SeriesPaywall from '../components/series/SeriesPaywall';
 import './RelationshipSeries.css';
 
 const chaptersData = [
@@ -66,7 +68,7 @@ const chaptersData = [
         title: "Healing & Self-Worth",
         insight: "They didn't just leave; they left you with a question: 'Was I ever enough?' The answer must come from you, not them.",
         practicum: "Write down 5 things you love about yourself that have NOTHING to do with being someone's partner.",
-        image: "file:///C:/Users/acer/.gemini/antigravity/brain/ae86f859-48ac-4dd2-a4db-e994a781d018/relationship_triptych_main_1773948700729.png"
+        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&q=80&w=1200"
     },
     {
         id: 9,
@@ -80,22 +82,25 @@ const chaptersData = [
         title: "The Partnership Blueprint",
         insight: "A great relationship is not a lack of problems. It is a shared willingness to solve them. You are a team against the problem.",
         practicum: "Discuss your goals for the next 5 years with your partner. Are you building the same house?",
-        image: "file:///C:/Users/acer/.gemini/antigravity/brain/ae86f859-48ac-4dd2-a4db-e994a781d018/relationship_hero_1773948679392.png"
+        image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?auto=format&fit=crop&q=80&w=1200"
     }
 ];
 
 const RelationshipSeries = () => {
     const { currentUser } = useAuth();
+    const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [isPremium, setIsPremium] = useState(false);
+    const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
     const [loading, setLoading] = useState(true);
+    const { markAsRead, isRead } = useSeriesProgress('relationship-mastery');
 
     const { scrollYProgress } = useScroll();
     const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
 
     useEffect(() => {
-        window.scrollTo(0, 0);
         const checkAccess = async () => {
             const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
             setIsPremium(hasAccess);
@@ -138,13 +143,21 @@ const RelationshipSeries = () => {
     const scrollToPost = (index) => {
         const posts = document.querySelectorAll('.chapter-block');
         if (posts[index]) {
-            posts[index].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const top = posts[index].getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top, behavior: 'smooth' });
         }
     };
 
-    const handleUnlock = async () => {
+    const handleUnlock = async (isFree = false) => {
+        if (isFree) {
+            setIsFreeUnlocked(true);
+            analytics.logEvent('series_unlock_free', { series: 'relationship_mastery' });
+            return;
+        }
+
+        setPaymentError('');
         if (!currentUser) {
-            alert("Please login to unlock full relationship training.");
+            navigate('/login');
             return;
         }
 
@@ -155,6 +168,7 @@ const RelationshipSeries = () => {
             setIsPremium(true);
         } catch (error) {
             console.error("Unlock failed:", error);
+            setPaymentError('Payment was cancelled or failed. Please try again.');
         } finally {
             setIsProcessing(false);
         }
@@ -168,7 +182,6 @@ const RelationshipSeries = () => {
                 title="Relationship Mastery: The Heart's Journey | SoulThread" 
                 description="Navigate the complexities of modern dating, breakups, and self-worth in this 10-chapter immersive series."
             />
-            <Breadcrumbs />
             <header className="sticky-header-heart">
                 <div className="header-inner">
                     <Link to="/" className="logo-link"><span className="logo-heart">SOULTHREAD</span></Link>
@@ -194,7 +207,10 @@ const RelationshipSeries = () => {
 
                 <div className="chapters-timeline">
                     {chaptersData.map((chapter, index) => {
-                        const isLocked = index >= 3 && !isPremium;
+                        const midPoint = Math.floor(chaptersData.length / 2);
+                        const isLocked = index >= midPoint && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
+                        
+                        if (isLocked && index > midPoint) return null;
 
                         return (
                             <motion.div 
@@ -205,16 +221,13 @@ const RelationshipSeries = () => {
                                 viewport={{ once: true, margin: "-100px" }}
                             >
                                 {isLocked ? (
-                                    <div className="locked-overlay">
-                                        <div className="paywall-inner">
-                                            <h2>The Deep Heart</h2>
-                                            <p>Chapters 4-10 of Relationship Mastery are restricted to <strong>Soul Basic</strong> members. Unlock the full psychological playbook.</p>
-                                            <button className="unlock-btn-heart" onClick={handleUnlock} disabled={isProcessing}>
-                                                {isProcessing ? 'Connecting...' : 'Upgrade To Basic — ₹199'}
-                                            </button>
-                                            <p style={{ opacity: 0.6, fontSize: '13px' }}>Unlocks 30+ growth series & wellness tools.</p>
-                                        </div>
-                                    </div>
+                                    <SeriesPaywall
+                                        seriesId="relationship-mastery"
+                                        seriesTitle="Relationship Mastery"
+                                        onUnlock={handleUnlock}
+                                        isProcessing={isProcessing}
+                                        paymentError={paymentError}
+                                    />
                                 ) : (
                                     <>
                                         <div className="chapter-meta">
@@ -229,10 +242,23 @@ const RelationshipSeries = () => {
                                             <h4>Transformation Focus</h4>
                                             <p>{chapter.insight}</p>
                                         </div>
-                                        <div className="practicum-box">
-                                            <div className="practicum-icon">💎</div>
-                                            <div className="practicum-content">
-                                                <p><strong>Practicum:</strong> {chapter.practicum}</p>
+                                        <div className="practicum-box" style={{ background: 'rgba(255, 107, 107, 0.05)', padding: '24px', borderRadius: '16px', borderLeft: '4px solid #ff6b6b', marginBottom: '24px' }}>
+                                            <h4 style={{ color: '#ff6b6b', fontSize: '1rem', fontWeight: '800', marginBottom: '12px' }}>PRACTICUM</h4>
+                                            <p style={{ fontSize: '1.1rem', fontStyle: 'italic', color: 'rgba(255,255,255,0.9)' }}>{chapter.practicum}</p>
+                                            <div className="action-footer" style={{ marginTop: '24px' }}>
+                                                {!isRead(chapter.title) ? (
+                                                    <button 
+                                                        className="mark-done-btn"
+                                                        onClick={() => markAsRead(chapter.title)}
+                                                        style={{ background: '#ff6b6b', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                                    >
+                                                        <Check size={18} /> MARK AS DONE
+                                                    </button>
+                                                ) : (
+                                                    <span style={{ color: '#ff6b6b', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Check size={18} /> LESSON COMPLETE
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     </>
@@ -247,7 +273,9 @@ const RelationshipSeries = () => {
             <footer className="paywall-heart">
                 <h2>Love is a choice.</h2>
                 <p>Choose growth. Choose yourself. Build something that lasts.</p>
-                <Link to="/series" className="unlock-btn-heart" style={{ textDecoration: 'none', display: 'inline-block' }}>Return to Library</Link>
+                <Link to="/series" className="unlock-btn-heart" style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    Return to Library <ArrowRight size={18} />
+                </Link>
             </footer>
         </div>
     );

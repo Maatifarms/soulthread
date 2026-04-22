@@ -2,6 +2,35 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../services/categories';
+import { 
+    HeartPulse, 
+    Brain, 
+    Volume2, 
+    Wrench, 
+    Sparkles, 
+    Rainbow, 
+    Users, 
+    Heart, 
+    Flame,
+    PenLine,
+    Sprout,
+    ArrowRight,
+    ArrowLeft
+} from 'lucide-react';
+
+const ICON_MAP = {
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout
+};
 
 const Onboarding = () => {
     const { currentUser, createPhoneUserProfile } = useAuth();
@@ -70,8 +99,8 @@ const Onboarding = () => {
 
                 {/* Header */}
                 <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-                    <div style={{ fontSize: '42px', marginBottom: '8px' }}>
-                        {step === 1 ? '🌱' : '✨'}
+                    <div style={{ color: 'var(--color-gold)', marginBottom: '12px' }}>
+                        {step === 1 ? <Sprout size={48} /> : <Sparkles size={48} />}
                     </div>
                     <h1 style={{ fontSize: '24px', color: 'var(--color-primary)', margin: '0 0 8px 0' }}>
                         {step === 1 ? 'Welcome to SoulThread!' : step === 2 ? 'A little more about you' : 'What touches your soul?'}
@@ -119,9 +148,9 @@ const Onboarding = () => {
                         <button
                             type="submit"
                             className="btn-primary"
-                            style={{ width: '100%', fontSize: '16px' }}
+                            style={{ width: '100%', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                         >
-                            Next →
+                            Next <ArrowRight size={18} />
                         </button>
                     </form>
                 )}
@@ -211,17 +240,17 @@ const Onboarding = () => {
                                 type="button"
                                 onClick={() => setStep(1)}
                                 className="btn-ghost"
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
-                                ← Back
+                                <ArrowLeft size={18} /> Back
                             </button>
                             <button
                                 type="button"
                                 onClick={() => setStep(3)}
                                 className="btn-primary"
-                                style={{ flex: 2, fontSize: '16px' }}
+                                style={{ flex: 2, fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
-                                Next →
+                                Next <ArrowRight size={18} />
                             </button>
                         </div>
                     </div>
@@ -262,7 +291,12 @@ const Onboarding = () => {
                                                 gap: '6px'
                                             }}
                                         >
-                                            <span>{cat.icon}</span> {cat.name}
+                                            <span className="category-icon" style={{ display: 'flex' }}>
+                                                {(() => {
+                                                    const IconComp = ICON_MAP[cat.icon];
+                                                    return IconComp ? <IconComp size={16} /> : <PenLine size={16} />;
+                                                })()}
+                                            </span> {cat.name}
                                         </button>
                                     );
                                 })}
@@ -274,9 +308,9 @@ const Onboarding = () => {
                                 type="button"
                                 onClick={() => setStep(2)}
                                 className="btn-ghost"
-                                style={{ flex: 1 }}
+                                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
-                                ← Back
+                                <ArrowLeft size={18} /> Back
                             </button>
                             <button
                                 type="submit"
@@ -288,7 +322,7 @@ const Onboarding = () => {
                                     boxShadow: '0 4px 14px rgba(61,139,127,0.3)'
                                 }}
                             >
-                                {loading ? 'Entering...' : 'Enter SoulThread 🌿'}
+                                {loading ? 'Entering...' : 'Enter SoulThread'}
                             </button>
                         </div>
                     </form>

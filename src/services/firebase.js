@@ -26,9 +26,12 @@ export const db = initializeFirestore(app, {
   })
 });
 
-// ── Auth + Storage: always needed upfront ─────────────────────────────────
+import { getFunctions } from "firebase/functions";
+
+// ── Auth + Storage + Functions: always needed upfront ─────────────────────────────────
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+export const functions = getFunctions(app);
 
 // ── App Check: defer until after first paint (non-blocking) ───────────────
 // Wrapping in requestIdleCallback / setTimeout keeps the critical path clean.

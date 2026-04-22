@@ -70,7 +70,7 @@ const FeedList = ({ circleId = null, searchTerm = '', filterCategory = null }) =
             if (entries[0].isIntersecting) {
                 setPostLimit(prev => prev + 10);
             }
-        }, { rootMargin: '400px' });
+        }, { rootMargin: '600px' });
         if (node) observer.current.observe(node);
     }, [loading, loadingMore]);
 

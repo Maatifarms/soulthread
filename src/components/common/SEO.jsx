@@ -5,9 +5,9 @@ import { useEffect } from 'react';
  * This helps with SEO in a Single Page Application (SPA).
  */
 const SEO = ({ 
-    title = "SoulThread | India's #1 Anonymous Mental Health Community", 
-    description = "SoulThread is a compassionate sanctuary for mental wellness in India. Share stories, find anxiety relief, and connect with anonymous peer support groups. Not a clothing brand.",
-    keywords = "soulthread india, mental health support india, anonymous community, anxiety relief, peer support, psychological growth, soulthread wellness",
+    title = "Anonymous Emotional Support & Safe Space | SoulThread", 
+    description = "Need a safe space to talk anonymously? Join SoulThread, the leading online venting platform for emotional support, anxiety relief, and mental wellness conversations.",
+    keywords = "anonymous emotional support, venting platform, safe space to talk anonymously, find emotional support online, mental health community, anonymous therapy alternative",
     image = "https://soulthread.in/logo.jpg", 
     url = "https://soulthread.in/",
     type = 'website', 

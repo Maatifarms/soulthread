@@ -1,7 +1,13 @@
 const admin = require('firebase-admin');
 
+function getDb() {
+    if (!admin.apps.length) admin.initializeApp();
+    return admin.firestore();
+}
+
+
 exports.handleAggregateGlobalMetrics = async (context) => {
-    const db = admin.firestore();
+    const db = getDb();
     const circlesSnap = await db.collection('circles').get();
     const totalCircles = circlesSnap.size;
     const weekAgo = new Date();

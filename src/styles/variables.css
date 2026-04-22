@@ -1,50 +1,49 @@
 :root {
-  /* ── Sanctuary Palette (warm teal) ── */
-  --color-primary: #3d8b7f;
-  --color-primary-hover: #2a6b61;
-  --color-primary-light: #c8e6e2;
-  --color-primary-soft: rgba(61, 139, 127, 0.12);
-  --color-primary-dark: #2a6b61;
+  /* ── Elite Sanctuary Palette (Premium Navy & Platinum) ── */
+  --color-primary: #0f172a; /* Deep Navy */
+  --color-primary-hover: #1e293b;
+  --color-primary-light: #f1f5f9;
+  --color-primary-soft: rgba(15, 23, 42, 0.08);
+  --color-primary-dark: #020617;
 
-  --color-secondary: #f0a050;
-  --color-secondary-soft: rgba(240, 160, 80, 0.1);
-  --color-accent: #8b7ad0;
+  --color-secondary: #c5a358; /* Ethereal Gold */
+  --color-secondary-soft: rgba(197, 163, 88, 0.1);
+  --color-accent: #64748b; /* Platinum Slate */
 
-  --color-success: #22c55e;
+  --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
 
-  /* ── Gradients ── */
-  --grad-primary: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  --grad-main: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-  --grad-premium: linear-gradient(135deg, #d4af37 0%, #f9d71c 100%);
-  --grad-aurora: linear-gradient(135deg, #3d8b7f 0%, #8b7ad0 100%);
-  --grad-glow: radial-gradient(circle at center, rgba(61, 139, 127, 0.15) 0%, transparent 70%);
+  /* ── Premium Gradients ── */
+  --grad-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --grad-main: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  --grad-premium: linear-gradient(135deg, #c5a358 0%, #eab308 100%);
+  --grad-aurora: linear-gradient(135deg, #0f172a 0%, #64748b 100%);
+  --grad-glow: radial-gradient(circle at center, rgba(197, 163, 88, 0.1) 0%, transparent 70%);
 
-
-
-  /* ── Surfaces ── */
-  --color-background: #f5f7f6;
+  /* ── Ultra-Refined Surfaces ── */
+  --color-background: #f8fafc;
   --color-surface: #ffffff;
-  --color-text-primary: #1a2d2a;
-  --color-text-secondary: #5a7a74;
-  --color-text-muted: #8aa8a3;
-  --color-text-link: var(--color-primary);
-  --color-border: #e4ece9;
-  --color-divider: #edf1f0;
+  --color-surface-rgb: 255, 255, 255;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-text-link: #0f172a;
+  --color-border: #e2e8f0;
+  --color-divider: #f1f5f9;
 
-  /* ── Spacing ── */
+  /* ── Spacing & Layout (Modern Whitespace) ── */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
   --spacing-md: 16px;
   --spacing-lg: 24px;
   --spacing-xl: 32px;
-  --max-width-feed: 640px;
-  --header-height: 56px;
-  --bottom-nav-height: 64px;
-  --top-nav-height: 56px;
+  --max-width-feed: 680px; /* Slightly wider for better readability */
+  --header-height: 64px;
+  --bottom-nav-height: 72px;
+  --top-nav-height: 64px;
 
-  /* ── Typography ── */
+  /* ── Premium Typography ── */
   --font-family-header: 'Outfit', -apple-system, sans-serif;
   --font-family-body: 'Outfit', -apple-system, sans-serif;
   --font-body: 'Outfit', -apple-system, sans-serif;
@@ -53,37 +52,45 @@
   --font-size-sm: 13px;
   --font-size-md: 15px;
   --font-size-lg: 18px;
-  --font-size-xl: 24px;
+  --font-size-xl: 26px; /* Slightly larger for impact */
 
-  /* ── Radius ── */
+  /* ── Modern Radius ── */
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-  --radius-xl: 32px;
+  --radius-xl: 36px;
   --radius-full: 9999px;
 
-  /* ── Shadows (Optimized for Mobile) ── */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-  --shadow-soft: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
-  --shadow-glow: 0 10px 30px -5px rgba(61, 139, 127, 0.35);
+  /* ── Depth & Glass (macOS Style) ── */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-soft: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+  --shadow-glow: 0 0 20px rgba(197, 163, 88, 0.2);
+
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-blur: blur(20px);
+  --glass-border: rgba(255, 255, 255, 0.2);
 }
 
-
-/* Dark Mode (High Contrast & Legibility) */
+/* Elite Dark Mode (Deep OLED Blacks & Silver Accents) */
 body.dark-mode {
-  --color-background: #08100f;
-  --color-surface: #121d1b;
-  --color-text-primary: #f2f7f6;
-  --color-text-secondary: #a0c4bf;
-  --color-text-muted: #6b8f8a;
-  --color-border: #223a36;
-  --color-divider: #1b2e2b;
-  --color-primary-soft: rgba(61, 139, 127, 0.2);
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --color-background: #020617; /* Deepest Navy */
+  --color-surface: #0f172a;
+  --color-surface-rgb: 15, 23, 42;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #475569;
+  --color-border: #1e293b;
+  --color-divider: #0f172a;
+  --color-primary-soft: rgba(248, 250, 252, 0.05);
+
+  --glass-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(248, 250, 252, 0.1);
+
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.8);
+  --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.9);
 }
 
 /* ── Native-Like Interactive Utilities ── */

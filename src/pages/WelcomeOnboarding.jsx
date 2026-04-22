@@ -1,29 +1,29 @@
-import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Sparkles, ShieldCheck, Heart, MessageCircle } from 'lucide-react';
 
 const ONBOARDING_STEPS = [
     {
         title: "Welcome to SoulThread",
         subtitle: "A digital sanctuary for your mind.",
-        icon: "🧵",
+        icon: Sparkles,
         text: "We believe in honest conversations and radical empathy. Here, you don't have to perform. You just have to be."
     },
     {
         title: "Zero Bias. Zero Judgment.",
         subtitle: "Safe by Design.",
-        icon: "🛡️",
+        icon: ShieldCheck,
         text: "SoulThread is built on anonymity. Your identity is hidden by default. Share your stories without fear of real-world repercussions."
     },
     {
         title: "Community Guidelines",
         subtitle: "Protect the Peace.",
-        icon: "🤝",
+        icon: Heart,
         text: "We do not tolerate hate speech, harassment, or harm. We protect our community fiercely. By entering, you agree to be kind."
     },
     {
         title: "How are you feeling?",
         subtitle: "First Check-in",
-        icon: "💭",
+        icon: MessageCircle,
         text: "Take a deep breath. Drop a quick mood, or skip it. Then we'll get you signed in."
     }
 ];
@@ -62,14 +62,16 @@ const WelcomeOnboarding = () => {
             </div>
 
             <div style={{ ...styles.contentSection, opacity: isAnimating ? 0 : 1, transform: isAnimating ? 'translateY(10px)' : 'translateY(0)' }}>
-                <div style={styles.icon}>{currentData.icon}</div>
+                <div style={styles.icon}>
+                    <currentData.icon size={64} strokeWidth={1.5} color="var(--color-primary)" />
+                </div>
                 <h1 style={styles.title}>{currentData.title}</h1>
                 <h2 style={styles.subtitle}>{currentData.subtitle}</h2>
                 <p style={styles.text}>{currentData.text}</p>
 
                 {step === 3 && (
                     <div style={styles.moodGrid}>
-                        {['😊 Peaceful', '😔 Heavy', '🤔 Reflective', '⚡ Anxious', '🔥 Motivated'].map(m => (
+                        {['Peaceful', 'Heavy', 'Reflective', 'Anxious', 'Motivated'].map(m => (
                             <button key={m} onClick={finishOnboarding} style={styles.moodBtn}>{m}</button>
                         ))}
                     </div>

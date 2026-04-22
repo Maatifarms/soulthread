@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════════════════════════
+   NAVBAR — Executive Sanctuary Design
+   Floating depth, liquid transitions, and premium contrast.
+   ═══════════════════════════════════════════════════════════ */
+
+.nav-root {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  background: transparent; /* Start transparent, filled on scroll */
+  border-bottom: 1px solid transparent;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  transition: all var(--transition-std);
+}
+
+.nav-root.scrolled {
+  height: 64px;
+  background: var(--glass-bg-scrolled, rgba(255, 255, 255, 0.98)); /* Toughened for 5-star clarity */
+  backdrop-filter: blur(24px) saturate(200%); /* Sharpened saturation */
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border-bottom: 1px solid var(--glass-border);
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.12); /* Authoritative depth */
+}
+
+.dark-mode .nav-root.scrolled {
+  background: rgba(15, 23, 42, 0.96); /* Deepened for dark mode authority */
+}
+
+.nav-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 100%;
+  padding: 0 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* ── Logo ── */
+.nav-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  transition: transform var(--transition-fast);
+}
+
+.nav-logo-text {
+  font-weight: 950;
+  font-size: 22px;
+  letter-spacing: -0.05em;
+  color: var(--color-text-primary);
+  font-family: var(--font-header);
+}
+
+/* ── Menu Links ── */
+.nav-links-desktop {
+  display: flex;
+  gap: 8px;
+  margin-left: 32px;
+}
+
+.nav-link-item {
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-weight: 900; /* Toughened from 800 */
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em; /* More premium spacing */
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  opacity: 0.9;
+}
+
+.nav-link-item:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text-primary);
+}
+
+.nav-link-item.active {
+  color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+/* ── Search Bar ── */
+.nav-search-wrapper {
+  flex: 1;
+  max-width: 320px;
+  margin: 0 40px;
+  position: relative;
+}
+
+.nav-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary); /* From Muted to Secondary */
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.nav-search-input {
+  width: 100%;
+  padding: 10px 16px 10px 42px;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--glass-border);
+  background: var(--glass-bg);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 700; /* Toughened */
+  outline: none;
+  transition: all var(--transition-std);
+}
+
+.nav-search-input::placeholder {
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+}
+
+.nav-search-input:focus {
+  border-color: var(--color-primary);
+  background: white;
+  box-shadow: var(--shadow-glow-sm);
+}
+
+.dark-mode .nav-search-input:focus {
+  background: var(--color-surface);
+}
+
+/* ── Action Buttons ── */
+.nav-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.nav-btn-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: all var(--transition-liquid);
+}
+
+.nav-btn-icon:hover {
+  transform: translateY(-4px);
+  background: white;
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.dark-mode .nav-btn-icon:hover {
+  background: var(--color-surface);
+}
+
+/* ── Entrance Button ── */
+.nav-btn-enter {
+  display: inline-flex;
+  align-items: center;
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); /* Explicit Deep Teal */
+  color: white !important;
+  padding: 10px 24px;
+  border-radius: var(--radius-full);
+  font-weight: 900;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(13, 148, 136, 0.2);
+  transition: all var(--transition-liquid);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn-enter:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(13, 148, 136, 0.4);
+  background: #0f766e;
+}
+
+
+
+/* ── Dropdowns ── */
+.nav-dropdown-menu {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  width: 280px;
+  background: white;
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2xl);
+  overflow: hidden;
+  z-index: 1100;
+}
+
+.dark-mode .nav-dropdown-menu {
+  background: #1e293b; /* More defined surface for menus */
+  border-color: #334155;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+}
+
+.nav-menu-item-link {
+  transition: all var(--transition-fast);
+}
+
+.nav-menu-item-link:hover {
+  background: var(--color-primary-soft);
+  padding-left: 20px !important;
+}
+
+@media (max-width: 1024px) {
+  .nav-root { 
+    height: 64px;
+    background: var(--color-background); 
+    border-bottom: 1px solid var(--color-border); 
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    transition: 
+      transform var(--transition-normal),
+      background var(--transition-liquid),
+      backdrop-filter var(--transition-liquid),
+      border var(--transition-liquid);
+    will-change: transform, background;
+    transform: translateY(0);
+  }
+
+  .nav-root.nav-hidden {
+    transform: translateY(-100%);
+  }
+
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    align-items: flex-start;
+    padding-top: 6px;
+    padding-bottom: env(safe-area-inset-bottom, 12px); /* Increased for ergonomics */
+    background: var(--color-surface);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--color-border);
+    z-index: 2000; /* Above everything */
+    min-height: 64px;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08); /* Subtle upward shadow */
+  }
+
+  /* Persistent Bottom Nav - No more nav-hidden class for mobile-bottom-nav */
+
+  .mobile-login-btn {
+    margin: auto;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    color: white;
+    background: var(--grad-primary);
+    box-shadow: var(--shadow-glow-sm);
+  }
+
+  .dark-mode .mobile-bottom-nav {
+    background: rgba(13, 26, 24, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-links-desktop, 
+  .nav-search-wrapper, 
+  .nav-btn-enter,
+  .hide-mobile { 
+    display: none !important; 
+  }
+  .nav-logo-text { font-size: 19px; }
+}

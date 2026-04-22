@@ -4,6 +4,40 @@ import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { CATEGORIES } from '../services/categories';
+import { 
+    AlertCircle, 
+    CheckCircle, 
+    CloudLightning, 
+    Hash, 
+    LayoutDashboard, 
+    ArrowLeft,
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout,
+    Loader2
+} from 'lucide-react';
+
+const ICON_MAP = {
+    HeartPulse,
+    Brain,
+    Volume2,
+    Wrench,
+    Sparkles,
+    Rainbow,
+    Users,
+    Heart,
+    Flame,
+    PenLine,
+    Sprout
+};
 
 /**
  * AdminSeedCategories — One-time admin page to seed Firestore categories.
@@ -23,8 +57,9 @@ const AdminSeedCategories = () => {
 
     if (!currentUser || currentUser.role !== 'admin') {
         return (
-            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)' }}>
-                ❌ Admin access required
+            <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-error)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+                <AlertCircle size={48} />
+                <span>Admin access required</span>
             </div>
         );
     }
@@ -34,7 +69,7 @@ const AdminSeedCategories = () => {
         setLog([]);
         setError(null);
         try {
-            appendLog('🌱 Starting category seed...\n');
+            appendLog('[INIT] Starting category seed...');
             for (const cat of CATEGORIES) {
                 const ref = doc(collection(db, 'categories'), cat.id);
                 await setDoc(ref, {
@@ -45,14 +80,14 @@ const AdminSeedCategories = () => {
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
                 }, { merge: true });
-                appendLog(`✅ [${cat.order}] ${cat.icon} ${cat.name}`);
+                appendLog(`[SUCCESS] [${cat.order}] ${cat.name} (${cat.icon})`);
             }
-            appendLog(`\n🎉 Done! ${CATEGORIES.length} categories seeded.`);
-            appendLog('📌 Document IDs = slug (ready for AI categorization).');
+            appendLog(`[DONE] ${CATEGORIES.length} categories seeded.`);
+            appendLog('[INFO] Document IDs = slug (ready for AI categorization).');
             setStatus('done');
         } catch (err) {
             setError(err.message);
-            appendLog(`❌ Error: ${err.message}`);
+            appendLog(`[ERROR] ${err.message}`);
             setStatus('error');
         }
     };
@@ -63,8 +98,8 @@ const AdminSeedCategories = () => {
             background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)',
             border: '1.5px solid var(--color-border)', boxShadow: 'var(--shadow-md)',
         }}>
-            <h2 style={{ color: 'var(--color-primary)', marginBottom: '8px', fontWeight: '800' }}>
-                🌱 Seed Categories
+            <h2 style={{ color: 'var(--color-gold)', marginBottom: '8px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Sprout size={24} /> Seed Categories
             </h2>
             <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px', fontSize: '14px' }}>
                 This is a one-time operation. It writes all 9 SoulThread categories to Firestore.<br />
@@ -78,7 +113,12 @@ const AdminSeedCategories = () => {
                         padding: '8px 0', borderBottom: '1px solid var(--color-border)',
                         fontSize: '14px',
                     }}>
-                        <span>{c.icon}</span>
+                        <span style={{ color: 'var(--color-primary)', display: 'flex' }}>
+                            {(() => {
+                                const IconComp = ICON_MAP[c.icon];
+                                return IconComp ? <IconComp size={18} /> : <PenLine size={18} />;
+                            })()}
+                        </span>
                         <span style={{ fontWeight: '600', color: 'var(--color-text-primary)' }}>{c.name}</span>
                         <span style={{
                             marginLeft: 'auto', fontSize: '11px', fontFamily: 'monospace',
@@ -102,7 +142,15 @@ const AdminSeedCategories = () => {
                         transition: 'all 0.2s ease',
                     }}
                 >
-                    {status === 'running' ? '⏳ Seeding...' : '🚀 Seed All 9 Categories to Firestore'}
+                    {status === 'running' ? (
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                            <Loader2 className="animate-spin" size={20} /> Seeding...
+                        </span>
+                    ) : (
+                        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                            <CloudLightning size={20} /> Seed All 9 Categories to Firestore
+                        </span>
+                    )}
                 </button>
             )}
 
@@ -129,7 +177,7 @@ const AdminSeedCategories = () => {
                         fontWeight: '700', cursor: 'pointer',
                     }}
                 >
-                    ← Back to Admin Dashboard
+                    <ArrowLeft size={18} style={{ marginRight: '8px' }} /> Back to Admin Dashboard
                 </button>
             )}
         </div>
