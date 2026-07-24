@@ -2,11 +2,10 @@ import { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useScroll, useSpring } from 'framer-motion';
 import { analytics } from '../services/analytics';
-import { db } from '../services/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+import { db } from '../services/firebase';
+import { doc, getDoc, updateDoc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
+
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
 import { 
@@ -14,7 +13,6 @@ import {
     ArrowLeft, 
     ArrowRight 
 } from 'lucide-react';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './HyperfocusSeries.css';
 
 const postsData = [
@@ -235,7 +233,7 @@ const HyperfocusSeries = () => {
     const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [completed, setCompleted] = useState(false);
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
@@ -251,7 +249,7 @@ const HyperfocusSeries = () => {
 
     useEffect(() => {
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const hasAccess = await true;
             setIsPremium(hasAccess);
 
             // Resume progress from Firestore
@@ -344,8 +342,8 @@ const HyperfocusSeries = () => {
 
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            const tier = true;
+            navigate("/pricing");
             setIsPremium(true);
             analytics.logEvent('series_unlock_success', { series: 'hyperfocus_architect' });
         } catch (error) {
@@ -360,7 +358,7 @@ const HyperfocusSeries = () => {
         <div className="hyperfocus-page">
             <SEO 
                 title="Hyperfocus Architect: Neuroscience-based Attention Training"
-                description="Master your focus and attention through 30 chapters of neuroscience-backed psychological training. Build a high-performance mental operating system."
+                description="Master your focus and attention through 30 chapters of neuroscience-backed emotional training. Build a high-performance mental operating system."
                 image="/assets/hyperfocus/post_01.png"
                 url="https://soulthread.in/hyperfocus-series"
                 type="article"
@@ -388,6 +386,18 @@ const HyperfocusSeries = () => {
                 </div>
                 <motion.div className="progress-bar" style={{ scaleX }} />
             </header>
+
+            <div className="series-progress-bar">
+                <div className="series-progress-track">
+                    <div 
+                        className="series-progress-fill"
+                        style={{ width: `${((currentPostIndex + 1) / postsData.length) * 100}%` }}
+                    />
+                </div>
+                <span className="series-progress-label">
+                    Day {currentPostIndex + 1} of {postsData.length}
+                </span>
+            </div>
 
             <section className="hero-section">
                 <motion.h1
@@ -445,13 +455,7 @@ const HyperfocusSeries = () => {
                                 transition={{ duration: 0.5 }}
                             >
                                 {isLocked ? (
-                                    <SeriesPaywall
-                                        seriesId="hyperfocus-architect"
-                                        seriesTitle="Hyperfocus Architect"
-                                        onUnlock={handleUnlock}
-                                        isProcessing={isProcessing}
-                                        paymentError={paymentError}
-                                    />
+                                    <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                 ) : (
                                     <>
                                         <div className="post-day-label">
@@ -470,18 +474,64 @@ const HyperfocusSeries = () => {
                                             {post.insight}
                                         </blockquote>
 
+                                        <div className="series-reflection">
+                                            <p className="series-reflection-label">
+                                                💭 Take a moment
+                                            </p>
+                                            <p className="series-reflection-text">
+                                                {post.reflectionPrompt || 
+                                                 "What does this bring up for you? How does it apply to your life right now?"}
+                                            </p>
+                                        </div>
+
                                         <div className="challenge-card">
                                             <div className="challenge-label">Today's Challenge</div>
                                             <p className="challenge-text">{post.takeaway.replace('Action: ', '')}</p>
                                             {!done && (
-                                                <button className="mark-done-btn" onClick={() => markAsRead(post.title)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                                <button 
+                                                    className="mark-done-btn" 
+                                                    onClick={async () => {
+                                                        markAsRead(post.title);
+                                                        if (currentUser) {
+                                                            const dayRef = doc(db, 'users', currentUser.uid, 'series_progress', 'hyperfocus-architect', 'days', post.id.toString());
+                                                            await setDoc(dayRef, { completed: true, completedAt: serverTimestamp() }, { merge: true });
+                                                            const progressRef = doc(db, 'users', currentUser.uid, 'series_progress', 'hyperfocus-architect');
+                                                            await setDoc(progressRef, { lastCompletedDay: post.id, totalCompleted: increment(1) }, { merge: true });
+                                                        }
+                                                    }} 
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                                >
                                                     <Check size={18} /> Mark as Complete
                                                 </button>
                                             )}
-                                            {done && (
-                                                <div className="done-msg">Challenge completed — keep the streak alive.</div>
-                                            )}
                                         </div>
+
+                                        {done && (
+                                            <div className="series-complete-card">
+                                                <span className="series-complete-emoji">✓</span>
+                                                <p className="series-complete-title">Day {post.id} done</p>
+                                                <p className="series-complete-sub">
+                                                    {postsData.length - post.id} days left in this series
+                                                </p>
+                                                <button 
+                                                    className="series-share-btn"
+                                                    onClick={() => {
+                                                        const shareText = `Day ${post.id} of Hyperfocus Architect: ${post.title}\n[Share your reflection here]`;
+                                                        navigate('/create', { state: { prefill: shareText, category: 'mental_health' } });
+                                                    }}
+                                                >
+                                                    Share how this landed 💬
+                                                </button>
+                                                {index < postsData.length - 1 && (
+                                                    <button 
+                                                        className="series-next-btn"
+                                                        onClick={() => scrollToPost(index + 1)}
+                                                    >
+                                                        Day {post.id + 1} →
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
 
                                         <div className="post-navigation">
                                             <button className="nav-btn prev" disabled={index === 0} onClick={() => scrollToPost(index - 1)} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

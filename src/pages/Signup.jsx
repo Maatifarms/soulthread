@@ -1,32 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { analytics } from '../services/analytics';
+import AuthStepIndicator from '../components/auth/AuthStepIndicator';
 
 import './Auth.css';
 
 const Signup = () => {
-    const { signup } = useAuth();
+    const { signup, loginWithGoogle, currentUser } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    const suggestedId = location.state?.suggestedSoulId || '';
 
+    // Redirect already-logged-in users
+    useEffect(() => {
+        if (currentUser) navigate('/');
+    }, [currentUser, navigate]);
+
+    useEffect(() => {
+        analytics.logEvent('signup_view');
+    }, []);
+
+    const [googleLoading, setGoogleLoading] = useState(false);
     const [formData, setFormData] = useState({
-        name: '',
+        name: suggestedId || '',
         email: '',
         password: '',
-        confirmPassword: '',
-        profession: '',
-        place: '',
-        gender: ''
+        confirmPassword: ''
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [agreeTerms, setAgreeTerms] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const handleGoogleSignup = async () => {
+        try {
+            setError('');
+            setGoogleLoading(true);
+            const result = await loginWithGoogle();
+            if (result?.user) navigate('/');
+        } catch (err) {
+            if (err.code !== 'auth/popup-closed-by-user') {
+                setError('Google sign-in failed. Please try again.');
+            }
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!agreeTerms) {
+            return setError('You must agree to the Terms of Service and Privacy Policy to register.');
+        }
+
+        // Email format validation — Firebase accepts syntactically valid emails even if they don't exist
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!emailRegex.test(formData.email.trim())) {
+            return setError('Please enter a valid email address (e.g. name@example.com).');
+        }
 
         if (formData.password !== formData.confirmPassword) {
             return setError('Passwords do not match');
@@ -35,18 +72,25 @@ const Signup = () => {
             return setError('Password should be at least 6 characters');
         }
 
+        analytics.logEvent('signup_attempt');
+
         try {
             setError('');
             setLoading(true);
-            const userCredential = await signup(formData.email, formData.password, formData.name, {
-                profession: formData.profession,
-                place: formData.place,
-                gender: formData.gender
-            });
+            const userCredential = await signup(formData.email, formData.password, formData.name);
+            analytics.logEvent('signup_success');
             navigate(`/profile/${userCredential.user.uid}`, { state: { justSignedUp: true } });
         } catch (err) {
             console.error(err);
-            setError('Failed to create an account. ' + err.message);
+            analytics.logEvent('signup_error', { reason: err.code || err.message });
+            // Translate Firebase error codes into human-readable messages
+            const friendlyErrors = {
+                'auth/email-already-in-use': 'An account with this email already exists. Try signing in instead.',
+                'auth/invalid-email': 'The email address is not valid.',
+                'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
+                'auth/network-request-failed': 'No internet connection. Please check your network and try again.',
+            };
+            setError(friendlyErrors[err.code] || 'Failed to create an account. ' + err.message);
         } finally {
             setLoading(false);
         }
@@ -128,7 +172,7 @@ const Signup = () => {
                     </motion.div>
                 )}
 
-                <form onSubmit={handleSubmit} className="auth-form">
+                <form onSubmit={handleSubmit} className="auth-form" noValidate>
                     <motion.div variants={itemVariants} className="auth-input-group">
                         <label className="auth-label">Soul Name</label>
                         <input
@@ -155,53 +199,6 @@ const Signup = () => {
                             required
                             disabled={loading}
                         />
-                    </motion.div>
-
-                    <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div className="auth-input-group">
-                            <label className="auth-label">Profession</label>
-                            <input
-                                type="text"
-                                name="profession"
-                                placeholder="Student, Writer..."
-                                className="auth-input"
-                                value={formData.profession}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                        </div>
-                        <div className="auth-input-group">
-                            <label className="auth-label">Location</label>
-                            <input
-                                type="text"
-                                name="place"
-                                placeholder="City / Country"
-                                className="auth-input"
-                                value={formData.place}
-                                onChange={handleChange}
-                                required
-                                disabled={loading}
-                            />
-                        </div>
-                    </motion.div>
-
-                    <motion.div variants={itemVariants} className="auth-input-group">
-                        <label className="auth-label">Gender Identity</label>
-                        <select
-                            name="gender"
-                            value={formData.gender}
-                            onChange={handleChange}
-                            className="auth-input"
-                            required
-                            disabled={loading}
-                        >
-                            <option value="" disabled>Select Sense</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Non-Binary">Non-Binary</option>
-                            <option value="Prefer not to say">Prefer not to say</option>
-                        </select>
                     </motion.div>
 
                     <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
@@ -233,6 +230,26 @@ const Signup = () => {
                         </div>
                     </motion.div>
 
+                    <motion.div variants={itemVariants} className="auth-checkbox-group" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '18px 0', paddingLeft: '4px' }}>
+                        <input
+                            type="checkbox"
+                            id="termsAccept"
+                            checked={agreeTerms}
+                            onChange={(e) => setAgreeTerms(e.target.checked)}
+                            required
+                            style={{ 
+                                marginTop: '3px',
+                                width: '16px',
+                                height: '16px',
+                                accentColor: '#3d7a72',
+                                cursor: 'pointer'
+                            }}
+                        />
+                        <label htmlFor="termsAccept" style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.4', cursor: 'pointer', textAlign: 'left' }}>
+                            I agree to the <Link to="/terms" style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'underline' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'underline' }}>Privacy Policy</Link>.
+                        </label>
+                    </motion.div>
+
                     <motion.button
                         variants={itemVariants}
                         type="submit"
@@ -241,12 +258,46 @@ const Signup = () => {
                         whileTap={{ scale: 0.98 }}
                     >
                         {loading ? (
-                            <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                <span className="spinner-small" /> Creating Soul...
-                            </span>
+                            <AuthStepIndicator steps={["Creating secure profile...", "Generating anonymous ID...", "Opening sanctuary..."]} />
                         ) : 'Sign Up'}
                     </motion.button>
                 </form>
+
+                <div className="auth-social-divider" style={{ margin: '0 0 16px' }}>
+                    <div className="auth-divider-line" />
+                    <span className="auth-divider-text">or sign up with</span>
+                    <div className="auth-divider-line" />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
+                    <button
+                        onClick={() => navigate('/login/phone')}
+                        className="auth-phone-btn"
+                        disabled={loading}
+                    >
+                        <span>📱</span> Mobile Number
+                    </button>
+
+                    <button
+                        onClick={handleGoogleSignup}
+                        disabled={googleLoading || loading}
+                        className="auth-google-btn"
+                    >
+                        {googleLoading ? (
+                            <AuthStepIndicator steps={["Connecting to Google...", "Verifying identity...", "Creating Soul..."]} />
+                        ) : (
+                            <>
+                                <svg width="20" height="20" viewBox="0 0 48 48">
+                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                                </svg>
+                                Continue with Google
+                            </>
+                        )}
+                    </button>
+                </div>
 
                 <div className="auth-footer">
                     Already have an account?{' '}

@@ -4,6 +4,35 @@
   margin: 0 auto;
 }
 
+.pull-refresh-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: var(--color-primary);
+  transition: height 0.2s ease;
+}
+
+.pull-refresh-indicator .pull-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+.feed-refresh-btn-web {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 auto 12px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .feed-skeleton-card {
   position: relative;
   background: var(--color-surface);

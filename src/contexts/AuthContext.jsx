@@ -1,3 +1,4 @@
+// AuthContext — global auth state: Google, email/password, phone OTP, anonymous
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import {
     onAuthStateChanged,
@@ -22,6 +23,7 @@ import { auth, db } from '../services/firebase';
 import { doc, setDoc, getDoc, addDoc, collection, onSnapshot, updateDoc, serverTimestamp, arrayUnion } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import ComplianceModal from '../components/auth/ComplianceModal';
+import { initFCM } from '../services/fcmService';
 
 const TERMS_VERSION = 2;
 const APP_VERSION = '2026-03-20-S1'; // Version bump for stability fix
@@ -48,7 +50,22 @@ export function AuthProvider({ children }) {
     const [loading, setLoading] = useState(true);
     const [confirmationResult, setConfirmationResult] = useState(null);
     const [showCompliance, setShowCompliance] = useState(false);
-    const [authInitialized, setAuthInitialized] = useState(false);
+    
+    // Check st_uid for immediate unblock
+    const [authInitialized, setAuthInitialized] = useState(() => {
+        return !!localStorage.getItem('st_uid');
+    });
+
+    // Detect Credential Manager support on mount synchronously
+    useEffect(() => {
+        if (!localStorage.getItem('st_cm_supported')) {
+            const isAndroid = Capacitor.getPlatform() === 'android';
+            // Credential Manager is typically supported on Android 14+ (API 34+). 
+            // For simplicity in synchronous detection, we mark it true for modern Android versions or fallbacks.
+            // If the first call fails with a non-cancel error, we will flip this flag.
+            localStorage.setItem('st_cm_supported', isAndroid ? 'true' : 'false');
+        }
+    }, []);
 
     // Persistence: Save only essential serializable user data
     useEffect(() => {
@@ -64,8 +81,10 @@ export function AuthProvider({ children }) {
                 acceptedVersion: currentUser.acceptedVersion
             };
             localStorage.setItem('soul_user_cache', JSON.stringify(safeData));
+            localStorage.setItem('st_uid', currentUser.uid);
         } else if (currentUser === null && authInitialized) {
             localStorage.removeItem('soul_user_cache');
+            localStorage.removeItem('st_uid');
         }
     }, [currentUser, authInitialized]);
 
@@ -206,6 +225,10 @@ export function AuthProvider({ children }) {
                 readBy: []
             });
         } catch (e) { }
+
+        // Redirect new phone users to onboarding
+        window.location.assign('/onboarding');
+        return new Promise(() => {});
     }
 
     function resetPassword(email) {
@@ -223,13 +246,31 @@ export function AuthProvider({ children }) {
                 const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
                 const webClientId = "813685915255-h8ajgn54lvgp0opp12h74e9b2skq93ei.apps.googleusercontent.com";
 
-                const result = await FirebaseAuthentication.signInWithGoogle({
-                    scopes: ["email", "profile"],
-                    webClientId: webClientId,
-                    grantOfflineAccess: true,
-                    forceCodeForRefreshToken: true,
-                    useCredentialManager: false
-                });
+                let result;
+                const cmKey = 'st_cm_ok';
+                const useCM = localStorage.getItem(cmKey) !== 'false';
+
+                try {
+                    result = await FirebaseAuthentication.signInWithGoogle({
+                        scopes: ["email", "profile"],
+                        webClientId: webClientId,
+                        grantOfflineAccess: true,
+                        useCredentialManager: useCM
+                    });
+                    localStorage.setItem(cmKey, 'true'); // CM worked, remember it
+                } catch (credError) {
+                    if (useCM) {
+                        localStorage.setItem(cmKey, 'false'); // CM failed, skip next time
+                        result = await FirebaseAuthentication.signInWithGoogle({
+                            scopes: ["email", "profile"],
+                            webClientId: webClientId,
+                            grantOfflineAccess: true,
+                            useCredentialManager: false
+                        });
+                    } else {
+                        throw credError;
+                    }
+                }
 
                 if (!result?.credential?.idToken) {
                     throw new Error("Google identity token missing.");
@@ -237,7 +278,9 @@ export function AuthProvider({ children }) {
 
                 const credential = GoogleAuthProvider.credential(result.credential.idToken);
                 const finalResult = await signInWithCredential(auth, credential);
-                await _saveGoogleUserProfile(finalResult.user);
+                _saveGoogleUserProfile(finalResult.user).catch(e =>
+                    console.warn('Profile save after Google login failed (non-critical):', e)
+                );
                 return finalResult;
             } else {
                 // Use popup — signInWithRedirect is broken in modern browsers
@@ -281,15 +324,22 @@ export function AuthProvider({ children }) {
         const isAdmin = adminEmails.includes(user.email?.toLowerCase());
         
         if (!userSnap.exists()) {
+            const random4 = Math.random().toString(36).substring(2, 6).toUpperCase();
             await setDoc(userRef, {
                 uid: user.uid,
                 displayName: user.displayName || 'Soul Searcher',
                 email: user.email,
+                anonymousHandle: `Soul${random4}`,
                 photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
                 role: isAdmin ? 'admin' : 'user',
                 isAdmin: isAdmin,
                 createdAt: new Date().toISOString()
             });
+            // Redirect new google users to onboarding ONLY in the User App
+            if (!document.title.includes('SoulThread Pro')) {
+                window.location.assign('/onboarding');
+                return new Promise(() => {});
+            }
         } else if (isAdmin && userSnap.data().role !== 'admin') {
             await updateDoc(userRef, { role: 'admin', isAdmin: true });
         }
@@ -327,6 +377,7 @@ export function AuthProvider({ children }) {
                 uid: result.user.uid,
                 email: email,
                 displayName: displayName,
+                anonymousHandle: extras.anonymousHandle || `Soul${result.user.uid.slice(-4)}`,
                 profession: extras.profession || '',
                 place: extras.place || '',
                 gender: extras.gender || '',
@@ -340,7 +391,9 @@ export function AuthProvider({ children }) {
                 await sendEmailVerification(result.user);
             } catch (e) { }
 
-            return result;
+            // Redirect new email users to onboarding
+            window.location.assign('/onboarding');
+            return new Promise(() => {});
         } catch (error) {
             console.error("Signup failed", error);
             throw error;
@@ -353,6 +406,7 @@ export function AuthProvider({ children }) {
 
     async function logout() {
         localStorage.removeItem('soul_user_cache');
+        localStorage.removeItem('st_uid');
         
         const isNative = typeof window !== 'undefined' &&
             (Capacitor.isNativePlatform() ||
@@ -372,39 +426,25 @@ export function AuthProvider({ children }) {
     }
 
     async function requestFCMToken(userId) {
-        const doRequest = async () => {
-            try {
-                if (typeof Notification === 'undefined' || !Notification.requestPermission) return;
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') return;
-                const { getMessaging, getToken } = await import('firebase/messaging');
-                const { default: app } = await import('../services/firebase');
-                const msgInstance = getMessaging(app);
-                const token = await getToken(msgInstance, {
-                    vapidKey: 'BPr7sK8-9W7-P0Y-B_mJk0XNqj-P_0-K-v_L-Z_W_J-X-Y-Z'
-                });
-                if (token) {
-                    await updateDoc(doc(db, 'users', userId), {
-                        fcmTokens: arrayUnion(token),
-                        lastTokenUpdate: serverTimestamp()
-                    });
-                }
-            } catch (e) { }
-        };
-        setTimeout(doRequest, 5000);
+        // Wait briefly so as not to block UI loading, then init native/web push notifications
+        setTimeout(() => {
+            initFCM(userId).catch(e => console.warn('FCM init warning:', e));
+        }, 5000);
     }
 
     useEffect(() => {
+        if (window.logToScreen) window.logToScreen('[4] AuthContext useEffect start');
         const isNative = Capacitor.isNativePlatform();
         
         // Safety timeout to prevent infinite splash screen hang
         const initTimeout = setTimeout(() => {
             if (loading && !authInitialized) {
                 console.warn("Auth initialization timeout - unblocking UI");
+                if (window.logToScreen) window.logToScreen('[5] Auth timeout triggered');
                 setLoading(false);
                 setAuthInitialized(true);
             }
-        }, 7000);
+        }, 200);
 
         const initializeAuthSystem = async () => {
             try {
@@ -436,11 +476,17 @@ export function AuthProvider({ children }) {
             }
 
             if (user) {
-                setCurrentUser(user);
+                // Render immediately with the Auth profile Firebase already gave us —
+                // no need to wait on a Firestore round-trip just to unblock the UI.
+                clearTimeout(initTimeout);
+                setCurrentUser(prev => (prev && prev.uid === user.uid) ? prev : user);
+                if (window.logToScreen) window.logToScreen('[6] onAuthStateChanged user loaded');
+                setLoading(false);
+                setAuthInitialized(true);
+
                 const userRef = doc(db, 'users', user.uid);
 
                 unsubUserDoc = onSnapshot(userRef, (docSnap) => {
-                    clearTimeout(initTimeout);
                     if (docSnap.exists()) {
                         const userData = docSnap.data();
                         setCurrentUser(prev => ({
@@ -451,23 +497,16 @@ export function AuthProvider({ children }) {
                             photoURL: userData.photoURL || user.photoURL
                         }));
                         setShowCompliance(!userData.acceptedVersion || userData.acceptedVersion < TERMS_VERSION);
-                    } else {
-                        setCurrentUser(prev => prev || user);
                     }
-                    setLoading(false);
-                    setAuthInitialized(true);
                 }, (err) => {
                     console.error("Profile Snapshot Error:", err);
-                    clearTimeout(initTimeout);
-                    setCurrentUser(prev => prev || user);
-                    setLoading(false);
-                    setAuthInitialized(true);
                 });
 
                 requestFCMToken(user.uid);
             } else {
                 clearTimeout(initTimeout);
                 setCurrentUser(null);
+                if (window.logToScreen) window.logToScreen('[7] onAuthStateChanged user null');
                 setLoading(false);
                 setAuthInitialized(true);
             }
@@ -495,17 +534,16 @@ export function AuthProvider({ children }) {
     }), [currentUser, loading, authInitialized, confirmationResult]);
 
     if (loading && !authInitialized && !currentUser) {
+        const steps = ['Opening your sanctuary', 'Checking your session', 'Almost there'];
         return (
-            <div style={{
-                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh',
-                background: 'var(--color-background)', gap: '20px'
-            }}>
-                <div style={{
-                    width: '50px', height: '50px', borderRadius: '50%', border: '4px solid var(--color-primary-soft)',
-                    borderTopColor: 'var(--color-primary)', animation: 'spin 1s linear infinite'
-                }} />
-                <span style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--color-primary)', fontWeight: '700', fontSize: '14px', letterSpacing: '0.05em' }}>
-                    CONNECTING TO SANCTUARY...
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center',
+                alignItems: 'center', height: '100vh', background: 'var(--color-background)', gap: '16px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%',
+                    border: '3px solid var(--color-primary-soft)', borderTopColor: 'var(--color-primary)',
+                    animation: 'spin 0.8s linear infinite' }} />
+                <span style={{ fontFamily: 'Outfit, sans-serif', color: 'var(--color-text-secondary)',
+                    fontSize: '13px', letterSpacing: '0.03em' }}>
+                    Setting up your space...
                 </span>
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>

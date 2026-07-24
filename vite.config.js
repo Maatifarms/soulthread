@@ -107,26 +107,24 @@ export default defineConfig({
     cssCodeSplit: true,
     cssMinify: true,  // esbuild CSS minification — fast and always available
 
-    // Granular manual chunks — browser caches unchanged vendor chunks across deploys
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-
-          // ── Firebase — split by service (each is ~60–200kb) ───────────
-          if (id.includes('/firebase/auth')) return 'vendor-firebase-auth';
-          if (id.includes('/firebase/firestore')) return 'vendor-firebase-firestore';
-          if (id.includes('/firebase/storage')) return 'vendor-firebase-storage';
-          if (id.includes('/firebase/functions')) return 'vendor-firebase-functions';
-          if (id.includes('/firebase/app-check')) return 'vendor-firebase-appcheck';
-          if (id.includes('/firebase/messaging')) return 'vendor-firebase-messaging';
-          if (id.includes('firebase')) return 'vendor-firebase-core';
-
-          // ── Core Bundle (Global Consolidation) ────────────────────────
-          // To definitively resolve circular dependencies between React, 
-          // React-Router, Framer Motion, and other standard UI libs, 
-          // we consolidate them into one single vendor bundle.
-          return 'vendor-core-all';
+        manualChunks: {
+          // Firebase — split by concern for granular caching
+          'vendor-firebase-core': ['firebase/app', 'firebase/auth'],
+          'vendor-firebase-db': ['firebase/firestore', 'firebase/storage', 'firebase/functions'],
+          // Recharts — only needed in NEHA recovery dashboard
+          'vendor-recharts': ['recharts'],
+          // Framer Motion — shared animation library, separate chunk avoids duplication
+          'vendor-motion': ['framer-motion'],
+          // React core — router, DOM
+          'vendor-react': [
+            'react',
+            'react-dom',
+            'react-router-dom'
+          ],
+          // Lucide icons — large icon library
+          'vendor-icons': ['lucide-react']
         },
         // Deterministic filenames — CDN/browser can cache by hash
         chunkFileNames: 'assets/js/[name]-[hash].js',
@@ -141,8 +139,8 @@ export default defineConfig({
       },
     },
 
-    // Allow large firebase chunks; suppress noise
-    chunkSizeWarningLimit: 1000,
+    // Warn us if any chunk exceeds 500KB
+    chunkSizeWarningLimit: 500,
 
     // No source maps in production
     sourcemap: false,

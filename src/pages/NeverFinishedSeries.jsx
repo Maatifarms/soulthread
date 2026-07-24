@@ -5,8 +5,7 @@ import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
 import { 
@@ -14,7 +13,6 @@ import {
     ArrowLeft, 
     ArrowRight 
 } from 'lucide-react';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './NeverFinishedSeries.css';
 
 const postsData = [
@@ -235,7 +233,7 @@ const NeverFinishedSeries = () => {
     const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [completed, setCompleted] = useState(false);
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
@@ -251,7 +249,7 @@ const NeverFinishedSeries = () => {
     useEffect(() => {
         // Check Premium Access
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const hasAccess = true;
             setIsPremium(hasAccess);
         };
         checkAccess();
@@ -345,8 +343,8 @@ const NeverFinishedSeries = () => {
 
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            const tier = { price: 499, name: "Premium" };
+            navigate("/pricing");
             setIsPremium(true);
             analytics.logEvent('series_unlock_success', { series: 'never_finished' });
         } catch (error) {
@@ -361,7 +359,7 @@ const NeverFinishedSeries = () => {
         <div className="hyperfocus-page never-finished-page">
             <SEO 
                 title="Never Finished: Mental Toughness Bootcamp"
-                description="A 30-part psychological bootcamp inspired by David Goggins. Master your mind, build resilience, and become uncommon amongst the uncommon."
+                description="A 30-part emotional bootcamp inspired by David Goggins. Master your mind, build resilience, and become uncommon amongst the uncommon."
                 image="/assets/neverfinished/post_01.png"
                 url="https://soulthread.in/never-finished-series"
                 type="article"
@@ -369,7 +367,7 @@ const NeverFinishedSeries = () => {
                     "@context": "https://schema.org",
                     "@type": "Course",
                     "name": "Never Finished: Mental Toughness Series",
-                    "description": "A 30-day psychological bootcamp to build mental resilience and toughness.",
+                    "description": "A 30-day emotional bootcamp to build mental resilience and toughness.",
                     "provider": {
                         "@type": "Organization",
                         "name": "SoulThread",
@@ -451,13 +449,7 @@ const NeverFinishedSeries = () => {
                                 transition={{ duration: 0.5 }}
                             >
                                 {isLocked ? (
-                                    <SeriesPaywall
-                                        seriesId="never-finished"
-                                        seriesTitle="Never Finished"
-                                        onUnlock={handleUnlock}
-                                        isProcessing={isProcessing}
-                                        paymentError={paymentError}
-                                    />
+                                    <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                 ) : (
                                     <>
                                         <div className="post-day-label">

@@ -31,6 +31,14 @@ const Explore = () => {
     const { isDarkMode } = useTheme();
     const navigate = useNavigate();
 
+    const getAnonymousName = (user) => {
+        if (!user) return 'Soul';
+        if (user.anonymousHandle) return user.anonymousHandle;
+        const id = user.id || user.uid;
+        const suffix = id ? id.slice(-4) : 'xxxx';
+        return `Soul${suffix}`;
+    };
+
     // States
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedTerm, setDebouncedTerm] = useState('');
@@ -60,74 +68,54 @@ const Explore = () => {
     // People Search Logic
     useEffect(() => {
         const searchPeople = async () => {
-            if (!debouncedTerm.trim()) {
-                setPeopleLoading(true);
-                try {
-                    const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(15));
-                    const snap = await getDocs(q);
-                    setPeopleResults(snap.docs
-                        .map(d => ({ id: d.id, ...d.data() }))
-                        .filter(u => u.id !== currentUser?.uid && !u.isAnonymous && !u.isIncognito)
-                    );
-                } finally { setPeopleLoading(false); }
-                return;
-            }
-
             setPeopleLoading(true);
             try {
-                const term = debouncedTerm.toLowerCase();
-                const usersRef = collection(db, 'users');
-                const variants = [debouncedTerm, term, debouncedTerm.charAt(0).toUpperCase() + term.slice(1)];
+                const q = query(collection(db, 'users'), limit(100));
+                const snap = await getDocs(q);
+                let users = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .filter(u => u.id !== currentUser?.uid && !u.isAnonymous && !u.isIncognito && u.displayName);
 
-                const promises = variants.map(v => getDocs(query(usersRef, orderBy('displayName'), startAt(v), endAt(v + '\uf8ff'), limit(10))));
-                const snaps = await Promise.all(promises);
-
-                let merged = new Map();
-                snaps.forEach(s => s.docs.forEach(d => {
-                    const data = d.data();
-                    if (d.id !== currentUser?.uid && !data.isAnonymous && !data.isIncognito) {
-                        merged.set(d.id, { id: d.id, ...data });
-                    }
-                }));
-                setPeopleResults(Array.from(merged.values()));
+                if (debouncedTerm.trim()) {
+                    const term = debouncedTerm.toLowerCase();
+                    users = users.filter(u => 
+                        (u.displayName && u.displayName.toLowerCase().includes(term)) || 
+                        (u.anonymousHandle && u.anonymousHandle.toLowerCase().includes(term)) ||
+                        (u.username && u.username.toLowerCase().includes(term))
+                    );
+                }
+                setPeopleResults(users);
             } catch (err) {
                 console.error(err);
-            } finally {
-                setPeopleLoading(false);
+            } finally { 
+                setPeopleLoading(false); 
             }
         };
 
         searchPeople();
     }, [debouncedTerm, currentUser]);
 
-    const initiateConnect = (e, user) => {
+    const initiateConnect = async (e, user) => {
         e.stopPropagation();
         if (!currentUser) return navigate('/login');
-        setConnectModalTarget(user);
-    };
-
-    const confirmConnect = async (note) => {
-        if (!currentUser || !connectModalTarget) return;
         try {
-            const targetId = connectModalTarget.id;
-            await setDoc(doc(db, 'users', targetId), { pendingRequests: arrayUnion(currentUser.uid) }, { merge: true });
-            await setDoc(doc(db, 'users', currentUser.uid), { sentRequests: arrayUnion(targetId) }, { merge: true });
-
+            const targetId = user.id;
+            await setDoc(doc(db, 'users', currentUser.uid), { connections: arrayUnion(targetId) }, { merge: true });
+            await setDoc(doc(db, 'users', targetId), { connections: arrayUnion(currentUser.uid) }, { merge: true });
             const isAnon = currentUser.isIncognito || currentUser.isAnonymous;
             await addDoc(collection(db, 'notifications'), {
                 recipientId: targetId,
                 senderId: currentUser.uid,
-                senderName: isAnon ? 'Anonymous Soul' : (currentUser.displayName || 'Someone'),
-                type: 'connection_request',
-                message: `${isAnon ? 'Someone' : (currentUser.displayName || 'Someone')} wants to connect.`,
-                note: note || '',
+                senderName: isAnon ? 'Someone' : (currentUser.displayName || 'Someone'),
+                type: 'new_connection',
+                message: `${isAnon ? 'Someone' : (currentUser.displayName || 'Someone')} connected with you on SoulThread.`,
                 read: false,
                 createdAt: serverTimestamp()
             });
-            alert("Connection request sent!");
-        } catch (e) { console.error(e); }
-        setConnectModalTarget(null);
+        } catch (err) { console.error(err); }
     };
+
+    const confirmConnect = async () => {};;
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -177,10 +165,10 @@ const Explore = () => {
             <div className={`explore-page ${isNativeApp ? 'is-native' : ''}`}>
                 <Breadcrumbs />
                 <SEO 
-                    title="Find Emotional Support & Mental Health Stories | Explore"
-                    description="Explore an anonymous venting platform filled with relatable mental health stories, anxiety relief tips, and supportive connections on SoulThread."
+                    title="Find Emotional Support & Wellness Stories | Explore"
+                    description="Explore an anonymous venting platform filled with relatable emotional well-being stories, stress relief tips, and supportive connections on SoulThread."
                     url="https://soulthread.in/explore"
-                    keywords="venting platform, mental health stories, find emotional support, anxiety relief tips, anonymous community, psychological growth"
+                    keywords="venting platform, personal stories, find emotional support, stress relief tips, anonymous community, personal growth"
                 />
                 
                 {/* Header / Search Area */}
@@ -241,20 +229,26 @@ const Explore = () => {
                                 <div key={i} style={{ height: '240px', borderRadius: 'var(--radius-lg)', background: 'var(--color-surface-soft)', border: '1px solid var(--color-border)' }} />
                             )) : peopleResults.map(user => (
                                 <div key={user.id} onClick={() => navigate(`/profile/${user.id}`)} className="soul-card">
-                                    <div className="soul-avatar">
-                                        {user.displayName?.charAt(0) || 'U'}
+                                    <div className="soul-avatar" style={user.photoURL ? { backgroundImage: `url(${user.photoURL})`, backgroundSize: 'cover', backgroundPosition: 'center', fontSize: 0 } : {}}>
+                                        {!user.photoURL && (user.displayName || 'S').charAt(0)}
                                     </div>
-                                    <div className="soul-name">{user.displayName || 'Soul'}</div>
-                                    <div className="soul-role">{user.role === 'psychologist' ? 'Counselor' : 'Member'}</div>
+                                    <div className="soul-name">{user.displayName || user.name || 'SoulThread User'}</div>
+                                    <div className="soul-role">{user.role === 'guide' ? 'Guide' : 'Member'}</div>
 
-                                    {!currentUser?.connections?.includes(user.id) && (
-                                        <button
-                                            onClick={(e) => initiateConnect(e, user)}
-                                            className="connect-btn"
-                                        >
-                                            Connect
-                                        </button>
-                                    )}
+                                    <button
+                                        onClick={(e) => initiateConnect(e, user)}
+                                        style={{
+                                            marginTop: '8px', padding: '7px 20px',
+                                            borderRadius: '20px', border: '1.5px solid',
+                                            borderColor: currentUser?.connections?.includes(user.id) ? 'var(--color-border)' : 'var(--color-primary)',
+                                            background: currentUser?.connections?.includes(user.id) ? 'transparent' : 'var(--color-primary)',
+                                            color: currentUser?.connections?.includes(user.id) ? 'var(--color-text-muted)' : 'white',
+                                            fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)'
+                                        }}
+                                    >
+                                        {currentUser?.connections?.includes(user.id) ? 'Connected ✓' : 'Connect'}
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -292,7 +286,7 @@ const Explore = () => {
 
                 {connectModalTarget && (
                     <ConnectModal
-                        targetName={connectModalTarget.displayName || 'Soul'}
+                        targetName={getAnonymousName(connectModalTarget)}
                         onConfirm={confirmConnect}
                         onClose={() => setConnectModalTarget(null)}
                     />

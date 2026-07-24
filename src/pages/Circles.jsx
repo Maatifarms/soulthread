@@ -9,12 +9,16 @@ import {
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { Users, ShieldCheck, Calendar } from 'lucide-react';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
+
+const SUBSCRIPTION_TIERS = { PRO: 'pro_tier' };
+const sustainability = {
+    verifyAccess: async () => false,
+    getTierDetails: () => ({ name: 'Soul Pro', price: 499, description: 'Pro Access' })
+};
 import { paymentService } from '../services/paymentService';
 import { analytics } from '../services/analytics';
 import FeedList from '../components/feed/FeedList';
 import CreatePost from '../components/post/CreatePost';
-import CircleMembersModal from '../components/circles/CircleMembersModal';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
@@ -78,7 +82,7 @@ const Circles = () => {
         // Discoverable Expert-Led Circles
         const qDiscover = query(
             collection(db, 'circles'),
-            where('circleType', '==', 'counselor'),
+            where('circleType', '==', 'guide'),
             limit(10)
         );
         getDocs(qDiscover).then(snap => {
@@ -210,7 +214,7 @@ const Circles = () => {
     };
 
     const handleJoinCircle = async (circle) => {
-        if (circle.circleType === 'counselor' && !isPro) {
+        if (circle.circleType === 'guide' && !isPro) {
             alert("This Expert-Led Circle is part of the Soul Pro membership.");
             return;
         }
@@ -227,7 +231,7 @@ const Circles = () => {
                 circleId: circle.id,
                 userId: currentUser.uid,
                 role: 'member',
-                paymentStatus: circle.circleType === 'counselor' ? 'subscription' : 'free',
+                paymentStatus: circle.circleType === 'guide' ? 'subscription' : 'free',
                 joinedAt: serverTimestamp()
             });
 
@@ -315,7 +319,7 @@ const Circles = () => {
                                     <div className="circle-info-main">
                                         <h4>{c.name}</h4>
                                         <p className="circle-meta">
-                                            <Users size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> {c.memberCount || 0}/15 members · {c.circleType === 'counselor' ? <><ShieldCheck size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> Soul Pro Circle</> : 'Community'}
+                                            <Users size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> {c.memberCount || 0}/15 members · {c.circleType === 'guide' ? <><ShieldCheck size={12} style={{ display: 'inline', verticalAlign: 'middle' }} /> Soul Pro Circle</> : 'Community'}
                                         </p>
                                     </div>
                                     <span className="enter-arrow">Enter Space →</span>
@@ -373,7 +377,7 @@ const Circles = () => {
                     </div>
                 ) : (
                     <div className="active-circle-view">
-                        {activeCircle.circleType === 'counselor' && !isPro && 
+                        {activeCircle.circleType === 'guide' && !isPro && 
                          currentUser.uid !== activeCircle.counselorId && (
                             <div className="locked-overlay">
                                 <span style={{ marginBottom: '16px' }}><ShieldCheck size={48} /></span>
@@ -466,10 +470,10 @@ const Circles = () => {
                     <div className="circle-modal-card animate-scale-up" onClick={e => e.stopPropagation()}>
                         <h3 className="empty-title">Craft a New Circle</h3>
                         <form onSubmit={handleCreateCircle}>
-                            {currentUser.role === 'psychologist' && (
+                            {currentUser.role === 'guide' && (
                                 <div className="circle-type-toggle">
                                     <button type="button" onClick={() => setCircleType('community')} className={`type-toggle-btn ${circleType === 'community' ? 'active' : ''}`}>Community</button>
-                                    <button type="button" onClick={() => setCircleType('counselor')} className={`type-toggle-btn ${circleType === 'counselor' ? 'active' : ''}`}>Expert Led</button>
+                                    <button type="button" onClick={() => setCircleType('guide')} className={`type-toggle-btn ${circleType === 'guide' ? 'active' : ''}`}>Expert Led</button>
                                 </div>
                             )}
                             <input

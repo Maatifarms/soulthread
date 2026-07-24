@@ -6,10 +6,9 @@ import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
+
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './MemorySeries.css';
 
 const postsData = [
@@ -230,7 +229,7 @@ const MemorySeries = () => {
     const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [completed, setCompleted] = useState(false);
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState(null);
@@ -247,7 +246,7 @@ const MemorySeries = () => {
         setIsProcessing(true);
         setPaymentError(null);
         try {
-            const success = await sustainability.processPayment(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const success = false;
             if (success) {
                 setIsPremium(true);
                 analytics.logEvent('subscription_success', { tier: 'soul_basic', series: 'memory_architect' });
@@ -261,7 +260,7 @@ const MemorySeries = () => {
 
     useEffect(() => {
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const hasAccess = true;
             setIsPremium(hasAccess);
         };
         checkAccess();
@@ -345,13 +344,7 @@ const MemorySeries = () => {
                         <motion.div key={post.id} className={`post-block ${isLocked ? 'locked' : ''} ${done ? 'done' : ''}`}
                             initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
                             {isLocked ? (
-                                <SeriesPaywall 
-                                    seriesId="memory-architect"
-                                    seriesTitle="Memory Architect"
-                                    onUnlock={() => setIsFreeUnlocked(true)}
-                                    isProcessing={isProcessing}
-                                    paymentError={paymentError}
-                                />
+                                <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                             ) : (
                                 <>
                                     <div className="post-meta">DAY {post.id} / 30</div>

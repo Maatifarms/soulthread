@@ -58,3 +58,10 @@ post_anxiety_content.js
 test_conn.cjs
 test-email-notifications.cjs
 scripts/reports/
+
+*.apk
+*.aab
+*.webm
+dist-user/
+dist-guide/
+temp_extracted*/

@@ -418,3 +418,122 @@ exports.reEngagementPush = functions.pubsub
         console.log(`[ReEngagement] ✅ Sent to ${candidates.length} users`);
         return null;
     });
+
+/**
+ * dailyGentlePrompt — Daily retention nudge at 8:00 PM IST
+ * Target: Users inactive for 2+ days who haven't been prompted in the last 3 days.
+ * Content: "How was today? Your space is still here."
+ */
+exports.dailyGentlePrompt = functions.pubsub
+    .schedule('0 20 * * *')
+    .timeZone('Asia/Kolkata')
+    .onRun(async () => {
+        const db = getDb();
+
+        const now = new Date();
+        const twoDaysAgo = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+        const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
+        try {
+            // Retrieve users who have an FCM token registered
+            const usersSnap = await db.collection('users')
+                .where('fcmToken', '!=', null)
+                .get();
+
+            const candidates = usersSnap.docs
+                .map(d => ({ id: d.id, ...d.data() }))
+                .filter(user => {
+                    if (!user.fcmToken) return false;
+
+                    // opened the app 2+ days ago
+                    const lastSeen = user.lastSeenAt 
+                        ? (user.lastSeenAt.toDate ? user.lastSeenAt.toDate() : new Date(user.lastSeenAt))
+                        : null;
+                    if (!lastSeen || lastSeen >= twoDaysAgo) return false;
+
+                    // not prompted in the last 3 days
+                    const lastPrompted = user.lastPromptedAt
+                        ? (user.lastPromptedAt.toDate ? user.lastPromptedAt.toDate() : new Date(user.lastPromptedAt))
+                        : null;
+                    if (lastPrompted && lastPrompted >= threeDaysAgo) return false;
+
+                    return true;
+                });
+
+            if (candidates.length === 0) {
+                console.log('[dailyGentlePrompt] No inactive users to prompt today');
+                return null;
+            }
+
+            const updateBatch = db.batch();
+            const nowFirestore = admin.firestore.FieldValue.serverTimestamp();
+
+            await Promise.all(candidates.map(user => {
+                updateBatch.update(db.collection('users').doc(user.id), {
+                    lastPromptedAt: nowFirestore,
+                });
+
+                const payload = {
+                    token: user.fcmToken,
+                    notification: {
+                        title: 'SoulThread',
+                        body: 'How was today? Your space is still here.'
+                    },
+                    data: {
+                        type: 'GENTLE_PROMPT',
+                        url: '/?compose=true',
+                        click_action: 'FLUTTER_NOTIFICATION_CLICK',
+                    },
+                    android: {
+                        priority: 'high',
+                        notification: {
+                            channelId: 'prompts',
+                            priority: 'max',
+                            defaultSound: true,
+                        }
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                alert: {
+                                    title: 'SoulThread',
+                                    body: 'How was today? Your space is still here.'
+                                },
+                                sound: 'default'
+                            }
+                        }
+                    },
+                    webpush: {
+                        notification: {
+                            title: 'SoulThread',
+                            body: 'How was today? Your space is still here.',
+                            icon: '/icon-192.png',
+                            data: { url: '/?compose=true' }
+                        },
+                        fcmOptions: { link: '/?compose=true' }
+                    }
+                };
+
+                return admin.messaging().send(payload).catch(err => {
+                    if (
+                        err.code === 'messaging/registration-token-not-registered' ||
+                        err.code === 'messaging/invalid-registration-token'
+                    ) {
+                        updateBatch.update(db.collection('users').doc(user.id), {
+                            fcmToken: admin.firestore.FieldValue.delete(),
+                        });
+                    } else {
+                        console.error(`[dailyGentlePrompt] Failed to send prompt to ${user.id}:`, err);
+                    }
+                });
+            }));
+
+            await updateBatch.commit();
+            console.log(`[dailyGentlePrompt] ✅ Sent gentle prompts to ${candidates.length} users`);
+        } catch (error) {
+            console.error('[dailyGentlePrompt] Error executing gentle prompts job:', error);
+        }
+
+        return null;
+    });
+

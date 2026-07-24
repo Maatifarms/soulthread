@@ -190,7 +190,7 @@ const PhoneLogin = () => {
                 )}
 
                 {step === 'phone' ? (
-                    <form onSubmit={handleSendOTP} className="auth-form">
+                    <form onSubmit={handleSendOTP} className="auth-form" noValidate>
                         <motion.div variants={itemVariants} className="auth-input-group">
                             <label className="auth-label">Mobile Number</label>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -236,7 +236,7 @@ const PhoneLogin = () => {
                         </motion.button>
                     </form>
                 ) : (
-                    <form onSubmit={handleVerifyOTP} className="auth-form">
+                    <form onSubmit={handleVerifyOTP} className="auth-form" noValidate>
                         <motion.div variants={itemVariants} className="auth-input-group" style={{ marginBottom: '12px' }}>
                             <label className="auth-label" style={{ textAlign: 'center', display: 'block' }}>Enter 6-Digit Code</label>
                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '8px' }}>

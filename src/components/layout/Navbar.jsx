@@ -10,8 +10,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { Capacitor } from '@capacitor/core';
-import { 
-    Settings, 
+import {
+    Settings,
     LayoutDashboard,
     Zap,
     Download,
@@ -24,13 +24,15 @@ import {
     Home,
     User,
     Sparkles,
-    Fingerprint,
     Search,
     Wind,
     Sun,
     Moon,
     Bell,
-    LogOut
+    LogOut,
+    PhoneCall,
+    Stethoscope,
+    LifeBuoy
 } from 'lucide-react';
 import './Navbar.css';
 
@@ -50,35 +52,43 @@ const Navbar = () => {
     const [showUserMenu, setShowUserMenu] = React.useState(false);
     const notifRef = React.useRef(null);
     const userMenuRef = React.useRef(null);
+    const searchRef = React.useRef(null);
 
     const [toast, setToast] = React.useState(null);
     const [isInitialLoad, setIsInitialLoad] = React.useState(true);
     const [scrolled, setScrolled] = React.useState(false);
     const [visible, setVisible] = React.useState(true);
     const lastScrollY = React.useRef(0);
+    const rafId = React.useRef(null);
 
     React.useEffect(() => {
         const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-            const threshold = 10;
-            const delta = Math.abs(currentScrollY - lastScrollY.current);
-            const isMobile = window.innerWidth <= 1024;
+            if (rafId.current) return;
+            rafId.current = requestAnimationFrame(() => {
+                const currentScrollY = window.scrollY;
+                const delta = Math.abs(currentScrollY - lastScrollY.current);
 
-            // Scrolled state for glass background
-            setScrolled(currentScrollY > 20);
+                setScrolled(prev => {
+                    const next = currentScrollY > 20;
+                    return prev === next ? prev : next;
+                });
 
-            // Update visible state for bottom navigation "Smart Hide"
-            if (delta > threshold) {
-                const isScrollingDown = currentScrollY > lastScrollY.current;
-                const isNavVisible = !isScrollingDown || currentScrollY < 100;
-                
-                setVisible(isNavVisible);
-                lastScrollY.current = currentScrollY;
-            }
+                if (delta > 10) {
+                    const isScrollingDown = currentScrollY > lastScrollY.current;
+                    const nextVisible = !isScrollingDown || currentScrollY < 100;
+                    setVisible(prev => prev === nextVisible ? prev : nextVisible);
+                    lastScrollY.current = currentScrollY;
+                }
+
+                rafId.current = null;
+            });
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (rafId.current) cancelAnimationFrame(rafId.current);
+        };
     }, []);
 
     // Reset on unmount
@@ -110,6 +120,19 @@ const Navbar = () => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    // Ctrl+K / Cmd+K — focus search
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                if (location.pathname !== '/explore') navigate('/explore');
+                searchRef.current?.focus();
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [navigate, location.pathname]);
 
     // Toast auto-hide
     React.useEffect(() => {
@@ -235,11 +258,10 @@ const Navbar = () => {
         return location.pathname.startsWith(path);
     };
 
-    const NavLink = ({ to, label, badge, icon: Icon }) => {
+    const NavLink = ({ to, label, badge }) => {
         const active = isActive(to);
         return (
             <Link to={to} className={`nav-link-item ${active ? 'active' : ''}`}>
-                {Icon && <Icon size={16} />}
                 <span>{label}</span>
                 {badge > 0 && <span className="nav-badge">{badge > 9 ? '9+' : badge}</span>}
             </Link>
@@ -247,20 +269,12 @@ const Navbar = () => {
     };
 
     // Mobile bottom tab
-    const TabItem = ({ to, label, badge, icon: Icon, highlightPath }) => {
+    const TabItem = ({ to, label, badge, icon: Icon, highlightPath, className }) => {
         const active = isActive(highlightPath || to);
         return (
-            <Link to={to} style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                gap: '2px', padding: '8px 0 4px', textDecoration: 'none', position: 'relative',
-                WebkitTapHighlightColor: 'transparent', transition: 'transform 0.15s ease',
-            }}>
+            <Link to={to} className={`mobile-tab-item ${className || ''} ${active ? 'active' : ''}`}>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {active ? (
-                        <Icon size={24} fill="var(--color-primary)" stroke="var(--color-primary)" strokeWidth={2.5} style={{ transform: 'scale(1.1) translateY(-2px)' }} />
-                    ) : (
-                        <Icon size={24} stroke="var(--color-text-secondary)" strokeWidth={2} />
-                    )}
+                    <Icon size={24} className="tab-icon" strokeWidth={active ? 2.5 : 2} />
                     {badge > 0 && (
                         <span style={{
                             position: 'absolute', top: '-6px', right: '-10px',
@@ -272,18 +286,8 @@ const Navbar = () => {
                         }}>{badge > 9 ? '9+' : badge}</span>
                     )}
                 </div>
-                <span style={{
-                    fontSize: '10px', fontWeight: active ? '800' : '750', // Toughened weight for authority
-                    color: active ? 'var(--color-primary)' : 'var(--color-text-secondary)',
-                    fontFamily: 'Outfit, sans-serif', transition: 'all 0.3s ease', marginTop: '2px',
-                    letterSpacing: '0.02em'
-                }}>{label}</span>
-                <div style={{
-                    position: 'absolute', bottom: '4px', width: '4px', height: '4px', borderRadius: '50%',
-                    background: 'var(--color-primary)', transition: 'all 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28)',
-                    opacity: active ? 1 : 0, transform: active ? 'scale(1)' : 'scale(0)',
-                    boxShadow: '0 0 8px var(--color-primary)',
-                }} />
+                <span className="tab-label">{label}</span>
+                <div className="tab-dot" />
             </Link>
         );
     };
@@ -295,135 +299,160 @@ const Navbar = () => {
             {/* ── TOP NAVBAR ── */}
             <nav className={`nav-root ${scrolled ? 'scrolled' : ''} ${!visible ? 'nav-hidden' : ''}`}>
                 <div className="nav-container">
-                    {/* Logo */}
-                    <Link to="/" className="nav-logo-link">
-                        <Fingerprint className="nav-logo-icon" size={28} color="var(--color-primary)" />
-                        <span className="nav-logo-text">SoulThread</span>
-                    </Link>
+                    <div className="nav-left-group">
+                        {/* Logo — with ST badge */}
+                        <Link to="/" className="nav-logo-link">
+                            <div className="nav-logo-badge">ST</div>
+                            <span className="nav-logo-text">SoulThread</span>
+                        </Link>
 
-                    {/* Desktop Navigation Links */}
-                    <div className="nav-links-desktop">
-                        <NavLink to="/" label="Home" />
-                        <NavLink to="/series" label="Series" />
-                        <NavLink to="/about" label="Sanctuary" />
-                        <NavLink to="/messages" label="Oracle" badge={unreadMessageCount} />
+                        {/* Desktop Navigation Links */}
+                        <div className="nav-links-desktop">
+                            <NavLink to="/" label="Home" />
+                            <NavLink to="/explore" label="Explore" />
+                            <NavLink to="/messages" label="Messages" />
+                        </div>
                     </div>
 
-                    {/* Desktop Search */}
-                    <div className="nav-search-wrapper">
-                        <Search size={18} className="nav-search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Search the sanctuary..."
-                            className="nav-search-input"
-                            onClick={() => { if (location.pathname !== '/explore') navigate('/explore'); }}
-                        />
-                    </div>
+                    <div className="nav-right-group">
+                        <Link to="/crisis" className="nav-get-support-btn hide-mobile">
+                            Get Support
+                        </Link>
 
-                    {/* Right side actions */}
-                    <div className="nav-actions">
-                        <button
-                            onClick={() => setShowBreathe(true)}
-                            className="nav-btn-icon hide-mobile"
-                            title="Breathe"
-                        >
-                            <Wind size={20} />
-                        </button>
+                        <div className="nav-actions">
+                            {/* Desktop Search Icon Button */}
+                            <button 
+                                className="nav-btn-icon hide-mobile" 
+                                onClick={() => { if (location.pathname !== '/explore') navigate('/explore'); }}
+                                title="Search"
+                            >
+                                <Search size={20} color="rgba(255,255,255,0.6)" />
+                            </button>
 
                         <button
                             onClick={toggleTheme}
-                            className="nav-btn-icon"
+                            className="nav-btn-icon nav-btn-mobile-hidden"
                             aria-label="Toggle Theme"
                         >
-                            {isDarkMode ? <Sun size={20} color="#FDB813" /> : <Moon size={20} color="var(--color-primary)" />}
+                            {isDarkMode ? <Sun size={18} color="#FDB813" /> : <Moon size={18} color="var(--color-text-primary)" />}
                         </button>
 
-                        {currentUser && (
-                            <div style={{ position: 'relative' }} ref={notifRef}>
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setShowNotifs(!showNotifs); }}
-                                    className="nav-btn-icon"
-                                    aria-label="Notifications"
-                                >
-                                    <Bell size={20} />
-                                    {unreadCount > 0 && <span className="nav-notif-dot" />}
-                                </button>
+                            {currentUser && (
+                                <div style={{ position: 'relative' }} ref={notifRef} className="nav-btn-mobile-hidden">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowNotifs(!showNotifs); }}
+                                        className="nav-btn-icon"
+                                        aria-label="Notifications"
+                                    >
+                                        <Bell size={20} />
+                                        {unreadCount > 0 && <span className="nav-notif-dot" />}
+                                    </button>
 
-                                {showNotifs && (
-                                    <div className="nav-dropdown-menu">
-                                        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800' }}>Narratives {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}</h4>
-                                            <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                                                <X size={18} />
-                                            </button>
-                                        </div>
-                                        <div className="nav-notif-scroll hide-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                                            {notifications.length === 0 ? (
-                                                <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Peaceful silence here.</div>
-                                            ) : (
-                                                notifications.map(n => (
-                                                    <div key={n.id} onClick={() => handleRead(n)} style={{
-                                                        padding: '12px 16px', borderBottom: '1px solid var(--color-border)',
-                                                        background: n.read ? 'transparent' : 'var(--color-primary-soft)',
-                                                        cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'center'
-                                                    }}>
-                                                        <div style={{ flex: 1 }}>
-                                                            <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-primary)' }}>{n.message}</p>
+                                    {showNotifs && (
+                                        <div className="nav-dropdown-menu">
+                                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--color-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800' }}>Narratives {unreadCount > 0 && <span className="nav-badge">{unreadCount}</span>}</h4>
+                                                <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                                    <X size={18} />
+                                                </button>
+                                            </div>
+                                            <div className="nav-notif-scroll hide-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                                {notifications.length === 0 ? (
+                                                    <div style={{ padding: '32px', textAlign: 'center', color: 'var(--color-text-muted)' }}>Peaceful silence here.</div>
+                                                ) : (
+                                                    notifications.map(n => (
+                                                        <div key={n.id} onClick={() => handleRead(n)} style={{
+                                                            padding: '12px 16px', borderBottom: '1px solid var(--color-border)',
+                                                            background: n.read ? 'transparent' : 'var(--color-primary-soft)',
+                                                            cursor: 'pointer', display: 'flex', gap: '12px', alignItems: 'center'
+                                                        }}>
+                                                            <div style={{ flex: 1 }}>
+                                                                <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-primary)' }}>{n.message}</p>
+                                                            </div>
+                                                            {!n.read && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)' }} />}
                                                         </div>
-                                                        {!n.read && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)' }} />}
-                                                    </div>
-                                                ))
-                                            )}
+                                                    ))
+                                                )}
+                                            </div>
+                                            <Link to="/notifications" className="nav-menu-link-all" style={{ display: 'block', padding: '12px', textAlign: 'center', fontSize: '13px', background: 'var(--color-surface-2)', textDecoration: 'none', color: 'var(--color-primary)', fontWeight: '700' }}>View All</Link>
                                         </div>
-                                        <Link to="/notifications" className="nav-menu-link-all" style={{ display: 'block', padding: '12px', textAlign: 'center', fontSize: '13px', background: 'var(--color-surface-2)', textDecoration: 'none', color: 'var(--color-primary)', fontWeight: '700' }}>View All</Link>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {currentUser ? (
-                            <div style={{ position: 'relative' }} ref={userMenuRef} className="hide-mobile">
-                                <button
-                                    onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
-                                    className="nav-btn-icon"
-                                    style={{ padding: 0 }}
-                                >
-                                    {currentUser.photoURL ? (
-                                        <img src={currentUser.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <div style={{ fontSize: '15px', fontWeight: '800' }}>{avatarLetter}</div>
                                     )}
-                                </button>
-                                {showUserMenu && (
-                                    <div className="nav-dropdown-menu" style={{ width: '220px' }}>
-                                        <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--color-border)' }}>
-                                            <div style={{ fontWeight: '800', fontSize: '14px', color: 'var(--color-text-primary)' }}>{currentUser.displayName || 'Narrator'}</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{currentUser.email}</div>
+                                </div>
+                            )}
+
+                            {currentUser && (
+                                <div style={{ position: 'relative' }} className="nav-bell-mobile">
+                                    <button
+                                        onClick={() => navigate('/notifications')}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center', position: 'relative' }}
+                                        aria-label="Notifications"
+                                    >
+                                        <Bell size={22} color="var(--color-text-primary)" />
+                                        {unreadCount > 0 && (
+                                            <span style={{
+                                                position: 'absolute', top: '2px', right: '2px',
+                                                width: '8px', height: '8px', borderRadius: '50%',
+                                                background: '#ef4444', border: '1.5px solid var(--color-background)'
+                                            }} />
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
+                            {currentUser ? (
+                                <div style={{ position: 'relative' }} ref={userMenuRef} className="nav-avatar-mobile-wrapper">
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setShowUserMenu(!showUserMenu); }}
+                                        className="nav-btn-icon avatar"
+                                        style={{ padding: 0 }}
+                                    >
+                                        {currentUser.photoURL ? (
+                                            <img src={currentUser.photoURL} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+                                        ) : (
+                                            <div style={{ fontSize: '15px', fontWeight: '800', width: '100%', height: '100%', borderRadius: '50%', backgroundColor: 'var(--color-primary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-primary)' }}>{avatarLetter}</div>
+                                        )}
+                                    </button>
+                                    {showUserMenu && (
+                                        <div className="nav-dropdown-menu" style={{ width: '220px' }}>
+                                            <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--color-border)' }}>
+                                                <div style={{ fontWeight: '800', fontSize: '14px', color: 'var(--color-text-primary)' }}>{currentUser.displayName || 'Narrator'}</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{currentUser.email}</div>
+                                            </div>
+                                            <div style={{ padding: '8px 0' }}>
+                                                {[
+                                                    { to: `/profile/${currentUser.uid}`, label: 'My Profile', icon: User },
+                                                    { to: '/messages', label: 'Messages', icon: MessageSquare, badge: unreadMessageCount },
+                                                    { to: '/settings', label: 'Settings', icon: Settings }
+                                                ].map(item => (
+                                                    <Link key={item.to} to={item.to} onClick={() => setShowUserMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }} className="nav-menu-item-link">
+                                                        <item.icon size={16} color="var(--color-text-secondary)" />
+                                                        <span style={{ flex: 1 }}>{item.label}</span>
+                                                        {item.badge > 0 && (
+                                                            <span style={{
+                                                                background: '#ff3b30',
+                                                                color: 'white',
+                                                                borderRadius: '10px',
+                                                                padding: '1px 6px',
+                                                                fontSize: '10px',
+                                                                fontWeight: '800'
+                                                            }}>{item.badge}</span>
+                                                        )}
+                                                    </Link>
+                                                ))}
+                                                <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: '#ef4444', background: 'none', border: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', borderTop: '1px solid var(--color-border)', marginTop: '4px' }}>
+                                                    <LogOut size={16} />
+                                                    Logout
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div style={{ padding: '8px 0' }}>
-                                            {[
-                                                { to: `/profile/${currentUser.uid}`, label: 'My Identity', icon: User },
-                                                { to: '/settings', label: 'Preferences', icon: Settings },
-                                                ...(currentUser?.role === 'admin' ? [{ to: '/admin', label: 'Nexus Control', icon: Terminal }] : []),
-                                            ].map(item => (
-                                                <Link key={item.to} to={item.to} onClick={() => setShowUserMenu(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: 'var(--color-text-primary)', textDecoration: 'none', fontSize: '14px', fontWeight: '600' }} className="nav-menu-item-link">
-                                                    <item.icon size={16} color="var(--color-text-secondary)" />
-                                                    {item.label}
-                                                </Link>
-                                            ))}
-                                            <button onClick={handleLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 16px', color: '#ef4444', background: 'none', border: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', borderTop: '1px solid var(--color-border)', marginTop: '4px' }}>
-                                                <LogOut size={16} />
-                                                Disconnect
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <Link to="/login" className="nav-btn-enter">
-                                Join Sanctuary
-                            </Link>
-                        )}
+                                    )}
+                                </div>
+                            ) : (
+                                <Link to="/login" className="nav-btn-enter">
+                                    Sign In
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
             </nav>
@@ -464,13 +493,19 @@ const Navbar = () => {
                     <>
                         <TabItem to="/" label="Home" icon={Home} />
                         <TabItem to="/explore" label="Explore" icon={Compass} />
-                        <TabItem to="/series" label="Series" icon={Layers} />
-                        <TabItem to="/messages" label="Chat" badge={unreadMessageCount} icon={MessageSquare} />
-                        <TabItem to="/crisis" label="Crisis" icon={Heart} />
-                        <TabItem to={`/profile/${currentUser.uid}`} label="Profile" highlightPath="/profile" icon={User} />
+                        <TabItem to="/experts" label="Get Support" icon={LifeBuoy} />
+                        <TabItem to="/messages" label="Messages" icon={MessageSquare} />
+                        <TabItem to={`/profile/${currentUser.uid}`} label="Me" highlightPath="/profile" icon={User} />
                     </>
                 ) : (
-                    <Link to="/login" className="mobile-login-btn">Enter Sanctuary</Link>
+                    <div style={{ display: 'flex', gap: '12px', width: '100%', padding: '0 16px', margin: 'auto' }}>
+                        <Link to="/login" style={{
+                            flex: 1, textAlign: 'center', padding: '10px 0', borderRadius: '30px',
+                            fontSize: '14px', fontWeight: '800', textDecoration: 'none',
+                            color: 'white', background: 'var(--grad-primary)',
+                            boxShadow: 'var(--shadow-glow-sm)'
+                        }}>Sign In</Link>
+                    </div>
                 )}
             </div>
 

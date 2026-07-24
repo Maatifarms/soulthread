@@ -35,7 +35,7 @@ const DesktopSidebar = () => {
                     Upgrade Your Mind
                 </h3>
                 <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', lineHeight: '1.6', margin: '0 0 18px 0' }}>
-                    Structured 30-day paths for focus mastery, mental toughness, and psychological resilience.
+                    Structured 30-day paths for focus mastery, mental toughness, and emotional resilience.
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
                     {[
@@ -94,7 +94,7 @@ const DesktopSidebar = () => {
                     </div>
                 </div>
                 <p style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.6', margin: '0 0 14px 0' }}>
-                    Verified psychologists available for confidential sessions.
+                    Verified guides available for confidential sessions.
                 </p>
                 <Link to="/crisis" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -105,7 +105,7 @@ const DesktopSidebar = () => {
                     onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                 >
-                    Find a Psychologist
+                    Find a Guide
                 </Link>
             </div>
 
@@ -143,7 +143,7 @@ const DesktopSidebar = () => {
                 <div style={{ fontSize: '11px', fontWeight: '800', color: 'var(--color-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '10px' }}>Community Links</div>
                 {[
                     { to: '/explore', label: 'Explore Community' },
-                    { to: '/crisis', label: 'Psychologist List' },
+                    { to: '/crisis', label: 'Guide List' },
                     { to: '/', label: 'Community Guidelines' },
                     ...(currentUser ? [{ to: `/profile/${currentUser.uid}`, label: 'My Profile' }] : [{ to: '/signup', label: 'Create Account' }]),
                 ].map(link => (

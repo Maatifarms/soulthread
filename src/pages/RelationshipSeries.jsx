@@ -7,10 +7,8 @@ import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
-import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+
 import SEO from '../components/common/SEO';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './RelationshipSeries.css';
 
 const chaptersData = [
@@ -90,7 +88,7 @@ const RelationshipSeries = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
@@ -102,7 +100,7 @@ const RelationshipSeries = () => {
 
     useEffect(() => {
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const hasAccess = true;
             setIsPremium(hasAccess);
             setLoading(false);
         };
@@ -163,8 +161,8 @@ const RelationshipSeries = () => {
 
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            const tier = { price: 499, name: "Premium" };
+            navigate("/pricing");
             setIsPremium(true);
         } catch (error) {
             console.error("Unlock failed:", error);
@@ -221,13 +219,7 @@ const RelationshipSeries = () => {
                                 viewport={{ once: true, margin: "-100px" }}
                             >
                                 {isLocked ? (
-                                    <SeriesPaywall
-                                        seriesId="relationship-mastery"
-                                        seriesTitle="Relationship Mastery"
-                                        onUnlock={handleUnlock}
-                                        isProcessing={isProcessing}
-                                        paymentError={paymentError}
-                                    />
+                                    <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                 ) : (
                                     <>
                                         <div className="chapter-meta">

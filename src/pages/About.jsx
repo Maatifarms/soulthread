@@ -75,7 +75,7 @@ const About = () => {
                 description="SoulThread is India's leading anonymous mental wellness community. Learn how we built a judgment-free sanctuary for venting, healing, and real human connection."
                 image="https://soulthread.in/logo.jpg"
                 url="https://soulthread.in/about"
-                keywords="about soulthread, mental health mission, anonymous community, soulthread india, safe space, psychological growth"
+                keywords="about soulthread, wellness mission, anonymous community, soulthread india, safe space, personal growth"
             />
 
             {/* ── HERO ── */}
@@ -93,7 +93,7 @@ const About = () => {
                         <span className="ab-grad-text">safest human sanctuary.</span>
                     </h1>
                     <p className="ab-hero-sub">
-                        Beyond social media. Beyond traditional therapy. A architectural space<br className="ab-br-hide" />
+                        Beyond social media. Beyond traditional support groups. A safe digital space<br className="ab-br-hide" />
                         designed for honesty, anonymity, and professional support.
                     </p>
                     <div className="ab-hero-actions">
@@ -212,9 +212,9 @@ const About = () => {
                                 <Brain className="ab-p-icon" size={32} />
                             </div>
                             <h3>Expert-Led Evolution</h3>
-                            <p>We bridge the gap between peer support and clinical psychology through verified professional networks and neuroscience-grounded learning series.</p>
+                            <p>We bridge the gap between peer support and verified psychology through verified professional networks and neuroscience-grounded learning series.</p>
                             <div className="ab-pillar-detail">
-                                <span>50+ Psychologists</span>
+                                <span>50+ Guides</span>
                                 <span>6 Growth Series</span>
                                 <span>Evidence-Based</span>
                             </div>
@@ -249,7 +249,7 @@ const About = () => {
                     <div className="ab-offer-grid">
                         {[
                             { icon: <MessageCircle />, title: 'Community Feed', desc: 'Secure, anonymous posting for real-time peer support and emotional venting.' },
-                            { icon: <Stethoscope />, title: 'Professional Network', desc: 'Direct connection to over 50 verified psychologists for specialized care.' },
+                            { icon: <Stethoscope />, title: 'Professional Network', desc: 'Direct connection to over 50 verified guides for specialized care.' },
                             { icon: <BookOpen />, title: 'Curated Series', desc: 'Deep-dive educational programs on ADHD, Mastery, and Emotional Resilience.' },
                             { icon: <AlertCircle />, title: 'Crisis Response', desc: 'Immediate access to 24/7 helplines and critical emotional support resources.' },
                             { icon: <Leaf />, title: 'Growth Circles', desc: 'Private, moderated groups focusing on shared healing and relationship growth.' },

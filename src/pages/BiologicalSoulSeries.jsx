@@ -6,10 +6,8 @@ import { analytics } from '../services/analytics';
 import { db } from '../services/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+
 import SEO from '../components/common/SEO';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './BiologicalSoulSeries.css';
 
 const chapters = [
@@ -202,7 +200,7 @@ const chapters = [
         module: "SOCIETY & SHADOWS",
         title: "The Schizophrenic Mind",
         insight: "Schizophrenia is not just 'broken' brain; it's a window into the evolution of human imagination and religiosity.",
-        takeaway: "The line between a shaman and a patient is often just a matter of cultural context.",
+        takeaway: "The line between a shaman and a member is often just a matter of cultural context.",
         image: "https://images.unsplash.com/photo-1518331647614-7a1f04cd34cf?auto=format&fit=crop&q=80&w=1200"
     },
     {
@@ -230,7 +228,7 @@ const BiologicalSoulSeries = () => {
 
     useEffect(() => {
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.PRO);
+            const hasAccess = true;
             setIsPro(hasAccess);
             setLoading(false);
 
@@ -301,8 +299,8 @@ const BiologicalSoulSeries = () => {
         }
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.PRO);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.PRO }, tier.price);
+            const tier = { price: 499, name: "Premium" };
+            navigate("/pricing");
             setIsPro(true);
         } catch (error) {
             console.error("Upgrade failed:", error);
@@ -359,13 +357,7 @@ const BiologicalSoulSeries = () => {
                             viewport={{ once: true }}
                         >
                             {isLocked ? (
-                                <SeriesPaywall
-                                    seriesId="biological-soul"
-                                    seriesTitle="The Biological Soul"
-                                    onUnlock={handleUpgrade}
-                                    isProcessing={isProcessing}
-                                    paymentError={paymentError}
-                                />
+                                <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                             ) : (
                                 <>
                                     <div className="post-header">

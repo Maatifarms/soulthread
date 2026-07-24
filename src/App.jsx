@@ -9,38 +9,42 @@ import { getActiveJobs } from './services/uploadPipeline';
 import { Capacitor } from '@capacitor/core';
 import ScrollToTop from './components/common/ScrollToTop';
 import Footer from './components/layout/Footer';
+import UpdateChecker from './components/common/UpdateChecker';
+import { SplashScreen } from '@capacitor/splash-screen';
 
 // Code Splitting: Lazy load ALL pages
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Chat = lazy(() => import('./pages/Chat'));
-const SupportGroups = lazy(() => import('./pages/SupportGroups'));
-const PsychologistList = lazy(() => import('./pages/PsychologistList'));
-const Crisis = lazy(() => import('./pages/Crisis'));
-const PostDetail = lazy(() => import('./pages/PostDetail'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
-const Explore = lazy(() => import('./pages/Explore'));
 const PhoneLogin = lazy(() => import('./pages/PhoneLogin'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
-const CounselorDashboard = lazy(() => import('./pages/CounselorDashboard'));
-const HyperfocusSeries = lazy(() => import('./pages/HyperfocusSeries'));
+const Explore = lazy(() => import('./pages/Explore'));
+const Profile = lazy(() => import('./pages/Profile'));
+const PostDetail = lazy(() => import('./pages/PostDetail'));
 const SeriesGallery = lazy(() => import('./pages/SeriesGallery'));
-const NeverFinishedSeries = lazy(() => import('./pages/NeverFinishedSeries'));
-const PromptEngineeringSeries = lazy(() => import('./pages/PromptEngineeringSeries'));
-const EgoIdSeries = lazy(() => import('./pages/EgoIdSeries'));
+const HyperfocusSeries = lazy(() => import('./pages/HyperfocusSeries'));
 const MeditationSeries = lazy(() => import('./pages/MeditationSeries'));
+const EgoIdSeries = lazy(() => import('./pages/EgoIdSeries'));
+const MemorySeries = lazy(() => import('./pages/MemorySeries'));
 const BiologicalSoulSeries = lazy(() => import('./pages/BiologicalSoulSeries'));
+const NeverFinishedSeries = lazy(() => import('./pages/NeverFinishedSeries'));
 const RelationshipSeries = lazy(() => import('./pages/RelationshipSeries'));
 const LustDecodedSeries = lazy(() => import('./pages/LustDecodedSeries'));
-const MemorySeries = lazy(() => import('./pages/MemorySeries'));
+const PromptEngineeringSeries = lazy(() => import('./pages/PromptEngineeringSeries'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Circles = lazy(() => import('./pages/Circles'));
+const Experts = lazy(() => import('./pages/Experts'));
+const JoinAsExpert = lazy(() => import('./pages/JoinAsExpert'));
+const GuideDashboard = lazy(() => import('./pages/GuideDashboard'));
+const Notifications = lazy(() => import('./pages/Notifications'));
 const Pricing = lazy(() => import('./pages/Pricing'));
+const Subscribe = lazy(() => import('./pages/Subscribe'));
+const PaymentStatus = lazy(() => import('./pages/PaymentStatus'));
+const Crisis = lazy(() => import('./pages/Crisis'));
 const About = lazy(() => import('./pages/About'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
 const NotFound = lazy(() => import('./pages/NotFound'));
-const Notifications = lazy(() => import('./pages/Notifications'));
 
 const ProfileRedirect = () => {
   const { currentUser, loading } = useAuth();
@@ -49,25 +53,16 @@ const ProfileRedirect = () => {
   return <Navigate to={`/profile/${currentUser.uid}`} replace />;
 };
 
-const AdminRoute = ({ children }) => {
-  const { currentUser, loading } = useAuth();
-  if (loading) return <Loading />;
-  if (!currentUser || (currentUser.role !== 'admin' && !currentUser.isAdmin)) {
-    return <Navigate to="/" replace />;
-  }
-  return children;
-};
-
 // Immersive series pages have their own sticky header — hide global Navbar + Footer
 const IMMERSIVE_SERIES_ROUTES = [
-  '/hyperfocus-series',
-  '/never-finished-series',
-  '/prompt-engineering-series',
-  '/ego-id-series',
-  '/biological-soul-series',
-  '/relationship-series',
-  '/lust-decoded',
-  '/memory-series',
+  '/series/hyperfocus',
+  '/series/never-finished',
+  '/series/prompt-engineering',
+  '/series/ego-id',
+  '/series/biological-soul',
+  '/series/relationship',
+  '/series/lust-decoded',
+  '/series/memory',
 ];
 const isImmersiveSeries = (pathname) => IMMERSIVE_SERIES_ROUTES.includes(pathname);
 
@@ -90,8 +85,13 @@ function AppShell({ children, activeJobs, isNativeApp }) {
 
 function App() {
   const [activeJobs, setActiveJobs] = useState([]);
+  if (window.logToScreen) window.logToScreen('[8] App Component Rendered');
 
   useEffect(() => {
+    if (window.logToScreen) window.logToScreen('[9] App useEffect start');
+    try {
+      SplashScreen.hide();
+    } catch(e) { console.warn('Splash hide failed:', e); }
     markAppLaunch();
     captureWebVitals();
 
@@ -112,15 +112,17 @@ function App() {
     // Remove splash screen once app is ready — instant fade for faster perceived load
     const splash = document.getElementById('splash-screen');
     if (splash) {
+      if (window.logToScreen) window.logToScreen('[10] Removing splash screen');
       splash.style.transition = 'opacity 0.4s ease-out, transform 0.6s ease-out';
       splash.style.opacity = '0';
       splash.style.transform = 'scale(1.03)';
       setTimeout(() => splash.remove(), 600);
+    } else {
+      if (window.logToScreen) window.logToScreen('[10] Splash screen not found');
     }
 
     // Pre-fetch critical chunks after the initial UI is painted
     const prefetchRoutes = () => {
-      // Home, Explore, and Login are the most likely next steps
       import('./pages/Home');
       import('./pages/Explore');
       import('./pages/Login');
@@ -141,44 +143,42 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
+      <UpdateChecker />
       <AppShell activeJobs={activeJobs} isNativeApp={isNativeApp}>
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/feed" element={<Home />} />
-            <Route path="/post" element={<Home />} />
-            <Route path="/explore" element={<Explore />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/login/phone" element={<PhoneLogin />} />
+            <Route path="/phone-login" element={<PhoneLogin />} />
+            <Route path="/explore" element={<Explore />} />
             <Route path="/profile" element={<ProfileRedirect />} />
             <Route path="/profile/:userId" element={<Profile />} />
-            <Route path="/messages" element={<Chat />} />
-            <Route path="/groups" element={<SupportGroups />} />
-            <Route path="/crisis" element={<Crisis />} />
-            <Route path="/care" element={<Crisis />} />
-            <Route path="/counselors" element={<PsychologistList />} />
-            <Route path="/notifications" element={<Notifications />} />
-            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/post/:postId" element={<PostDetail />} />
-            <Route path="/hyperfocus-series" element={<HyperfocusSeries />} />
             <Route path="/series" element={<SeriesGallery />} />
-            <Route path="/series/:id" element={<Navigate to="/series" replace />} />
+            <Route path="/series/hyperfocus" element={<HyperfocusSeries />} />
+            <Route path="/series/meditation" element={<MeditationSeries />} />
+            <Route path="/series/ego-id" element={<EgoIdSeries />} />
+            <Route path="/series/memory" element={<MemorySeries />} />
+            <Route path="/series/biological-soul" element={<BiologicalSoulSeries />} />
+            <Route path="/series/never-finished" element={<NeverFinishedSeries />} />
+            <Route path="/series/relationship" element={<RelationshipSeries />} />
+            <Route path="/series/lust-decoded" element={<LustDecodedSeries />} />
+            <Route path="/series/prompt-engineering" element={<PromptEngineeringSeries />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/circles" element={<Circles />} />
+            <Route path="/experts" element={<Experts />} />
+            <Route path="/experts/join" element={<JoinAsExpert />} />
+            <Route path="/guide-dashboard" element={<GuideDashboard />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/subscribe" element={<Subscribe />} />
+            <Route path="/payment-status" element={<PaymentStatus />} />
+            <Route path="/crisis" element={<Crisis />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
-            <Route path="/never-finished-series" element={<NeverFinishedSeries />} />
-            <Route path="/prompt-engineering-series" element={<PromptEngineeringSeries />} />
-            <Route path="/ego-id-series" element={<EgoIdSeries />} />
-            <Route path="/meditation-series" element={<MeditationSeries />} />
-            <Route path="/biological-soul-series" element={<BiologicalSoulSeries />} />
-            <Route path="/relationship-series" element={<RelationshipSeries />} />
-            <Route path="/lust-decoded" element={<LustDecodedSeries />} />
-            <Route path="/memory-series" element={<MemorySeries />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/counselor-dashboard" element={<CounselorDashboard />} />
-            <Route path="/status" element={<NotFound />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
@@ -188,3 +188,4 @@ function App() {
 }
 
 export default App;
+

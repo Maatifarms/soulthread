@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SoulGuide</string>
+    <string name="title_activity_main">SoulGuide</string>
+    <string name="package_name">in.soulthread.guide</string>
+    <string name="custom_url_scheme">in.soulthread.guide</string>
+</resources>

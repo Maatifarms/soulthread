@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { Heart } from 'lucide-react';
+import { Heart, Phone } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
@@ -12,6 +12,10 @@ const Footer = () => {
 
     return (
         <footer className="footer-main">
+            <div className="crisis-pin">
+                <Phone size={14} color="#C0392B" />
+                <span>In crisis? <Link to="/crisis" className="crisis-link">Get help now</Link> <span style={{opacity: 0.5}}>·</span> iCall: <a href="tel:9152987821" className="crisis-link">9152987821</a></span>
+            </div>
             <div className="container footer-content">
                 <div className="footer-branding">
                     <Link to="/" className="footer-logo">
@@ -19,7 +23,7 @@ const Footer = () => {
                         <span>SoulThread</span>
                     </Link>
                     <p className="footer-tagline">
-                        A digital sanctuary for your soul. REDEFINING human connection through anonymous peer support and mental wellness.
+                        India's first platform combining patient care and mental health support. Built for families going through something hard.
                     </p>
                     <div className="footer-socials">
                         {/* Placeholder for future socials */}
@@ -40,8 +44,9 @@ const Footer = () => {
                         <h4>Platform</h4>
                         <Link to="/about">Our Story</Link>
                         <Link to="/pricing">Sponsorship</Link>
-                        <Link to="/download/soulthread.apk">Android App</Link>
+                        <a href="https://play.google.com/store/apps/details?id=in.soulthread.app" target="_blank" rel="noopener noreferrer">Get Android App</a>
                         <Link to="/status">Site Status</Link>
+                        <Link to="/join-as-expert">Apply as Expert</Link>
                     </div>
 
                     <div className="link-group">

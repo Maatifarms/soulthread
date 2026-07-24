@@ -44,10 +44,11 @@
   --top-nav-height: 64px;
 
   /* ── Premium Typography ── */
-  --font-family-header: 'Outfit', -apple-system, sans-serif;
+  --font-family-header: 'Playfair Display', Georgia, serif;
   --font-family-body: 'Outfit', -apple-system, sans-serif;
   --font-body: 'Outfit', -apple-system, sans-serif;
-  --font-header: 'Outfit', -apple-system, sans-serif;
+  --font-header: 'Playfair Display', Georgia, serif;
+  --font-display: 'Playfair Display', Georgia, serif;
   --font-serif: 'Lora', Georgia, serif;
   --font-size-sm: 13px;
   --font-size-md: 15px;

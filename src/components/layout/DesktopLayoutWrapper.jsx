@@ -4,7 +4,7 @@ import DesktopSidebar from './DesktopSidebar';
 
 import { Capacitor } from '@capacitor/core';
 
-const DesktopLayoutWrapper = ({ children, hideRightSidebar = false }) => {
+const DesktopLayoutWrapper = ({ children, hideRightSidebar = false, wide = false }) => {
     const isNativeApp = Capacitor.isNativePlatform();
 
     if (isNativeApp) {
@@ -19,7 +19,7 @@ const DesktopLayoutWrapper = ({ children, hideRightSidebar = false }) => {
 
     return (
         <div style={{
-            maxWidth: 'var(--max-width-feed)',
+            maxWidth: wide ? '1200px' : 'var(--max-width-feed)',
             margin: '20px auto',
             padding: '0 16px'
         }}>

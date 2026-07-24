@@ -19,7 +19,7 @@ const Breadcrumbs = () => {
         'prompt-engineering-series': 'Prompt Architect',
         'pricing': 'Pricing',
         'crisis': 'Get Help',
-        'care': 'Psychologist Network'
+        'care': 'Guide Network'
     };
 
     return (

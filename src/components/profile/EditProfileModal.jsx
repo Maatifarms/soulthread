@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc, arrayRemove, getDoc, setDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayRemove, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -202,7 +202,7 @@ const EditProfileModal = ({ userProfile, onClose, onUpdate }) => {
         setLoading(true);
         try {
             // Delete user document
-            await doc(db, 'users', currentUser.uid).delete(); // Note: Simplified, usually handled by Cloud Functions for thorough cleanup
+            await deleteDoc(doc(db, 'users', currentUser.uid)); // Note: Simplified, usually handled by Cloud Functions for thorough cleanup
             alert("Account deleted. We're sorry to see you go.");
             window.location.href = '/';
         } catch (error) {
@@ -220,23 +220,28 @@ const EditProfileModal = ({ userProfile, onClose, onUpdate }) => {
 
     return (
         <div style={{
-            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
+            position: 'fixed', inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex',
+            justifyContent: 'center', alignItems: 'flex-end', zIndex: 1000
         }} onClick={handleClose}>
             <div style={{
                 background: 'var(--color-surface)',
-                borderRadius: '20px',
-                maxWidth: '550px',
-                width: '90%',
-                maxHeight: '90vh',
+                borderRadius: '20px 20px 0 0',
+                width: '100%',
+                maxWidth: '600px',
+                maxHeight: '92vh',
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+                boxShadow: '0 -4px 32px rgba(0,0,0,0.2)',
                 overflow: 'hidden'
             }} onClick={e => e.stopPropagation()}>
                 {/* Header */}
-                <div style={{ padding: '24px 30px', borderBottom: '1px solid var(--color-border)' }}>
-                    <h2 style={{ margin: 0, color: 'var(--color-text-primary)', fontSize: '22px' }}>Edit Profile</h2>
+                <div style={{ padding: '12px 20px 0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: 'var(--color-border)', marginBottom: '12px' }} />
+                </div>
+                <div style={{ padding: '4px 20px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <h2 style={{ margin: 0, color: 'var(--color-text-primary)', fontSize: '18px', fontWeight: '700' }}>Edit Profile</h2>
+                    <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--color-text-muted)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
                 </div>
 
                 {/* Tabs */}
@@ -262,8 +267,7 @@ const EditProfileModal = ({ userProfile, onClose, onUpdate }) => {
                                 gap: '6px'
                             }}
                         >
-                            <span>{tab.icon}</span>
-                            <span>{tab.label}</span>
+                            <span style={{ fontSize: '13px' }}>{tab.label}</span>
                         </button>
                     ))}
                 </div>
@@ -291,7 +295,7 @@ const EditProfileModal = ({ userProfile, onClose, onUpdate }) => {
                                                 width: '28px',
                                                 height: '28px',
                                                 borderRadius: '50%',
-                                                background: '#ff4444',
+                                                background: 'rgba(0,0,0,0.55)',
                                                 color: 'white',
                                                 border: '2px solid white',
                                                 cursor: 'pointer',

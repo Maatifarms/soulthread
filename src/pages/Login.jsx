@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import AuthStepIndicator from '../components/auth/AuthStepIndicator';
 
 import './Auth.css';
 
@@ -158,7 +159,7 @@ const Login = () => {
                 )}
 
                 {!showReset ? (
-                    <form onSubmit={handleEmailLogin} className="auth-form">
+                    <form onSubmit={handleEmailLogin} className="auth-form" noValidate>
                         <motion.div variants={itemVariants} className="auth-input-group">
                             <label className="auth-label">Email Address</label>
                             <input
@@ -214,14 +215,12 @@ const Login = () => {
                             whileTap={{ scale: 0.98 }}
                         >
                             {loading ? (
-                                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                    <span className="spinner-small" /> Logging in...
-                                </span>
+                                <AuthStepIndicator />
                             ) : 'Log In'}
                         </motion.button>
                     </form>
                 ) : (
-                    <form onSubmit={handleResetPassword} className="auth-form">
+                    <form onSubmit={handleResetPassword} className="auth-form" noValidate>
                         <motion.div variants={itemVariants} className="auth-input-group">
                             <label className="auth-label">Email Address</label>
                             <input
@@ -279,9 +278,7 @@ const Login = () => {
                                 className="auth-google-btn"
                             >
                                 {googleLoading ? (
-                                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <span className="spinner-small" /> Signing in...
-                                    </span>
+                                    <AuthStepIndicator steps={["Connecting to Google...", "Verifying identity...", "Logging in..."]} />
                                 ) : (
                                     <>
                                         <svg width="20" height="20" viewBox="0 0 48 48">

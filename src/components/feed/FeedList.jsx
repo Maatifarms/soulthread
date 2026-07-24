@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { Capacitor } from '@capacitor/core';
+import { RefreshCw } from 'lucide-react';
 import './FeedList.css';
 
 const isNativeApp = Capacitor.isNativePlatform();
@@ -13,22 +14,14 @@ const isNativeApp = Capacitor.isNativePlatform();
 // Skeleton card shown while posts load — makes app feel instant
 const FeedSkeleton = () => (
     <div className="feed-container">
-        {[1, 2, 3, 4].map(i => (
-            <div key={i} className="feed-skeleton-card">
-                <div className="skeleton-header">
-                    <div className="skeleton-avatar" />
-                    <div>
-                        <div className="skeleton-title" />
-                        <div className="skeleton-meta" />
-                    </div>
-                </div>
-                <div className="skeleton-line full" />
-                <div className="skeleton-line three-quarters" />
-                <div className="skeleton-line half" />
-            </div>
+        {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="skeleton" style={{ height: '100px', margin: '16px 0', borderRadius: '8px', background: 'linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%)', backgroundSize: '200% 100%', animation: 'shimmer 1.5s infinite' }} />
         ))}
     </div>
 );
+
+const PULL_THRESHOLD = 70;
+const MAX_PULL = 110;
 
 const FeedList = ({ circleId = null, searchTerm = '', filterCategory = null }) => {
     const { currentUser } = useAuth();
@@ -36,8 +29,51 @@ const FeedList = ({ circleId = null, searchTerm = '', filterCategory = null }) =
     const [postLimit, setPostLimit] = React.useState(8);
     // Use either the explicit prop (from Home/Explore) OR the user's preference
     const activeCategory = filterCategory || (currentUser?.feedFocus !== 'all' ? currentUser?.feedFocus : null);
-    const { posts, loading, loadingMore, error } = usePosts(postLimit, activeCategory, currentUser, circleId, searchTerm);
+    const { posts, loading, loadingMore, error, refetch } = usePosts(postLimit, activeCategory, currentUser, circleId, searchTerm);
     const [spotlightPost, setSpotlightPost] = React.useState(null);
+
+    // Pull-to-refresh (native app) — WebView disables its own overscroll glow,
+    // so we drive the gesture manually via touch events instead.
+    const [pullDistance, setPullDistance] = React.useState(0);
+    const [refreshing, setRefreshing] = React.useState(false);
+    const touchStartYRef = React.useRef(null);
+    const pullingRef = React.useRef(false);
+
+    const handleTouchStart = React.useCallback((e) => {
+        if (refreshing || window.scrollY > 4) return;
+        touchStartYRef.current = e.touches[0].clientY;
+        pullingRef.current = true;
+    }, [refreshing]);
+
+    const handleTouchMove = React.useCallback((e) => {
+        if (!pullingRef.current || touchStartYRef.current === null) return;
+        const delta = e.touches[0].clientY - touchStartYRef.current;
+        if (delta <= 0 || window.scrollY > 4) {
+            pullingRef.current = false;
+            setPullDistance(0);
+            return;
+        }
+        setPullDistance(Math.min(delta * 0.45, MAX_PULL));
+    }, []);
+
+    const handleTouchEnd = React.useCallback(() => {
+        if (!pullingRef.current) return;
+        pullingRef.current = false;
+        touchStartYRef.current = null;
+        setPullDistance(current => {
+            if (current >= PULL_THRESHOLD) {
+                setRefreshing(true);
+                refetch();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => {
+                    setRefreshing(false);
+                    setPullDistance(0);
+                }, 800);
+                return current;
+            }
+            return 0;
+        });
+    }, [refetch]);
 
     // Fetch spotlight post
     React.useEffect(() => {
@@ -109,7 +145,42 @@ const FeedList = ({ circleId = null, searchTerm = '', filterCategory = null }) =
     );
 
     return (
-        <div className="feed-container">
+        <div
+            className="feed-container"
+            style={{ position: 'relative' }}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
+            {isNativeApp ? (
+                <div
+                    className="pull-refresh-indicator"
+                    style={{
+                        height: `${refreshing ? 44 : pullDistance}px`,
+                        opacity: refreshing ? 1 : Math.min(pullDistance / PULL_THRESHOLD, 1),
+                    }}
+                >
+                    <RefreshCw
+                        size={20}
+                        className={refreshing ? 'pull-spin' : ''}
+                        style={{
+                            transform: refreshing ? 'none' : `rotate(${Math.min(pullDistance, MAX_PULL) * 2.6}deg)`,
+                        }}
+                    />
+                </div>
+            ) : (
+                <button
+                    onClick={() => {
+                        refetch();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    title="Refresh feed"
+                    className="feed-refresh-btn-web"
+                >
+                    <RefreshCw size={16} />
+                    Refresh
+                </button>
+            )}
             {displayPosts.length === 0 ? (
                 <div className="feed-empty">
                     {currentUser && currentUser.age < 18
@@ -124,7 +195,9 @@ const FeedList = ({ circleId = null, searchTerm = '', filterCategory = null }) =
                     )}
 
                     {displayPosts.map(post => (
-                        <FeedItem key={post.id} post={post} />
+                        <div key={post.id} style={{ contentVisibility: 'auto', containIntrinsicSize: '0 120px' }}>
+                            <FeedItem post={post} />
+                        </div>
                     ))}
 
                     {/* --- FEED LOADERS & BANNERS --- */}

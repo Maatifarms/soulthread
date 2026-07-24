@@ -104,7 +104,7 @@ const posts = [
   {
     title: "Processing vs Rumination",
     content: "Processing leads to a resolution or acceptance. Rumination is a loop that leads only to more distress.\n\nIf you aren't finding a solution or a new insight, you are ruminating. Move your body to break the loop.\n\nTakeaway: If you've been thinking about the same problem for 15 minutes without progress, go for a walk or do 20 jumping jacks.",
-    tags: ["Action", "Mental Health", "Movement"]
+    tags: ["Action", "Emotional Well-being", "Movement"]
   },
   {
     title: "Grounding in the Present",
@@ -148,7 +148,7 @@ const posts = [
   },
   {
     title: "Patience with the Process",
-    content: "You wouldn't expect to run a marathon after one day of training. Emotional mastery is a lifelong practice.\n\nBe patient with your failures. They are your greatest teachers.\n\nTakeaway: Forgive yourself for a recent emotional 'slip up.' You are learning.",
+    content: "You wouldn't expect to run a marathon after one day of training. Emotional mastery is a lifelong practice.\n\nBe member with your failures. They are your greatest teachers.\n\nTakeaway: Forgive yourself for a recent emotional 'slip up.' You are learning.",
     tags: ["Patience", "Learning", "Forgiveness"]
   },
   {

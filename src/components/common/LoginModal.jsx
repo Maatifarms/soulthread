@@ -51,7 +51,7 @@ const LoginModal = ({ onClose }) => {
 
                 <h2 style={{ marginBottom: '10px', color: 'var(--color-text-primary)' }}>Join SoulThread</h2>
                 <p style={{ marginBottom: '20px', color: 'var(--color-text-secondary)' }}>
-                    Login to post, comment, and connect with counselors.
+                    Login to post, comment, and connect with guides.
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

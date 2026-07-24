@@ -6,8 +6,7 @@ import { db } from '../services/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
-import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+
 import SEO from '../components/common/SEO';
 import './LustDecodedSeries.css';
 import { 
@@ -16,7 +15,6 @@ import {
     ArrowRight,
     MessageCircle
 } from 'lucide-react';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 
 const postsData = [
     {
@@ -146,7 +144,7 @@ const LustDecodedSeries = () => {
     const [currentPostIndex, setCurrentPostIndex] = useState(0);
     const [ageConfirmed, setAgeConfirmed] = useState(false);
     const [completed, setCompleted] = useState(false);
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
@@ -167,7 +165,7 @@ const LustDecodedSeries = () => {
         }
 
         const checkAccess = async () => {
-            const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const hasAccess = true;
             setIsPremium(hasAccess);
 
             // Resume progress check
@@ -257,8 +255,8 @@ const LustDecodedSeries = () => {
 
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            const tier = { price: 499, name: "Premium" };
+            navigate("/pricing");
             setIsPremium(true);
             analytics.logEvent('series_unlock_success', { series: 'lustdecoded' });
         } catch (error) {
@@ -358,13 +356,7 @@ const LustDecodedSeries = () => {
                                 transition={{ duration: 0.6 }}
                             >
                                 {isLocked ? (
-                                    <SeriesPaywall
-                                        seriesId="lustdecoded"
-                                        seriesTitle="Lust Decoded"
-                                        onUnlock={handleUnlock}
-                                        isProcessing={isProcessing}
-                                        paymentError={paymentError}
-                                    />
+                                    <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                 ) : (
                                     <>
                                         <div className="post-header">

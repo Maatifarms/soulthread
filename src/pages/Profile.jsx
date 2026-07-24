@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { 
     ShieldCheck, Share2, MessageCircle, UserPlus, Award, 
     LayoutGrid, List, Bookmark, BookOpen, PenTool, 
-    Image, Rocket, Lock, Link2 
+    Image, Rocket, Lock, Link2, Trash2 
 } from 'lucide-react';
 const ImageIcon = Image;
 import useTheme from '../hooks/useTheme';
@@ -11,7 +11,7 @@ import {
     collection, doc, getDoc, getDocs, setDoc, updateDoc,
     addDoc, arrayUnion, arrayRemove, query, where,
     orderBy, limit, deleteDoc, getCountFromServer, onSnapshot,
-    serverTimestamp
+    serverTimestamp, collectionGroup
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,58 +25,79 @@ import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 
 import './Profile.css';
+import MySessions from '../components/bookings/MySessions';
 
-const GridImage = ({ src, content, postStyle, hasMultiple, onClick }) => {
-    const [loaded, setLoaded] = useState(false);
+const ProfilePostCard = ({ post, isOwner, viewMode, onDelete, onNavigate }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    const formatTimeAgo = (timestamp) => {
+        if (!timestamp) return 'Just now';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        const now = new Date();
+        const diff = Math.floor((now - date) / 1000);
+        
+        if (diff < 60) return 'Just now';
+        const mins = Math.floor(diff / 60);
+        if (mins < 60) return `${mins}m ago`;
+        const hours = Math.floor(mins / 60);
+        if (hours < 24) return `${hours}h ago`;
+        const days = Math.floor(hours / 24);
+        return `${days}d ago`;
+    };
+
+    const contentText = post.content || '';
+    const isLongText = contentText.length > 200;
+    const shouldClamp = isLongText && !expanded;
+
     return (
-        <div
-            onClick={onClick}
-            className="grid-item"
-            style={{ 
-                background: postStyle?.background || 'var(--color-surface-soft)',
-                borderRadius: '8px' // Consistent with Profile.css grid-item
-            }}
-        >
-            {src ? (
-                <img
-                    src={src}
-                    alt=""
-                    onLoad={() => setLoaded(true)}
-                    style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        opacity: loaded ? 1 : 0,
-                        transition: 'opacity 0.6s ease'
-                    }}
-                    loading="lazy"
-                />
-            ) : (
-                <div className="grid-text-placeholder" style={{
-                    width: '100%',
-                    height: '100%',
-                    padding: '16px',
-                    fontSize: '12px',
-                    lineHeight: '1.5',
-                    overflow: 'hidden',
-                    color: postStyle?.color || 'var(--color-text-secondary)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    textAlign: 'center',
-                    fontFamily: postStyle?.fontFamily || 'var(--font-main)',
-                    fontWeight: '700'
-                }}>
-                    <span className="clamp-5">
-                        {content}
+        <div className={`profile-post-card ${viewMode}`} style={{
+            background: post.style?.background || 'var(--color-surface)',
+            color: post.style?.color || 'var(--color-text-primary)'
+        }}>
+            <div className="profile-post-header">
+                <span className="profile-post-category-badge">{post.category?.toUpperCase() || 'GENERAL'}</span>
+                {isOwner && post.flagged && (
+                    <span style={{ marginLeft: '8px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', fontSize: '10px', fontWeight: 'bold', borderRadius: '4px' }}>
+                        Post under review
                     </span>
+                )}
+                <span className="profile-post-time">{formatTimeAgo(post.createdAt)}</span>
+            </div>
+            
+            <div className="profile-post-body" onClick={() => onNavigate(post.id)}>
+                <p className={`profile-post-content ${shouldClamp ? 'clamped' : ''}`}>
+                    {contentText}
+                </p>
+                {isLongText && (
+                    <button 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setExpanded(!expanded);
+                        }} 
+                        className="read-more-btn"
+                    >
+                        {expanded ? 'Show less' : 'Read more'}
+                    </button>
+                )}
+            </div>
+
+            <div className="profile-post-footer">
+                <div className="profile-post-stats">
+                    <span className="stat-span">❤️ {post.likes?.length || post.likesCount || 0}</span>
+                    <span className="stat-span">💬 {post.commentsCount || post.repliesCount || 0}</span>
                 </div>
-            )}
-            {hasMultiple && (
-                <div className="grid-multiple-badge">
-                    <ImageIcon size={14} color="white" />
-                </div>
-            )}
+                {isOwner && (
+                    <button 
+                        className="delete-post-btn" 
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(post.id);
+                        }}
+                    >
+                        <Trash2 size={16} />
+                    </button>
+                )}
+            </div>
         </div>
     );
 };
@@ -97,6 +118,7 @@ const Profile = () => {
 
     const [userProfile, setUserProfile] = useState(null);
     const [posts, setPosts] = useState([]);
+    const [postsLoading, setPostsLoading] = useState(true);
     const [totalPostsCount, setTotalPostsCount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -167,6 +189,7 @@ const Profile = () => {
         };
 
         const startPostsListener = (targetUid) => {
+            setPostsLoading(true);
             const postsQuery = query(
                 collection(db, "posts"),
                 where("authorId", "==", targetUid),
@@ -187,8 +210,10 @@ const Profile = () => {
                 
                 setPosts(userPosts);
                 setMediaPosts(userPosts.filter(p => (p.mediaItems && p.mediaItems.length > 0) || p.type === 'video' || p.videoUrl));
+                setPostsLoading(false);
             }, (err) => {
                 console.error("Posts listener error:", err);
+                setPostsLoading(false);
             });
         };
 
@@ -196,7 +221,7 @@ const Profile = () => {
 
         // Listen to Replies (Comments by this user)
         const repliesQuery = query(
-            collection(db, "comments"),
+            collectionGroup(db, "replies"),
             where("authorId", "==", userId),
             orderBy("createdAt", "desc"),
             limit(20)
@@ -208,12 +233,21 @@ const Profile = () => {
         // Listen to Saved Posts (Only if isOwner)
         if (currentUser && currentUser.uid === userId) {
             const savedQuery = query(
-                collection(db, `users/${userId}/savedPosts`),
+                collection(db, `users/${userId}/saved_posts`),
                 orderBy("savedAt", "desc"),
                 limit(20)
             );
-            unsubSaved = onSnapshot(savedQuery, (snapshot) => {
-                setSavedPosts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            unsubSaved = onSnapshot(savedQuery, async (snapshot) => {
+                const savedList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const actualPosts = await Promise.all(savedList.map(async (s) => {
+                    const postRef = doc(db, 'posts', s.postId || s.id);
+                    const docSnap = await getDoc(postRef);
+                    if (docSnap.exists()) {
+                        return { id: docSnap.id, ...docSnap.data(), savedAt: s.savedAt };
+                    }
+                    return null;
+                }));
+                setSavedPosts(actualPosts.filter(p => p !== null));
             }, () => setSavedPosts([]));
         }
 
@@ -236,11 +270,13 @@ const Profile = () => {
         const fetchConnectionsData = async () => {
             if (!userProfile || !currentUser) return;
 
-            // Connection Status
+            // Connection Status — fetch fresh from Firestore (not from auth object)
             if (currentUser.uid !== userId) {
-                const isConnected = currentUser.connections?.includes(userId) || userProfile.connections?.includes(currentUser.uid);
-                const isSent = currentUser.sentRequests?.includes(userId) || userProfile.pendingRequests?.includes(currentUser.uid);
-                const isReceived = currentUser.pendingRequests?.includes(userId);
+                const myDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                const myData = myDoc.data() || {};
+                const isConnected = myData.connections?.includes(userId) || userProfile.connections?.includes(currentUser.uid);
+                const isSent = myData.sentRequests?.includes(userId) || userProfile.pendingRequests?.includes(currentUser.uid);
+                const isReceived = myData.pendingRequests?.includes(userId) || userProfile.sentRequests?.includes(currentUser.uid);
 
                 if (isConnected) setConnectionStatus('connected');
                 else if (isSent) setConnectionStatus('pending');
@@ -268,55 +304,65 @@ const Profile = () => {
     }, [userProfile, currentUser, userId]);
 
     // Open Modal
-    const handleConnectClick = () => {
+    const handleConnectClick = async () => {
         if (!currentUser) return navigate('/login');
+
+        if (connectionStatus === 'connected') {
+            try {
+                const myRef = doc(db, 'users', currentUser.uid);
+                const theirRef = doc(db, 'users', userId);
+                await setDoc(myRef, { connections: arrayRemove(userId) }, { merge: true });
+                await setDoc(theirRef, { connections: arrayRemove(currentUser.uid) }, { merge: true });
+                setConnectionStatus('none');
+            } catch (e) { console.error('Unfollow error', e); }
+            return;
+        }
+
+        if (connectionStatus === 'pending') {
+            try {
+                const myRef = doc(db, 'users', currentUser.uid);
+                const theirRef = doc(db, 'users', userId);
+                await setDoc(myRef, { sentRequests: arrayRemove(userId) }, { merge: true });
+                await setDoc(theirRef, { pendingRequests: arrayRemove(currentUser.uid) }, { merge: true });
+                setConnectionStatus('none');
+            } catch (e) { console.error('Cancel request error', e); }
+            return;
+        }
+
+        // Open the ConnectModal to type a note
         setShowConnectModal(true);
     };
 
-    // Actual Logic
     const confirmConnect = async (note) => {
-        if (!currentUser) return;
-
-        // PREVENT DUPLICATE REQUESTS
-        if (connectionStatus === 'pending') {
-            alert('Connection request already sent. Please wait for their response.');
-            setShowConnectModal(false);
-            return;
-        }
-
-        if (connectionStatus === 'connected') {
-            alert('You are already connected with this user.');
-            setShowConnectModal(false);
-            return;
-        }
-
         try {
-            const theirRef = doc(db, 'users', userId);
             const myRef = doc(db, 'users', currentUser.uid);
-
-            await setDoc(theirRef, { pendingRequests: arrayUnion(currentUser.uid) }, { merge: true });
+            const theirRef = doc(db, 'users', userId);
             await setDoc(myRef, { sentRequests: arrayUnion(userId) }, { merge: true });
-
+            await setDoc(theirRef, { pendingRequests: arrayUnion(currentUser.uid) }, { merge: true });
+            setConnectionStatus('pending');
             const isAnon = currentUser.isIncognito || currentUser.isAnonymous;
             await addDoc(collection(db, 'notifications'), {
                 recipientId: userId,
                 senderId: currentUser.uid,
                 senderName: isAnon ? 'Someone' : (currentUser.displayName || 'Someone'),
-                senderPhoto: isAnon ? 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous' : currentUser.photoURL,
+                senderPhoto: isAnon ? '' : (currentUser.photoURL || ''),
                 type: 'connection_request',
-                message: `${isAnon ? 'Someone' : (currentUser.displayName || 'Someone')} wants to connect with you.`,
-                note: note || '', // Personal Note
+                message: note ? `${isAnon ? 'Someone' : (currentUser.displayName || 'Someone')} wants to connect: "${note}"` : `${isAnon ? 'Someone' : (currentUser.displayName || 'Someone')} wants to connect with you. Tap to accept.`,
                 read: false,
                 createdAt: serverTimestamp()
             });
-
-            setConnectionStatus('pending');
-        } catch (e) {
-            console.error(e);
-            alert("Failed to send request.");
-        } finally {
             setShowConnectModal(false);
-        }
+        } catch (e) { console.error('Connect error', e); }
+    };
+
+    const handleDeclineRequest = async () => {
+        try {
+            const myRef = doc(db, 'users', currentUser.uid);
+            const theirRef = doc(db, 'users', userId);
+            await setDoc(myRef, { pendingRequests: arrayRemove(userId) }, { merge: true });
+            await setDoc(theirRef, { sentRequests: arrayRemove(currentUser.uid) }, { merge: true });
+            setConnectionStatus('none');
+        } catch (e) { console.error('Decline error', e); }
     };
 
     const handleAcceptRequest = async (requesterId) => {
@@ -410,11 +456,22 @@ const Profile = () => {
             alert("Failed to block user.");
         }
     };
+    const handleDeletePost = async (postId) => {
+        if (!window.confirm('Remove this post from the sanctuary?')) return;
+        try {
+            await deleteDoc(doc(db, 'posts', postId));
+            setPosts(prev => prev.filter(p => p.id !== postId));
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Error: ' + error.message);
+        }
+    };
 
     if (loading || !userProfile) return <Skeleton height="300px" />;
 
     const isOwner = currentUser?.uid === userId;
-    const isSuper = currentUser?.role === 'admin' || currentUser?.role === 'psychologist';
+    const anonymousHandle = userProfile.anonymousHandle || (userProfile.id ? `Soul${userProfile.id.slice(-4)}` : 'Soulxxxx');
+    const isSuper = currentUser?.role === 'admin' || currentUser?.role === 'guide';
 
     // ABSOLUTE INCOGNITO CHECK: Only Owner or Admin can see an Incognito profile
     const isBlockedByMe = currentUser?.blockedUsers?.includes(userId);
@@ -423,7 +480,7 @@ const Profile = () => {
     const isHidden = (userProfile.isIncognito && (currentUser?.uid !== userId) && !isSuper) || (currentUser && !isSuper && (isBlockedByMe || hasBlockedMe));
 
     // ANONYMOUS ACCOUNT WALL: Block all visitors except the owner and admins
-    if (userProfile.isAnonymous && !isOwner && !isSuper) {
+    if ((userProfile.isAnonymous || userProfile.isIncognito) && !isOwner && !isSuper) {
         return (
             <div className="container" style={{ textAlign: 'center', padding: '100px 20px' }}>
                 <div style={{ color: 'var(--color-text-secondary)', marginBottom: '20px' }}>
@@ -498,8 +555,7 @@ const Profile = () => {
             <div className="container profile-page" style={{
                 padding: '0 0 120px 0',
                 animation: 'fadeIn 0.5s',
-                maxWidth: 'var(--app-max-width)',
-                background: 'var(--color-surface)'
+                maxWidth: 'var(--app-max-width)'
             }}>
                 <Breadcrumbs />
                 {/* PREMIUM PROFILE HEADER */}
@@ -507,7 +563,8 @@ const Profile = () => {
                     <div className="profile-hero"></div>
 
                     <div className="profile-header-content">
-                        <div className="profile-avatar-row">
+                        {/* Avatar & Stats Row (Instagram Style) */}
+                        <div className="profile-avatar-stats-row">
                             <div className="profile-avatar-wrapper" onClick={() => isOwner && setShowEditModal(true)}>
                                 <div className="profile-avatar">
                                     <img 
@@ -520,49 +577,60 @@ const Profile = () => {
                                 </div>
                             </div>
 
-                            <div className="profile-actions">
-                                {isOwner ? (
-                                    <>
-                                        <button onClick={() => setShowEditModal(true)} className="profile-btn">Edit Profile</button>
-                                        <button onClick={async () => { await logout(); navigate('/'); }} className="profile-btn" style={{ opacity: 0.7 }}>Logout</button>
-                                    </>
-                                ) : (
-                                    <>
-                                        {connectionStatus === 'connected' ? (
-                                            <button onClick={() => navigate(`/messages?chat=${userId}`)} className="profile-btn profile-btn-primary">Message</button>
-                                        ) : (
-                                            <button onClick={handleConnectClick} className={`profile-btn ${connectionStatus !== 'pending' ? 'profile-btn-primary' : ''}`}>
-                                                {connectionStatus === 'pending' ? 'Request Sent' : 'Connect'}
-                                            </button>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        <div className="profile-info">
-                            <div className="profile-name-row">
-                                <h1 className="profile-display-name">{userProfile.displayName || 'SoulThread Member'}</h1>
-                                {userProfile.role === 'expert' && <span className="expert-badge">Expert</span>}
-                            </div>
-                            <div className="profile-username">@{userProfile.username || 'soul'}</div>
-                            
-                            <div className="profile-bio">
-                                {userProfile.bio || 'SoulThread Member • Exploring the depth of human experience.'}
-                            </div>
-
                             <div className="profile-stats">
                                 <div className="stat-item">
                                     <div className="stat-value">{totalPostsCount}</div>
                                     <div className="stat-label">Insights</div>
                                 </div>
-                                <div className="stat-item" onClick={() => navigate(`/connections/${userId}?tab=following`)} style={{ cursor: 'pointer' }}>
-                                    <div className="stat-value">{userProfile.followingCount || 0}</div>
+                                <div className="stat-item">
+                                    <div className="stat-value">{(userProfile.connections?.length || 0) + (userProfile.followingCount || 0)}</div>
                                     <div className="stat-label">Following</div>
                                 </div>
-                                <div className="stat-item" onClick={() => navigate(`/connections/${userId}?tab=followers`)} style={{ cursor: 'pointer' }}>
-                                    <div className="stat-value">{userProfile.followersCount || 0}</div>
+                                <div className="stat-item">
+                                    <div className="stat-value">{(userProfile.connections?.length || 0) + (userProfile.followersCount || 0)}</div>
                                     <div className="stat-label">Followers</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Name & Bio Details (Instagram Style) */}
+                        <div className="profile-info">
+                            <div className="profile-name-row">
+                                <h1 className="profile-display-name">@{anonymousHandle}</h1>
+                                {userProfile.role === 'expert' && <span className="expert-badge">Expert</span>}
+                            </div>
+                            
+                            {isOwner && (
+                                <div className="profile-real-name-row" style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    marginTop: '4px',
+                                    marginBottom: '8px',
+                                    flexWrap: 'wrap'
+                                }}>
+                                    <span className="profile-real-name" style={{
+                                        fontSize: '14px',
+                                        fontWeight: '700',
+                                        color: 'var(--color-text-secondary)'
+                                    }}>
+                                        {userProfile.displayName || 'SoulThread Member'}
+                                    </span>
+                                    <span className="profile-real-name-note" style={{
+                                        fontSize: '11px',
+                                        color: 'var(--color-text-muted)',
+                                        background: 'var(--color-surface-soft)',
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        fontWeight: '500'
+                                    }}>
+                                        🔒 Only you see your real name
+                                    </span>
+                                </div>
+                            )}
+                            
+                            <div className="profile-bio">
+                                {userProfile.bio || 'SoulThread Member • Exploring the depth of human experience.'}
                             </div>
 
                             {/* Social Links Section */}
@@ -581,6 +649,34 @@ const Profile = () => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Action Buttons Row (Instagram Style) */}
+                        <div className="profile-actions-row">
+                            {isOwner ? (
+                                <>
+                                    <button onClick={() => setShowEditModal(true)} className="profile-action-btn">Edit Profile</button>
+                                    <button onClick={async () => { await logout(); navigate('/'); }} className="profile-action-btn profile-logout-btn">Logout</button>
+                                </>
+                            ) : (
+                                <>
+                                    {connectionStatus === 'connected' ? (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button onClick={() => navigate(`/messages?with=${userProfile.id || userId}&name=${encodeURIComponent(userProfile.displayName || 'User')}`)} className="profile-action-btn profile-action-btn-primary">💬 Message</button>
+                                            <button onClick={handleConnectClick} className="profile-action-btn" style={{ fontSize: '12px', padding: '8px 12px', opacity: 0.6 }}>Connected ✓</button>
+                                        </div>
+                                    ) : connectionStatus === 'received' ? (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button onClick={() => handleAcceptRequest(userId)} className="profile-action-btn profile-action-btn-primary">✨ Follow back</button>
+                                            <button onClick={handleDeclineRequest} className="profile-action-btn" style={{ opacity: 0.6 }}>Decline</button>
+                                        </div>
+                                    ) : (
+                                        <button onClick={handleConnectClick} className={`profile-action-btn ${connectionStatus !== 'pending' ? 'profile-action-btn-primary' : ''}`}>
+                                            {connectionStatus === 'pending' ? 'Requested' : 'Connect'}
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
                     </div>
                 </div>
 
@@ -589,9 +685,10 @@ const Profile = () => {
                         {[
                             { id: 'posts', label: 'POSTS', icon: <LayoutGrid size={18} /> },
                             { id: 'saved', label: 'SAVED', icon: <Bookmark size={18} /> },
-                            { id: 'series', label: 'SERIES', icon: <BookOpen size={18} /> }
+                            { id: 'series', label: 'SERIES', icon: <BookOpen size={18} /> },
+                            { id: 'sessions', label: 'SESSIONS', icon: <span>📅</span> }
                         ].map((tab) => {
-                            if (tab.id === 'saved' && !isOwner) return null;
+                            if ((tab.id === 'saved' || tab.id === 'sessions') && !isOwner) return null;
                             const isActive = activeTab === tab.id;
                             return (
                                 <div
@@ -601,7 +698,7 @@ const Profile = () => {
                                 >
                                     {tab.icon}
                                     <span>{tab.label}</span>
-                                    {isActive && <div className="active-indicator" />}
+                        {isActive && <div className="active-indicator" />}
                                 </div>
                             );
                         })}
@@ -609,7 +706,11 @@ const Profile = () => {
                 </div>
 
                 <div className="profile-content-area">
-                    {activeTab === 'posts' && (
+                    {activeTab === 'sessions' && isOwner && (
+                    <MySessions />
+                )}
+
+                {activeTab === 'posts' && (
                         <>
                             <div className="view-toggle-bar">
                                 <button 
@@ -628,115 +729,68 @@ const Profile = () => {
                                 </button>
                             </div>
 
-                            {/* ── LIST VIEW ── */}
-                            {viewMode === 'list' && (
-                                <div className="profile-list">
-                                    {posts.length > 0 ? (
-                                        posts.map(p => {
-                                            // Detect text-only Kafka-style posts and render beautifully
-                                            const isTextPost = !p.mediaItems || p.mediaItems.length === 0;
-                                            const lines = (p.content || '').split('\n');
-                                            const numberLine = lines[lines.length - 1]?.trim();
-                                            const isNumbered = /^\d+\/\d+$/.test(numberLine);
-                                            const bodyLines = isNumbered ? lines.slice(0, -1) : lines;
-
-                                            if (isTextPost) {
-                                                return (
-                                                    <div 
-                                                        key={p.id} 
-                                                        className="kafka-post"
-                                                        style={{ background: p.style?.background || '#000', color: p.style?.color || '#fff' }}
-                                                        onClick={() => navigate(`/post/${p.id}`)}
-                                                    >
-                                                        {/* Author row */}
-                                                        <div className="kafka-author-row">
-                                                            <div className="kafka-avatar">
-                                                                <img 
-                                                                    src={p.authorPhoto || `https://api.dicebear.com/7.x/personas/svg?seed=${p.authorId}`} 
-                                                                    alt="" 
-                                                                    style={{width:'100%', height:'100%', objectFit:'cover'}} 
-                                                                />
-                                                            </div>
-                                                            <div style={{fontWeight:'800', fontSize:'13px', letterSpacing:'0.1em'}}>{p.authorName?.toUpperCase()}</div>
-                                                        </div>
-                                                        {/* Post body */}
-                                                        <div className="kafka-body">
-                                                            {bodyLines.map((line, i) => (
-                                                                line.trim() === ''
-                                                                    ? <br key={i} />
-                                                                    : <div key={i} style={{ marginBottom: '8px' }}>{line}</div>
-                                                            ))}
-                                                        </div>
-                                                        {/* Number badge */}
-                                                        {isNumbered && <div style={{marginTop:'24px', opacity:0.4, fontWeight:'900', fontSize:'11px'}}>INSIGHT {numberLine}</div>}
-                                                    </div>
-                                                );
-                                            }
-
-                                            // Media/regular posts → use FeedItem
-                                            return (
-                                                <FeedItem
-                                                    key={p.id}
-                                                    post={p}
-                                                    currentUser={currentUser}
-                                                />
-                                            );
-                                        })
-                                    ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-icon"><PenTool size={48} /></div>
-                                            <h3>No Posts Yet</h3>
-                                            <p>This soul hasn't shared anything yet.</p>
-                                        </div>
-                                    )}
+                            {postsLoading ? (
+                                <div className="profile-posts-skeletons">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="post-skeleton animate-pulse" />
+                                    ))}
                                 </div>
-                            )}
-
-                            {/* ── GRID VIEW ── */}
-                            {viewMode === 'grid' && (
-                                <div className="profile-grid">
-                                    {posts.length > 0 ? (
-                                        posts.map(p => (
-                                            <GridImage
-                                                key={p.id}
-                                                src={p.mediaItems?.[0]?.url}
-                                                content={p.content}
-                                                postStyle={p.style}
-                                                hasMultiple={p.mediaItems?.length > 1}
-                                                onClick={() => navigate(`/post/${p.id}`)}
-                                            />
-                                        ))
-                                    ) : (
-                                        <div className="empty-state">
-                                            <div className="empty-icon"><ImageIcon size={48} /></div>
-                                            <h3>No Visuals Yet</h3>
-                                            <p>When you share photos, they will appear here.</p>
-                                        </div>
-                                    )}
+                            ) : posts.filter(p => p.content?.trim().length > 0).length > 0 ? (
+                                <div className={`profile-posts-${viewMode}`}>
+                                    {posts
+                                        .filter(p => p.content?.trim().length > 0)
+                                        .map(p => (
+                                        <ProfilePostCard
+                                            key={p.id}
+                                            post={p}
+                                            isOwner={isOwner}
+                                            viewMode={viewMode}
+                                            onDelete={handleDeletePost}
+                                            onNavigate={(id) => navigate(`/post/${id}`)}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="empty-state">
+                                    <div className="empty-icon"><PenTool size={48} /></div>
+                                    <h3>No Posts Yet</h3>
+                                    <p>This soul hasn't shared anything yet.</p>
                                 </div>
                             )}
                         </>
                     )}
 
                     {activeTab === 'saved' && (
-                        <div className="profile-grid">
-                            {savedPosts.length > 0 ? (
-                                savedPosts.map(p => (
-                                    <GridImage
-                                        key={p.id}
-                                        src={p.mediaItems?.[0]?.url}
-                                        content={p.content}
-                                        hasMultiple={p.mediaItems?.length > 1}
-                                        onClick={() => navigate(`/post/${p.id}`)}
-                                    />
-                                ))
+                        <div>
+                            {postsLoading ? (
+                                <div className="profile-posts-skeletons">
+                                    {[1, 2, 3].map(i => (
+                                        <div key={i} className="post-skeleton animate-pulse" />
+                                    ))}
+                                </div>
+                            ) : savedPosts.length > 0 ? (
+                                <div className={`profile-posts-${viewMode}`}>
+                                    {savedPosts.map(p => (
+                                        <ProfilePostCard
+                                            key={p.id}
+                                            post={p}
+                                            isOwner={false}
+                                            viewMode={viewMode}
+                                            onDelete={() => {}}
+                                            onNavigate={(id) => navigate(`/post/${id}`)}
+                                        />
+                                    ))}
+                                </div>
                             ) : (
                                 <div className="empty-state">
                                     <div className="empty-icon">
                                         <Bookmark size={48} />
                                     </div>
-                                    <h3>Nothing Saved</h3>
+                                    <h3>Nothing saved yet</h3>
                                     <p>Save posts you want to revisit later.</p>
+                                    <button onClick={() => navigate('/explore')} className="empty-state-cta">
+                                        Browse Stories
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -745,41 +799,57 @@ const Profile = () => {
                     {activeTab === 'series' && (
                         <div className="series-section">
                             <div className="series-header">
-                                <h4 style={{ fontSize: '18px', fontWeight: '900', margin: 0 }}>Learning Progress</h4>
-                                {isOwner && (
-                                    <button onClick={() => navigate('/explore')} className="profile-btn" style={{padding:'8px 16px'}}>Browse Library</button>
-                                )}
+                                <h4 style={{ fontSize: '18px', fontWeight: '900', margin: '0 0 16px 0' }}>Learning Progress</h4>
                             </div>
                             {(userProfile.seriesProgress && Object.keys(userProfile.seriesProgress).length > 0) ? (
-                                Object.entries(userProfile.seriesProgress).map(([seriesId, rawProgress]) => {
-                                    const completedDays = typeof rawProgress === 'object' ? (rawProgress.currentPost || 0) : (rawProgress || 0);
-                                    const totalDays = typeof rawProgress === 'object' ? (rawProgress.totalPosts || 30) : 30;
-                                    const percent = Math.round((completedDays / totalDays) * 100);
-                                    const friendlyName = seriesId.replace(/-/g, ' ').toUpperCase();
-                                    
-                                    return (
-                                        <div key={seriesId} className="series-progress-card">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                                <span className="stat-label">{friendlyName}</span>
-                                                <span style={{ fontWeight: '900', color: 'var(--color-primary)' }}>{percent}%</span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                                    {Object.entries(userProfile.seriesProgress).map(([seriesId, rawProgress]) => {
+                                        const completedDays = typeof rawProgress === 'object' ? (rawProgress.currentPost || 0) : (rawProgress || 0);
+                                        const totalDays = typeof rawProgress === 'object' ? (rawProgress.totalPosts || 30) : 30;
+                                        const percent = Math.round((completedDays / totalDays) * 100);
+                                        const friendlyName = seriesId.replace(/-/g, ' ').toUpperCase();
+                                        
+                                        return (
+                                            <div key={seriesId} className="series-progress-card" style={{
+                                                background: 'var(--color-surface)',
+                                                border: '1px solid var(--color-border)',
+                                                borderRadius: '16px',
+                                                padding: '16px'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span className="stat-label" style={{ fontWeight: '700', color: 'var(--color-text-primary)' }}>{friendlyName}</span>
+                                                    <span style={{ fontWeight: '900', color: 'var(--color-primary)' }}>{percent}%</span>
+                                                </div>
+                                                <div className="progress-track" style={{
+                                                    height: '6px',
+                                                    background: 'var(--color-border)',
+                                                    borderRadius: '3px',
+                                                    overflow: 'hidden'
+                                                }}>
+                                                    <div className="progress-fill" style={{
+                                                        width: `${percent}%`,
+                                                        height: '100%',
+                                                        background: 'var(--color-primary)'
+                                                    }} />
+                                                </div>
+                                                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '700' }}>{completedDays}/{totalDays} Days</span>
+                                                    <button onClick={() => navigate(`/${seriesId}-series`)} className="profile-btn-primary" style={{padding:'8px 16px', borderRadius:'12px', fontSize:'12px'}}>Resume</button>
+                                                </div>
                                             </div>
-                                            <div className="progress-track">
-                                                <div className="progress-fill" style={{ width: `${percent}%` }} />
-                                            </div>
-                                            <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '12px', color: 'var(--color-text-muted)', fontWeight: '700' }}>{completedDays}/{totalDays} Days</span>
-                                                <button onClick={() => navigate(`/${seriesId}-series`)} className="profile-btn-primary" style={{padding:'8px 16px', borderRadius:'12px', fontSize:'12px'}}>Resume</button>
-                                            </div>
-                                        </div>
-                                    );
-                                })
+                                        );
+                                    })}
+                                </div>
                             ) : (
                                 <div className="empty-state">
                                     <div className="empty-icon">
                                         <Rocket size={48} />
                                     </div>
-                                    <h3>Start Your Journey</h3>
-                                    <button onClick={() => navigate('/explore')} className="profile-btn-primary" style={{marginTop:'16px'}}>Explore Series</button>
+                                    <h3>No series started yet</h3>
+                                    <p>Embark on mindfulness, neuro-focus, and mental resilience series.</p>
+                                    <button onClick={() => navigate('/series')} className="empty-state-cta">
+                                        Explore Series
+                                    </button>
                                 </div>
                             )}
                         </div>

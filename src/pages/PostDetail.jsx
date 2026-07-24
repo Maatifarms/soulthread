@@ -55,10 +55,19 @@ const PostDetail = () => {
     );
 
     if (error) return (
-        <div className="container" style={{ textAlign: 'center', marginTop: '40px', color: 'var(--color-text-secondary)' }}>
-            <h2>😕</h2>
-            <p>{error}</p>
-            <button onClick={() => navigate('/')} style={{ marginTop: '10px' }}>Go Home</button>
+        <div style={{ minHeight: '60vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', textAlign: 'center' }}>
+            <p style={{ fontSize: '32px', marginBottom: '12px' }}>🔍</p>
+            <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', color: 'var(--color-text-primary)' }}>
+                Post not found
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '24px' }}>
+                This post may have been deleted or is not visible to you.
+            </p>
+            <button
+                onClick={() => navigate('/')}
+                style={{ padding: '10px 24px', borderRadius: '10px', background: 'var(--color-primary)', color: 'white', border: 'none', fontWeight: '600', cursor: 'pointer', fontSize: '14px' }}>
+                Back to Feed
+            </button>
         </div>
     );
 
@@ -163,7 +172,7 @@ const PostDetail = () => {
                     border: '1.5px solid var(--color-border)',
                     boxShadow: 'var(--shadow-lg)'
                 }}>
-                    {post && <FeedItem post={post} />}
+                    {post && <FeedItem post={post} autoExpandComments={true} />}
                 </div>
             </div>
         </div>

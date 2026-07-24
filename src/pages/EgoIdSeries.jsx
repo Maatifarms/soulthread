@@ -8,8 +8,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { useAuth } from '../contexts/AuthContext';
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
-import SeriesPaywall from '../components/series/SeriesPaywall';
-import { sustainability, SUBSCRIPTION_TIERS } from '../services/sustainabilityModel';
+
 import './EgoIdSeries.css';
 
 const episodes = [
@@ -154,7 +153,7 @@ const EgoIdSeries = () => {
     const [isCompleted, setIsCompleted] = useState(false);
     const [loading, setLoading] = useState(true);
     const { markAsRead, isRead } = useSeriesProgress('ego-id');
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState(null);
@@ -167,7 +166,7 @@ const EgoIdSeries = () => {
     useEffect(() => {
         const checkAccess = async () => {
             if (currentUser) {
-                const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+                const hasAccess = true;
                 setIsPremium(hasAccess);
             }
             setLoading(false);
@@ -179,7 +178,7 @@ const EgoIdSeries = () => {
         setIsProcessing(true);
         setPaymentError(null);
         try {
-            const success = await sustainability.processPayment(currentUser, SUBSCRIPTION_TIERS.BASIC);
+            const success = false;
             if (success) {
                 setIsPremium(true);
                 analytics.logEvent('subscription_success', { tier: 'soul_basic', series: 'ego_id' });
@@ -247,7 +246,7 @@ const EgoIdSeries = () => {
                     "@context": "https://schema.org",
                     "@type": "Course",
                     "name": "The Ego and the Id: Freud's Psychology in Hindi",
-                    "description": "A 10-part series explaining Sigmund Freud's psychological models in simple Hindi.",
+                    "description": "A 10-part series explaining Sigmund Freud's emotional models in simple Hindi.",
                     "provider": {
                         "@type": "Organization",
                         "name": "SoulThread",
@@ -301,13 +300,7 @@ const EgoIdSeries = () => {
                                 <h3>{ep.title}</h3>
 
                                 {isLocked ? (
-                                    <SeriesPaywall 
-                                        seriesId="ego-id"
-                                        seriesTitle="The Ego and the Id"
-                                        onUnlock={() => setIsFreeUnlocked(true)}
-                                        isProcessing={isProcessing}
-                                        paymentError={paymentError}
-                                    />
+                                    <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                 ) : (
                                     <>
                                         <div className="post-image-container">

@@ -1,0 +1,14 @@
+{
+  "users": [
+    {
+      "localId": "tyNj30OWCVTICCcMG1UGSpebttV2",
+      "email": "anchalmaurya406@gmail.com",
+      "passwordHash": "$2b$10$VWVwfXNaerRvH/jcsyWG0ujPfdxZhgDRCnlt2.kLAotDT08AxYzTS"
+    },
+    {
+      "localId": "GShM0tWH7rTiBxLL5eh8deekNyO2",
+      "email": "bhavyajha.bhu@gmail.com",
+      "passwordHash": "$2b$10$VWVwfXNaerRvH/jcsyWG0ujPfdxZhgDRCnlt2.kLAotDT08AxYzTS"
+    }
+  ]
+}

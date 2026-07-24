@@ -1,0 +1,399 @@
+/* JoinAsExpert.css - Psychologist Application Form Styling */
+
+.join-expert-page {
+    background: var(--color-background);
+    min-height: 100vh;
+    padding: 24px 24px 80px;
+}
+
+.join-expert-page .form-container {
+    max-width: 720px;
+    margin: 40px auto 0;
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    box-shadow: var(--shadow-sm);
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.header-icon {
+    color: var(--color-primary);
+    margin-bottom: 16px;
+}
+
+.form-header h1 {
+    font-family: var(--font-header);
+    font-size: 2.2rem;
+    font-weight: 850;
+    color: var(--color-text-primary);
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+}
+
+.form-header p {
+    color: var(--color-text-secondary);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 540px;
+    margin: 0 auto;
+}
+
+.expert-form {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.form-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-primary-dark);
+    margin: 0 0 8px;
+}
+
+.form-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+}
+
+.form-field label {
+    font-size: 0.9rem;
+    font-weight: 750;
+    color: var(--color-text-primary);
+}
+
+.form-field input[type="text"],
+.form-field input[type="email"],
+.form-field input[type="tel"],
+.form-field input[type="number"],
+.form-field textarea,
+.form-select {
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-background);
+    color: var(--color-text-primary);
+    font-size: 0.98rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-field input:focus,
+.form-field textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(45, 122, 111, 0.15);
+}
+
+.form-select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%232d7a6f' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 16px;
+    padding-right: 40px;
+    cursor: pointer;
+}
+
+.field-note {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.field-note.warning {
+    color: var(--color-error);
+}
+
+/* Multi-select Chips */
+.chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.chip-btn {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-secondary);
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chip-btn:hover {
+    border-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+    background: var(--color-primary-soft);
+}
+
+.chip-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+}
+
+/* Price Input Wrapper */
+.price-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.price-prefix {
+    position: absolute;
+    left: 16px;
+    color: var(--color-text-secondary);
+    font-weight: 750;
+    font-size: 1rem;
+    pointer-events: none;
+}
+
+.price-input-wrapper input {
+    padding-left: 36px !important;
+}
+
+/* Char Counter */
+.char-counter {
+    position: absolute;
+    right: 8px;
+    bottom: -20px;
+    font-size: 11px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+/* Form Submit Button */
+.form-submit-btn {
+    background: var(--grad-primary);
+    color: white;
+    border: none;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    font-size: 1.1rem;
+    font-weight: 850;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(45, 122, 111, 0.25);
+    transition: all 0.2s ease;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.form-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(45, 122, 111, 0.35);
+}
+
+.form-submit-btn:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Success Card Screen */
+.join-expert-success-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+.success-card {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.success-icon {
+    color: #22c55e;
+}
+
+.success-card h1 {
+    font-family: var(--font-header);
+    font-size: 2rem;
+    font-weight: 850;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.success-card p {
+    font-size: 1.1rem;
+    color: var(--color-text-secondary);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.success-details {
+    background: var(--color-background-soft);
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    font-size: 0.92rem;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+.success-home-btn {
+    background: var(--color-text-primary);
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: var(--radius-full);
+    font-weight: 800;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.success-home-btn:hover {
+    background: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(45, 122, 111, 0.2);
+}
+
+/* Unauthenticated Screen */
+.join-expert-unauth-page {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+}
+
+.unauth-card {
+    background: var(--color-surface);
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 48px;
+    text-align: center;
+    max-width: 480px;
+    width: 100%;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.unauth-icon {
+    color: var(--color-primary);
+    margin-bottom: 8px;
+}
+
+.unauth-card h1 {
+    font-family: var(--font-header);
+    font-size: 1.8rem;
+    font-weight: 850;
+    color: var(--color-text-primary);
+    margin: 0;
+}
+
+.unauth-card p {
+    font-size: 0.98rem;
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin: 0 0 12px;
+}
+
+.unauth-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+}
+
+.unauth-btn-primary {
+    background: var(--grad-primary);
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: var(--radius-full);
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(45, 122, 111, 0.2);
+    transition: all 0.2s ease;
+}
+
+.unauth-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(45, 122, 111, 0.3);
+}
+
+.unauth-btn-secondary {
+    background: transparent;
+    border: 1.5px solid var(--color-border);
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    padding: 12px;
+    border-radius: var(--radius-full);
+    font-weight: 800;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+.unauth-btn-secondary:hover {
+    background: var(--color-surface-2);
+    color: var(--color-text-primary);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 640px) {
+    .join-expert-page .form-container {
+        padding: 24px;
+    }
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .success-card, .unauth-card {
+        padding: 32px 24px;
+    }
+}

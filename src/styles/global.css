@@ -23,7 +23,6 @@
 
 html {
   font-size: 16px;
-  scroll-behavior: smooth;
   height: 100%;
   -webkit-text-size-adjust: 100%;
 }
@@ -35,7 +34,6 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   min-height: 100svh;
-  overflow-x: hidden;
 }
 
 /* Safe area for Android/iOS */

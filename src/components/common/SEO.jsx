@@ -4,10 +4,10 @@ import { useEffect } from 'react';
  * SEO Component to dynamically update document title and meta tags.
  * This helps with SEO in a Single Page Application (SPA).
  */
-const SEO = ({ 
-    title = "Anonymous Emotional Support & Safe Space | SoulThread", 
-    description = "Need a safe space to talk anonymously? Join SoulThread, the leading online venting platform for emotional support, anxiety relief, and mental wellness conversations.",
-    keywords = "anonymous emotional support, venting platform, safe space to talk anonymously, find emotional support online, mental health community, anonymous therapy alternative",
+const SEO = ({
+    title = "Vent Anonymously & Talk to Someone Who Gets It | SoulThread",
+    description = "Free anonymous venting app for students and young adults. No real name, no screenshots, no judgment — just a safe space to talk about stress, anxiety, and everything in between.",
+    keywords = "vent anonymously app, anonymous venting platform, safe space to talk anonymously, talk to someone anonymously online, anonymous chat for stress and anxiety, student mental health support, young adult emotional support community",
     image = "https://soulthread.in/logo.jpg", 
     url = "https://soulthread.in/",
     type = 'website', 

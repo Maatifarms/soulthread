@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager } from "firebase/firestore";
+import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, memoryLocalCache } from "firebase/firestore";
 import { Capacitor } from '@capacitor/core';
 
 export const firebaseConfig = {
@@ -17,13 +17,15 @@ export const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // ── Firestore: optimised persistence ──────────────────────────────────────
-// Use SingleTab manager on native (no multi-tab contention) and on mobile web.
-// Multi-tab only on desktop web. This removes the IndexedDB lock wait on APK.
+// Use memory cache on native platform to bypass IndexedDB locks, race conditions,
+// and fatal assertion crashes (Unexpected state ID: ca9 / b815).
 const isNative = Capacitor.isNativePlatform();
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: isNative ? persistentSingleTabManager({}) : persistentSingleTabManager({})
-  })
+  localCache: isNative 
+    ? memoryLocalCache() 
+    : persistentLocalCache({
+        tabManager: persistentSingleTabManager({})
+      })
 });
 
 import { getFunctions } from "firebase/functions";

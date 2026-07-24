@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
@@ -14,28 +14,29 @@ import { CheckCircle2 } from 'lucide-react';
 const Pricing = () => {
     const { currentUser } = useAuth();
     const [loadingTier, setLoadingTier] = useState(null);
+    const [confirmingTier, setConfirmingTier] = useState(null);
+
+    // currentUser is live-synced from Firestore (AuthContext), so once the
+    // Cashfree webhook flips subscriptionTier server-side, this clears on
+    // its own without any polling.
+    useEffect(() => {
+        if (confirmingTier && currentUser?.subscriptionTier === confirmingTier) {
+            setConfirmingTier(null);
+        }
+    }, [currentUser?.subscriptionTier, confirmingTier]);
 
     const handleSubscribe = async (tierId) => {
         if (!currentUser) {
             alert('Please login to subscribe.');
             return;
         }
+        if (tierId === SUBSCRIPTION_TIERS.FREE) return;
 
         setLoadingTier(tierId);
-        const tier = sustainability.getTierDetails(tierId);
-        tier.id = tierId;
 
         try {
-            console.log(`[Billing] Initializing checkout for tier: ${tierId}`);
-            
-            if (tierId === SUBSCRIPTION_TIERS.PRO) {
-                // Use Razorpay for Pro
-                await paymentService.initializeRazorpay(currentUser, tier, tier.price);
-            } else {
-                // Use Stripe for Basic (or choice)
-                await paymentService.initializeStripe(currentUser, tierId);
-                alert('Stripe redirect would happen here. For now, we are using Razorpay for testing.');
-            }
+            await paymentService.startCheckout(tierId);
+            setConfirmingTier(tierId);
         } catch (err) {
             console.error('Payment failed:', err);
             alert(`Payment could not be completed: ${err.message}`);
@@ -90,7 +91,7 @@ const Pricing = () => {
                                 lineHeight: '1.6'
                             }}
                         >
-                            Structured growth paths and deep clinical support for those who prioritize their mental architecture.
+                            Structured growth paths and deep verified support for those who prioritize their mental architecture.
                         </motion.p>
                     </header>
 
@@ -180,7 +181,7 @@ const Pricing = () => {
 
                                     <button
                                         onClick={() => handleSubscribe(tier.id)}
-                                        disabled={isCurrent || loadingTier !== null}
+                                        disabled={isCurrent || loadingTier !== null || confirmingTier === tier.id}
                                         style={{
                                             padding: '16px',
                                             borderRadius: '16px',
@@ -197,7 +198,11 @@ const Pricing = () => {
                                         onMouseEnter={e => !isCurrent && (e.currentTarget.style.transform = 'scale(1.02)')}
                                         onMouseLeave={e => !isCurrent && (e.currentTarget.style.transform = 'scale(1)')}
                                     >
-                                        {loadingTier === tier.id ? 'Connecting...' : (isCurrent ? 'Current Plan' : 'Select Plan')}
+                                        {loadingTier === tier.id
+                                            ? 'Connecting...'
+                                            : confirmingTier === tier.id
+                                                ? 'Confirming payment...'
+                                                : (isCurrent ? 'Current Plan' : 'Select Plan')}
                                     </button>
                                 </motion.div>
                             );

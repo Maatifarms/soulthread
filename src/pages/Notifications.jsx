@@ -56,6 +56,22 @@ const Notifications = () => {
                 navigate(`/profile/${notif.senderId}`);
             } else if (notif.type === 'message') {
                 navigate(`/messages${notif.chatId ? `?chat=${notif.chatId}` : ''}`);
+            } else if (['booking_request', 'booking_confirmed', 'booking_cancelled',
+                        'booking_sent', 'session_reminder', 'meet_link_added'].includes(notif.type)) {
+                // Guide → go to bookings dashboard
+                // User → go to their sessions in profile
+                if (notif.bookingId) {
+                    // Detect which app we're in by checking the route
+                    const isGuideApp = window.location.pathname.includes('/dashboard') ||
+                                       window.location.pathname.includes('/bookings');
+                    if (isGuideApp || notif.type === 'booking_request') {
+                        navigate('/bookings');
+                    } else {
+                        navigate(`/profile/${currentUser.uid}?tab=sessions`);
+                    }
+                }
+            } else if (notif.type === 'new_follow') {
+                if (notif.senderId) navigate(`/profile/${notif.senderId}`);
             }
         } catch (error) {
             console.error("Error handling notification click:", error);
@@ -240,8 +256,29 @@ const Notifications = () => {
                                     color: 'var(--color-text-primary)',
                                     lineHeight: '1.5'
                                 }}>
-                                    {n.message}
+                                    {(() => {
+                                        const NOTIF_ICONS = {
+                                            booking_request:   '📅',
+                                            booking_confirmed: '✅',
+                                            booking_cancelled: '❌',
+                                            booking_sent:      '📤',
+                                            session_reminder:  '⏰',
+                                            meet_link_added:   '🔗',
+                                            new_follow:        '👤',
+                                            connection_request:'🤝',
+                                            message:           '💬',
+                                            like:              '❤️',
+                                            comment:           '💬',
+                                        };
+                                        const notifIcon = NOTIF_ICONS[n.type] || '🔔';
+                                        return <>{notifIcon} {n.title || n.message}</>;
+                                    })()}
                                 </div>
+                                {n.title && n.message && n.title !== n.message && (
+                                    <div style={{ fontSize: '14px', color: 'var(--color-text-secondary)', marginTop: '4px' }}>
+                                        {n.message}
+                                    </div>
+                                )}
                                 <div style={{ 
                                     fontSize: '12px', 
                                     color: 'var(--color-text-muted)',

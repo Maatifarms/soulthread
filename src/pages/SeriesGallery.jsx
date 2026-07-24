@@ -2,13 +2,13 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { sustainability } from '../services/sustainabilityModel';
 import { Capacitor } from '@capacitor/core';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import { useSeriesProgress } from '../hooks/useSeriesProgress';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
 import { ArrowRight } from 'lucide-react';
+import './SeriesGallery.css';
 
 const SeriesProgressBar = ({ seriesId, total }) => {
     const { getCompletionRate } = useSeriesProgress(seriesId);
@@ -52,7 +52,7 @@ export const SERIES_DATA = [
         id: 'never-finished',
         title: 'Never Finished',
         subtitle: 'Mental Toughness Series.',
-        description: 'A 30-day psychological bootcamp inspired by the David Goggins philosophy of the "uncommon amongst uncommon".',
+        description: 'A 30-day emotional bootcamp inspired by the David Goggins philosophy of the "uncommon amongst uncommon".',
         image: '/assets/neverfinished/post_01.png',
         path: '/never-finished-series',
         tag: 'Psychology',
@@ -132,20 +132,13 @@ const SeriesGallery = () => {
     const handleSeriesClick = (e, series) => {
         if (series.isLocked) {
             e.preventDefault();
-            return; // Still coming soon
+            return;
         }
-
-        // Navigate using the predefined path from the series object
-        analytics.logEvent('series_view', { 
-            series_id: series.id,
-            series_title: series.title 
-        });
-        
         navigate(series.path);
     };
 
     return (
-        <DesktopLayoutWrapper>
+        <DesktopLayoutWrapper wide={true}>
             <SEO 
                 title="Learning Series: Curated Wisdom & Focus Mastery | SoulThread"
                 description="Explore our library of deep-dive series on neuroscience, mental toughness, AI engineering, and psychology. Curated for the modern seeker."
@@ -185,81 +178,82 @@ const SeriesGallery = () => {
                 maxWidth: '1200px',
                 margin: '0 auto'
             }}>
-                <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                    <span style={{
-                        display: 'inline-block',
-                        padding: '6px 18px',
-                        background: 'var(--color-primary-soft)',
-                        color: 'var(--color-primary)',
-                        borderRadius: '20px',
-                        fontSize: '13px',
-                        fontWeight: '800',
-                        letterSpacing: '0.08em',
-                        textTransform: 'uppercase',
-                        marginBottom: '20px'
-                    }}>
-                        Transformation Library
-                    </span>
-                    <h1 style={{
-                        fontSize: '3.5rem',
-                        fontWeight: '900',
-                        fontFamily: 'Outfit, sans-serif',
-                        background: 'var(--grad-primary)',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                        marginBottom: '16px',
-                        lineHeight: 1.1
-                    }}>
-                        Change Your Life.<br />One Series at a Time.
-                    </h1>
-                    <p style={{
-                        fontSize: '1.2rem',
-                        color: 'var(--color-text-secondary)',
-                        maxWidth: '600px',
-                        margin: '0 auto 40px',
-                        fontWeight: '500',
-                        lineHeight: 1.6
-                    }}>
-                        Neuroscience. Psychology. Focus. Relationships. Each series is a structured journey — not just content, but a blueprint for lasting change.
-                    </p>
+            <div className="sg-hero" style={{
+                textAlign: 'center', marginBottom: '32px', paddingTop: '32px', paddingBottom: '24px'
+            }}>
+                <span style={{
+                    display: 'inline-block',
+                    padding: '6px 18px',
+                    background: 'var(--color-primary-soft)',
+                    color: 'var(--color-primary)',
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    marginBottom: '20px'
+                }}>
+                    Transformation Library
+                </span>
+                <h1 className="sg-hero-title" style={{
+                    fontWeight: '900',
+                    fontFamily: 'Outfit, sans-serif',
+                    background: 'var(--grad-primary)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    marginBottom: '16px',
+                    lineHeight: 1.2
+                }}>
+                    Change Your Life.<br />One Series at a Time.
+                </h1>
+                <p style={{
+                    fontSize: '1.2rem',
+                    color: 'var(--color-text-secondary)',
+                    maxWidth: '600px',
+                    margin: '0 auto 40px',
+                    fontWeight: '500',
+                    lineHeight: 1.6
+                }}>
+                    Neuroscience. Psychology. Focus. Relationships. Each series is a structured journey — not just content, but a blueprint for lasting change.
+                </p>
 
-                    {/* Stats bar */}
-                    <div style={{
-                        display: 'flex',
-                        justifyContent: 'center',
-                        gap: '48px',
-                        flexWrap: 'wrap',
-                        padding: '24px 32px',
-                        background: 'var(--color-surface)',
-                        borderRadius: '20px',
-                        border: '1.5px solid var(--color-border)',
-                        maxWidth: '600px',
-                        margin: '0 auto'
-                    }}>
-                        {[
-                            { value: '8', label: 'Series' },
-                            { value: '150+', label: 'Lessons' },
-                            { value: '30 Days', label: 'To Transform' }
-                        ].map(stat => (
-                            <div key={stat.label} style={{ textAlign: 'center' }}>
-                                <div style={{
-                                    fontSize: '2rem',
-                                    fontWeight: '900',
-                                    background: 'var(--grad-primary)',
-                                    WebkitBackgroundClip: 'text',
-                                    WebkitTextFillColor: 'transparent',
-                                    lineHeight: 1
-                                }}>{stat.value}</div>
-                                <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: '600', marginTop: '4px' }}>{stat.label}</div>
-                            </div>
-                        ))}
-                    </div>
+                {/* Stats bar */}
+                <div className="sg-stats-bar" style={{
+                    display: 'flex',
+                    justifyContent: 'space-around',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px 20px',
+                    background: 'var(--color-surface)',
+                    borderRadius: '20px',
+                    border: '1.5px solid var(--color-border)',
+                    maxWidth: '600px',
+                    margin: '0 auto'
+                }}>
+                    {[
+                        { value: '8', label: 'Series' },
+                        { value: '150+', label: 'Lessons' },
+                        { value: '30 Days', label: 'To Transform' }
+                    ].map(stat => (
+                        <div key={stat.label} style={{ textAlign: 'center', flex: 1 }}>
+                            <div style={{
+                                fontSize: '2rem',
+                                fontWeight: '900',
+                                background: 'var(--grad-primary)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent',
+                                lineHeight: 1
+                            }}>{stat.value}</div>
+                            <div style={{ fontSize: '13px', color: 'var(--color-text-secondary)', fontWeight: '600', marginTop: '4px' }}>{stat.label}</div>
+                        </div>
+                    ))}
                 </div>
+            </div>
 
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-                    gap: '32px'
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(min(360px, 100%), 1fr))',
+                    gap: '24px'
                 }}>
                     {SERIES_DATA.map((series) => (
                         <motion.div
@@ -279,7 +273,8 @@ const SeriesGallery = () => {
                                 flexDirection: 'column',
                                 position: 'relative',
                                 cursor: 'pointer',
-                                transition: 'border-color 0.3s ease'
+                                transition: 'border-color 0.3s ease',
+                                height: '100%'
                             }}
                         >
                             <Link 

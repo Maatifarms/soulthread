@@ -163,3 +163,121 @@ exports.onNewChatMessage = functions.firestore
 
         return null;
     });
+
+/**
+ * onNotificationCreate — Sends generic, private FCM notifications on comments/reactions
+ * Enforces a daily limit of 3 notifications per recipient.
+ */
+exports.onNotificationCreate = functions.firestore
+    .document('notifications/{notificationId}')
+    .onCreate(async (snap, context) => {
+        const localAdmin = getAdmin();
+        const db = localAdmin.firestore();
+        const notif = snap.data();
+
+        const { type, recipientId, postId } = notif;
+        if (!recipientId || !postId) return null;
+
+        // Only process post_comment and post_reaction
+        if (type !== 'post_comment' && type !== 'post_reaction') return null;
+
+        // Fetch recipient's FCM token
+        const recipientSnap = await db.doc(`users/${recipientId}`).get();
+        if (!recipientSnap.exists) return null;
+
+        const recipientData = recipientSnap.data();
+        const fcmToken = recipientData.fcmToken;
+        if (!fcmToken) {
+            console.log(`[onNotificationCreate] No FCM token for user ${recipientId} — skipping`);
+            return null;
+        }
+
+        // Enforce limit of 3 notifications per user per day
+        const todayStr = new Date().toISOString().split('T')[0];
+        const limitRef = db.doc(`users/${recipientId}/notification_limits/${todayStr}`);
+
+        try {
+            const count = await db.runTransaction(async (transaction) => {
+                const limitSnap = await transaction.get(limitRef);
+                const currentCount = limitSnap.exists ? (limitSnap.data().count || 0) : 0;
+                if (currentCount < 3) {
+                    transaction.set(limitRef, { count: currentCount + 1 }, { merge: true });
+                    return currentCount + 1;
+                }
+                return currentCount + 1; // indicates cap reached/exceeded
+            });
+
+            if (count > 3) {
+                console.log(`[onNotificationCreate] Limit reached (3/day) for recipient ${recipientId} — skipping FCM`);
+                return null;
+            }
+        } catch (err) {
+            console.error('[onNotificationCreate] Transaction for daily limit check failed:', err);
+            return null;
+        }
+
+        // Build notification body
+        const title = 'SoulThread';
+        let body = '';
+        if (type === 'post_comment') {
+            body = 'Someone replied to what you shared 💬';
+        } else {
+            body = "Someone said 'been there' on your post 🫂";
+        }
+
+        const payload = {
+            token: fcmToken,
+            notification: { title, body },
+            data: {
+                type,
+                postId,
+                url: `/post/${postId}`,
+            },
+            android: {
+                priority: 'high',
+                notification: {
+                    channelId: 'posts',
+                    priority: 'max',
+                    defaultSound: true,
+                    defaultVibrateTimings: true,
+                },
+            },
+            apns: {
+                payload: {
+                    aps: {
+                        alert: { title, body },
+                        sound: 'default',
+                        badge: 1,
+                    },
+                },
+            },
+            webpush: {
+                notification: {
+                    title,
+                    body,
+                    icon: '/icon-192.png',
+                    badge: '/badge-72.png',
+                    data: { url: `/post/${postId}` },
+                },
+                fcmOptions: { link: `/post/${postId}` },
+            },
+        };
+
+        try {
+            const response = await localAdmin.messaging().send(payload);
+            console.log(`[onNotificationCreate] ✅ FCM notification sent to ${recipientId}: ${response}`);
+        } catch (err) {
+            if (
+                err.code === 'messaging/registration-token-not-registered' ||
+                err.code === 'messaging/invalid-registration-token'
+            ) {
+                console.warn(`[onNotificationCreate] Stale token for ${recipientId} — removing`);
+                await db.doc(`users/${recipientId}`).update({ fcmToken: admin.firestore.FieldValue.delete() });
+            } else {
+                console.error(`[onNotificationCreate] Failed to send push: ${err.code} — ${err.message}`);
+            }
+        }
+
+        return null;
+    });
+

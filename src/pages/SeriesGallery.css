@@ -227,3 +227,24 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ── SeriesGallery Modern Hero ── */
+.sg-hero-title {
+    font-size: 3.5rem;
+}
+
+.sg-stats-bar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 480px) {
+    .sg-hero-title {
+        font-size: 28px !important;
+        line-height: 1.2 !important;
+    }
+    .sg-stats-bar {
+        padding: 16px 12px !important;
+        gap: 8px !important;
+    }
+}

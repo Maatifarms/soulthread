@@ -154,13 +154,13 @@
 /* ── Souls Grid ── */
 .souls-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 24px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
 }
 
 .soul-card {
     background: var(--color-surface);
-    padding: 32px 24px;
+    padding: 16px;
     border-radius: var(--radius-lg);
     border: 1px solid var(--color-border);
     text-align: center;
@@ -178,34 +178,34 @@
 }
 
 .soul-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
     background: var(--grad-main);
-    margin: 0 auto 20px;
+    margin: 0 auto 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 900;
     color: white;
-    font-size: 32px;
+    font-size: 20px;
     box-shadow: var(--shadow-glow);
     font-family: var(--font-display);
 }
 
 .soul-name {
     font-weight: 900;
-    font-size: 1.1rem;
+    font-size: 14px;
     color: var(--color-text-primary);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-family: var(--font-display);
     letter-spacing: -0.01em;
 }
 
 .soul-role {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--color-text-muted);
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -213,8 +213,8 @@
 
 .connect-btn {
     width: 100%;
-    padding: 12px;
-    border-radius: 12px;
+    height: 36px;
+    border-radius: 10px;
     border: none;
     background: var(--color-primary-soft);
     color: var(--color-primary);
@@ -223,6 +223,9 @@
     cursor: pointer;
     transition: var(--transition-std);
     font-family: var(--font-display);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .connect-btn:hover {
@@ -304,6 +307,9 @@
 @media (max-width: 600px) {
     .souls-grid {
         grid-template-columns: 1fr 1fr;
-        gap: 16px;
+        gap: 12px;
+    }
+    .explore-content-container {
+        margin-top: 20px !important;
     }
 }

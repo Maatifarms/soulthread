@@ -113,9 +113,10 @@ const useVideoAutoPlay = ({
         return () => {
             observer.disconnect();
             pauseVideo(video);
-            // Free browser memory: remove src when offscreen
-            // Only do this if the video is not in view at unmount
-            if (!isInView) {
+            // Only clear src if the video is completely offscreen (uses element directly, not stale state)
+            const rect = video.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            if (!isVisible) {
                 video.src = '';
                 video.load();
             }

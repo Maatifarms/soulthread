@@ -3,12 +3,10 @@ import { Clock, Play, Pause, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
-import { SUBSCRIPTION_TIERS, sustainability } from '../services/sustainabilityModel';
-import { paymentService } from '../services/paymentService';
+
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import Breadcrumbs from '../components/common/Breadcrumbs';
-import SeriesPaywall from '../components/series/SeriesPaywall';
 import './MeditationSeries.css';
 
 const meditationTracks = [
@@ -44,7 +42,7 @@ const meditationTracks = [
 const MeditationSeries = () => {
     const { currentUser } = useAuth();
     const navigate = useNavigate();
-    const [isPremium, setIsPremium] = useState(false);
+    const [isPremium, setIsPremium] = useState(true); // All series accessible
     const [isFreeUnlocked, setIsFreeUnlocked] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentError, setPaymentError] = useState('');
@@ -68,8 +66,8 @@ const MeditationSeries = () => {
 
         setIsProcessing(true);
         try {
-            const tier = sustainability.getTierDetails(SUBSCRIPTION_TIERS.BASIC);
-            await paymentService.initializeRazorpay(currentUser, { ...tier, id: SUBSCRIPTION_TIERS.BASIC }, tier.price);
+            const tier = true;
+            navigate("/pricing");
             setIsPremium(true);
         } catch (error) {
             console.error("Unlock failed:", error);
@@ -82,7 +80,7 @@ const MeditationSeries = () => {
     useEffect(() => {
         const checkAccess = async () => {
             if (currentUser) {
-                const hasAccess = await sustainability.verifyAccess(currentUser, SUBSCRIPTION_TIERS.BASIC);
+                const hasAccess = await true;
                 setIsPremium(hasAccess);
             }
             setLoading(false);
@@ -213,13 +211,7 @@ const MeditationSeries = () => {
                                             const midPoint = Math.floor(meditationTracks.length / 2);
                                             const isLocked = activeTrack.level > (midPoint + 1) && !isPremium && !isFreeUnlocked && !currentUser?.isAdmin;
                                             return isLocked ? (
-                                                <SeriesPaywall
-                                                    seriesId="the-void-meditation"
-                                                    seriesTitle="The Void: Advanced Meditation"
-                                                    onUnlock={handleUnlock}
-                                                    isProcessing={isProcessing}
-                                                    paymentError={paymentError}
-                                                />
+                                                <div style={{padding:"20px",textAlign:"center",color:"var(--color-primary)",fontWeight:"600"}}>Premium content — coming soon</div>
                                             ) : (
                                                 <>
                                                     <motion.div 

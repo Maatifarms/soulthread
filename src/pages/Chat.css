@@ -243,7 +243,7 @@
 }
 
 .dc-cancel {
-  background: white;
+  background: var(--color-surface);
   border: 1px solid #fca5a5;
   color: #991b1b;
   padding: 5px 12px;
@@ -255,6 +255,14 @@
 }
 
 .dc-cancel:hover { background: #fef2f2; }
+
+.dark-mode .dc-cancel {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fc8181;
+}
+
+.dark-mode .dc-cancel:hover { background: rgba(239, 68, 68, 0.2); }
 
 .dc-confirm {
   background: #ef4444;

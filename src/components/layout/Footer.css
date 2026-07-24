@@ -1,11 +1,40 @@
 .footer-main {
     background: var(--color-surface);
     border-top: 1.5px solid var(--color-border);
-    padding: 100px 0 40px;
-    margin-top: 100px;
+    padding: 60px 0 40px;
+    margin-top: 60px;
     color: var(--color-text-primary);
     position: relative;
     overflow: hidden;
+}
+
+.crisis-pin {
+    background: rgba(192, 57, 43, 0.04);
+    border: 1px solid rgba(192, 57, 43, 0.15);
+    border-radius: 12px;
+    padding: 14px 20px;
+    margin: 0 auto 60px;
+    max-width: 600px;
+    width: calc(100% - 40px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.crisis-link {
+    color: #C0392B;
+    font-weight: 700;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.crisis-link:hover {
+    text-decoration: underline;
+    opacity: 0.8;
 }
 
 .footer-main::before {
@@ -54,7 +83,7 @@
 .footer-tagline {
     font-size: 0.95rem;
     line-height: 1.8;
-    opacity: 0.6;
+    opacity: 0.75;
     margin-bottom: 32px;
 }
 
@@ -63,7 +92,7 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    opacity: 0.4;
+    opacity: 0.65;
 }
 
 .footer-links-grid {
@@ -88,7 +117,7 @@
     color: inherit;
     font-size: 1rem;
     margin-bottom: 16px;
-    opacity: 0.7;
+    opacity: 0.8;
     transition: all 0.2s ease;
     font-weight: 500;
 }
@@ -108,7 +137,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    opacity: 0.4;
+    opacity: 0.7;
     font-size: 0.85rem;
     font-weight: 600;
 }
@@ -121,12 +150,29 @@
 }
 
 @media (max-width: 768px) {
+    .footer-content {
+        padding: 0 24px;
+    }
     .footer-links-grid {
-        grid-template-columns: 1fr;
-        gap: 48px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 32px;
+    }
+    .footer-links-grid .link-group:last-child {
+        grid-column: span 2;
     }
     .footer-main {
-        padding: 60px 0 40px;
+        padding: 40px 0 30px;
+        margin-top: 40px;
+    }
+    .crisis-pin {
+        margin: 0 20px 40px;
+        width: auto;
+        font-size: 13px;
+        padding: 12px 16px;
+        display: flex;
+    }
+    .footer-bottom {
+        padding: 24px;
     }
     .bottom-flex {
         flex-direction: column;
@@ -134,3 +180,10 @@
         text-align: center;
     }
 }
+
+/* ── Dark mode overrides ── */
+.dark-mode .footer-tagline { opacity: 0.85; }
+.dark-mode .footer-socials { opacity: 0.75; }
+.dark-mode .bottom-flex { opacity: 0.85; }
+.dark-mode .link-group a { opacity: 0.85; }
+.dark-mode .link-group h4 { opacity: 1; }

@@ -13,6 +13,8 @@
 import { getToken, onMessage } from 'firebase/messaging';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 
 // Lazily get the messaging instance (only loaded when actually needed)
 let _messaging = null;
@@ -43,16 +45,44 @@ export const initFCM = async (userId, onToken) => {
     if (typeof window === 'undefined') return null;
 
     try {
-        if (typeof Notification === 'undefined' || !Notification.requestPermission) {
-            console.warn('[FCM] Notification API not supported');
-            return null;
-        }
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') return null;
+        let token = null;
 
-        const msgInstance = await getMsg();
-        const tokenOptions = VAPID_KEY ? { vapidKey: VAPID_KEY } : {};
-        const token = await getToken(msgInstance, tokenOptions);
+        if (Capacitor.isNativePlatform()) {
+            // Request native push notification permissions
+            let permStatus = await PushNotifications.checkPermissions();
+            if (permStatus.receive === 'prompt') {
+                permStatus = await PushNotifications.requestPermissions();
+            }
+            if (permStatus.receive !== 'granted') return null;
+
+            // Register with APNs/FCM
+            await PushNotifications.register();
+            
+            // Wait for token to be received
+            token = await new Promise((resolve) => {
+                const regListener = PushNotifications.addListener('registration', (res) => {
+                    regListener.remove();
+                    resolve(res.value);
+                });
+                const errListener = PushNotifications.addListener('registrationError', (error) => {
+                    errListener.remove();
+                    console.error('[FCM] Registration Error:', error);
+                    resolve(null);
+                });
+            });
+        } else {
+            // Web Push Notifications
+            if (typeof Notification === 'undefined' || !Notification.requestPermission) {
+                console.warn('[FCM] Notification API not supported');
+                return null;
+            }
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return null;
+
+            const msgInstance = await getMsg();
+            const tokenOptions = VAPID_KEY ? { vapidKey: VAPID_KEY } : {};
+            token = await getToken(msgInstance, tokenOptions);
+        }
 
         if (!token) return null;
 
@@ -60,6 +90,7 @@ export const initFCM = async (userId, onToken) => {
         onToken?.(token);
         return token;
     } catch (err) {
+        console.error('[FCM] Init error:', err);
         return null;
     }
 };
@@ -90,11 +121,23 @@ export const clearFCMToken = async (userId) => {
  */
 export const listenForMessages = (onForegroundMessage) => {
     let unsub = () => {};
-    getMsg().then(msgInstance => {
-        unsub = onMessage(msgInstance, (payload) => {
-            onForegroundMessage?.(payload);
+    
+    if (Capacitor.isNativePlatform()) {
+        const listener = PushNotifications.addListener('pushNotificationReceived', (notification) => {
+            onForegroundMessage?.(notification);
         });
-    }).catch(() => {});
+        unsub = () => {
+            listener.then(l => l.remove()).catch(() => {});
+        };
+    } else {
+        getMsg().then(msgInstance => {
+            const firebaseUnsub = onMessage(msgInstance, (payload) => {
+                onForegroundMessage?.(payload);
+            });
+            unsub = () => firebaseUnsub();
+        }).catch(() => {});
+    }
+    
     return () => unsub();
 };
 

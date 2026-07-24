@@ -31,14 +31,16 @@ exports.handleCreatePost = async (data, context) => {
         throw new functions.https.HttpsError('resource-exhausted', 'Post limit exceeded.');
     }
 
-    const { content, mediaItems, circleId, isAnonymous, isSensitive, hashtags, type, promptId, promptText, categoryId } = data;
+    const { content, mediaItems, circleId, isAnonymous, isSensitive, hashtags, type, promptId, promptText, categoryId, category, subCategory, language, riskLevel, flagged } = data;
     const db = getDb();
     const userSnap = await db.collection('users').doc(userId).get();
     const userData = userSnap.exists ? userSnap.data() : {};
 
-    const authorData = userData.isAnonymous ? { authorName: null, authorPhotoURL: null, authorIsAnonymous: true, isIncognito: true } :
-        (isAnonymous ? { authorName: 'Anonymous Soul', authorPhotoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous', authorIsAnonymous: false, isIncognito: true } :
-            { authorName: userData.displayName || 'Friend', authorPhotoURL: userData.photoURL || null, authorIsAnonymous: false, isIncognito: false });
+    // The client explicitly sends isAnonymous based on the toggle (which defaults to user's hideIdentity setting).
+    // We should respect the client's explicit choice for this specific post.
+    const authorData = isAnonymous 
+        ? { authorName: 'Anonymous Soul', authorPhotoURL: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anonymous', authorIsAnonymous: false, isIncognito: true }
+        : { authorName: userData.displayName || 'Friend', authorPhotoURL: userData.photoURL || null, authorIsAnonymous: false, isIncognito: false };
 
     try {
         const postRef = await db.collection('posts').add({
@@ -46,7 +48,14 @@ exports.handleCreatePost = async (data, context) => {
             mediaUrl: (mediaItems && mediaItems.length > 0) ? mediaItems[0].url : null,
             mediaType: (mediaItems && mediaItems.length > 0) ? mediaItems[0].type : null,
             mediaItems: mediaItems || [], isSensitive: isSensitive || false, hashtags: hashtags || [],
-            categoryId: categoryId || 'general', type: type || 'normal', promptId: promptId || null, promptText: promptText || null, circleId: circleId || null,
+            categoryId: categoryId || 'general',
+            category: category || 'mental_health',
+            subCategory: subCategory || '',
+            language: language || 'en',
+            riskLevel: riskLevel || 'none',
+            flagged: flagged || false,
+            flaggedAt: flagged ? admin.firestore.FieldValue.serverTimestamp() : null,
+            type: type || 'normal', promptId: promptId || null, promptText: promptText || null, circleId: circleId || null,
             createdAt: admin.firestore.FieldValue.serverTimestamp(), likesCount: 0, commentsCount: 0, status: "processing"
         });
         return { success: true, postId: postRef.id };

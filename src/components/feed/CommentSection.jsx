@@ -15,7 +15,7 @@ const CommentSection = React.memo(({ postId, postAuthorId }) => {
 
     useEffect(() => {
         const q = query(
-            collection(db, 'posts', postId, 'comments'),
+            collection(db, 'posts', postId, 'replies'),
             orderBy('createdAt', 'asc')
         );
 
@@ -49,7 +49,7 @@ const CommentSection = React.memo(({ postId, postAuthorId }) => {
 
         try {
             const isAnon = currentUser.isIncognito || currentUser.isAnonymous;
-            await addDoc(collection(db, 'posts', postId, 'comments'), {
+            await addDoc(collection(db, 'posts', postId, 'replies'), {
                 content: newComment,
                 authorId: currentUser.uid,
                 authorName: isAnon ? 'Anonymous' : (currentUser.displayName || 'Anonymous'),
@@ -89,7 +89,7 @@ const CommentSection = React.memo(({ postId, postAuthorId }) => {
     const handleDeleteComment = async (commentId) => {
         if (!confirm("Delete this comment?")) return;
         try {
-            await deleteDoc(doc(db, 'posts', postId, 'comments', commentId));
+            await deleteDoc(doc(db, 'posts', postId, 'replies', commentId));
             const postRef = doc(db, 'posts', postId);
             await updateDoc(postRef, {
                 commentsCount: increment(-1)
@@ -167,9 +167,18 @@ const CommentSection = React.memo(({ postId, postAuthorId }) => {
                 />
                 <button
                     type="submit"
-                    style={{ color: 'var(--color-primary)', fontWeight: '600', fontSize: '13px' }}
+                    disabled={!newComment.trim()}
+                    style={{ 
+                        color: newComment.trim() ? 'var(--color-primary)' : 'var(--color-text-muted)', 
+                        fontWeight: '700', 
+                        fontSize: '13px',
+                        cursor: newComment.trim() ? 'pointer' : 'default',
+                        background: 'none',
+                        border: 'none',
+                        padding: '8px'
+                    }}
                 >
-                    Post
+                    Send
                 </button>
             </form>
             {showLoginModal && <LoginModal onClose={() => setShowLoginModal(false)} />}
