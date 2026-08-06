@@ -1,27 +1,26 @@
 import { useEffect } from 'react';
 
 /**
- * SEO Component to dynamically update document title and meta tags.
- * This helps with SEO in a Single Page Application (SPA).
+ * Enhanced SEO Component for SoulThread (SPA)
+ * Handles Title, Meta Description, Keywords, Canonical URLs, OpenGraph, Twitter Cards,
+ * and Schema.org JSON-LD Structured Data (Organization, WebSite, FAQPage, BreadcrumbList, MedicalWebPage).
  */
 const SEO = ({
-    title = "Vent Anonymously & Talk to Someone Who Gets It | SoulThread",
-    description = "Free anonymous venting app for students and young adults. No real name, no screenshots, no judgment — just a safe space to talk about stress, anxiety, and everything in between.",
-    keywords = "vent anonymously app, anonymous venting platform, safe space to talk anonymously, talk to someone anonymously online, anonymous chat for stress and anxiety, student mental health support, young adult emotional support community",
+    title = "SoulThread | India's Trusted Anonymous Mental Health Sanctuary & Care Platform",
+    description = "Talk to someone who understands. SoulThread is India's leading anonymous mental health sanctuary offering peer support, verified online psychologists, and confidential crisis guidance without judgment or real names.",
+    keywords = "mental health platform India, online therapy India, anonymous mental health support, vent anonymously online, anxiety relief app India, depression support group, student mental health India, corporate EAP wellness",
     image = "https://soulthread.in/logo.jpg", 
     url = "https://soulthread.in/",
     type = 'website', 
     schema = null 
 }) => {
-    const fullTitle = `${title} | SoulThread Sanctuary`;
+    const fullTitle = title.includes('SoulThread') ? title : `${title} | SoulThread`;
 
     useEffect(() => {
-        // Update Title
-        if (title) {
-            document.title = fullTitle;
-        }
+        // 1. Title Tag
+        document.title = fullTitle;
 
-        // Update Description
+        // Helper to upsert meta tags
         const updateMetaTag = (name, content, property = false) => {
             if (!content) return;
             const attr = property ? 'property' : 'name';
@@ -36,26 +35,25 @@ const SEO = ({
             }
         };
 
-        if (description) {
-            updateMetaTag('description', description);
-            updateMetaTag('og:description', description, true);
-            updateMetaTag('twitter:description', description);
-        }
+        // 2. Standard & Social Meta Tags
+        updateMetaTag('description', description);
+        updateMetaTag('og:description', description, true);
+        updateMetaTag('twitter:description', description);
 
-        if (keywords) {
-            updateMetaTag('keywords', keywords);
-        }
+        updateMetaTag('keywords', keywords);
 
-        if (image) {
-            updateMetaTag('og:image', image, true);
-            updateMetaTag('twitter:image', image);
-        }
+        updateMetaTag('og:image', image, true);
+        updateMetaTag('twitter:image', image);
+
+        updateMetaTag('og:title', fullTitle, true);
+        updateMetaTag('twitter:title', fullTitle);
+        updateMetaTag('og:type', type, true);
 
         if (url) {
             updateMetaTag('og:url', url, true);
             updateMetaTag('twitter:url', url);
             
-            // Update Canonical Link
+            // Canonical URL
             let canonical = document.querySelector('link[rel="canonical"]');
             if (canonical) {
                 canonical.setAttribute('href', url);
@@ -67,27 +65,41 @@ const SEO = ({
             }
         }
 
-        if (title) {
-            updateMetaTag('og:title', title, true);
-            updateMetaTag('twitter:title', title);
-        }
+        // 3. WebSite & SearchAction Base Schema
+        const websiteSchema = {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "SoulThread",
+            "url": "https://soulthread.in/",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://soulthread.in/explore?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        };
 
-        updateMetaTag('og:type', type, true);
-
-        // --- JSON-LD Structured Data ---
-        // Remove existing dynamic schemas (those not in index.html)
+        // 4. JSON-LD Dynamic Schema Ingestion
         const existingSchemas = document.querySelectorAll('script[type="application/ld+json"].dynamic-schema');
         existingSchemas.forEach(s => s.remove());
 
+        const schemasToInject = [websiteSchema];
         if (schema) {
+            if (Array.isArray(schema)) {
+                schemasToInject.push(...schema);
+            } else {
+                schemasToInject.push(schema);
+            }
+        }
+
+        schemasToInject.forEach((schObj) => {
             const script = document.createElement('script');
             script.type = 'application/ld+json';
             script.className = 'dynamic-schema';
-            script.text = JSON.stringify(schema);
+            script.text = JSON.stringify(schObj);
             document.head.appendChild(script);
-        }
+        });
 
-    }, [title, description, keywords, image, url, type, schema]);
+    }, [fullTitle, description, keywords, image, url, type, schema]);
 
     return null;
 };

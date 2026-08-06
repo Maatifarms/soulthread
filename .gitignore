@@ -53,6 +53,7 @@ google-services.json
 *.secret
 *.key
 *serviceAccount.json
+serviceAccountKey.json
 setup_anxiety_user.js
 post_anxiety_content.js
 test_conn.cjs

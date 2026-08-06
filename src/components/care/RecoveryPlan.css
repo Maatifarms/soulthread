@@ -1,0 +1,184 @@
+/* RecoveryPlan.css — Post-session recovery plan styling */
+
+.rp-container {
+    padding: 24px 0;
+    font-family: var(--font-body, -apple-system, sans-serif);
+    color: #f8fafc;
+}
+
+.rp-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.rp-sub {
+    font-size: 14px;
+    color: #94a3b8;
+    margin-bottom: 24px;
+}
+
+.rp-empty-card {
+    background: #121826;
+    border: 1px solid rgba(13, 148, 136, 0.25);
+    border-radius: 20px;
+    padding: 40px;
+    text-align: center;
+    max-width: 580px;
+    margin: 0 auto;
+}
+
+.rp-empty-ic {
+    color: #0d9488;
+    margin-bottom: 16px;
+}
+
+.rp-empty-card h3 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+}
+
+.rp-empty-card p {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.rp-btn-book {
+    background: #0d9488;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.rp-plans-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.rp-card {
+    background: #121826;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.rp-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rp-guide-badge {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #2dd4bf;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rp-date { font-size: 12px; color: #64748b; }
+
+.rp-advice-box {
+    background: rgba(13, 148, 136, 0.08);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.rp-advice-box strong {
+    font-size: 12px;
+    color: #0d9488;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.rp-advice-box p {
+    font-size: 14px;
+    color: #cbd5e1;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.rp-tasks-section h4, .rp-resources-section h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 12px;
+}
+
+.rp-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.rp-task-item {
+    background: #171f33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.rp-task-item:hover { border-color: rgba(13, 148, 136, 0.3); }
+
+.rp-task-item.completed {
+    background: rgba(16, 185, 129, 0.06);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.rp-ic-done { color: #10b981; }
+.rp-ic-todo { color: #64748b; }
+
+.rp-task-text {
+    font-size: 13.5px;
+    color: #ffffff;
+}
+
+.rp-task-item.completed .rp-task-text {
+    text-decoration: line-through;
+    color: #94a3b8;
+}
+
+.rp-resources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.rp-resource-item {
+    background: #171f33;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: #2dd4bf;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.rp-loading { text-align: center; padding: 40px; color: #94a3b8; }

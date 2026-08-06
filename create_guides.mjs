@@ -1,6 +1,9 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { getFirestore, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const firebaseConfig = {
   apiKey: "AIzaSyBcpOg9-ZKbEDkPGI3hHlrvekwh4PPHrCY",
@@ -17,9 +20,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 const guides = [
-  { email: "anchalmaurya406@gmail.com", password: "Passsoul@1" },
-  { email: "bhavyajha.bhu@gmail.com", password: "Passsoul@1" }
+  { email: process.env.GUIDE1_EMAIL, password: process.env.GUIDE1_PASSWORD },
+  { email: process.env.GUIDE2_EMAIL, password: process.env.GUIDE2_PASSWORD }
 ];
+
+if (guides.some(g => !g.email || !g.password)) {
+  console.error(
+    "Missing guide credentials. Set GUIDE1_EMAIL, GUIDE1_PASSWORD, GUIDE2_EMAIL, GUIDE2_PASSWORD in your .env file (see .env.example)."
+  );
+  process.exit(1);
+}
 
 async function createGuides() {
   for (const guide of guides) {

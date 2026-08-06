@@ -3,9 +3,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { analytics } from '../services/analytics';
-import AuthStepIndicator from '../components/auth/AuthStepIndicator';
 
-import './Auth.css';
+import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
+import { Card } from '../components/common/Card';
+import { Checkbox } from '../components/common/Checkbox'; // We scaffolded this!
+
 
 const Signup = () => {
     const { signup, loginWithGoogle, currentUser } = useAuth();
@@ -13,7 +16,6 @@ const Signup = () => {
     const location = useLocation();
     const suggestedId = location.state?.suggestedSoulId || '';
 
-    // Redirect already-logged-in users
     useEffect(() => {
         if (currentUser) navigate('/');
     }, [currentUser, navigate]);
@@ -29,283 +31,185 @@ const Signup = () => {
         password: '',
         confirmPassword: ''
     });
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [agreeTerms, setAgreeTerms] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+        if (errors[e.target.name]) {
+            setErrors({ ...errors, [e.target.name]: null }); // Clear error as user types
+        }
     };
 
     const handleGoogleSignup = async () => {
         try {
-            setError('');
+            setErrors({});
             setGoogleLoading(true);
             const result = await loginWithGoogle();
             if (result?.user) navigate('/');
         } catch (err) {
             if (err.code !== 'auth/popup-closed-by-user') {
-                setError('Google sign-in failed. Please try again.');
+                setErrors({ global: 'Google sign-in failed. Please try again.' });
             }
         } finally {
             setGoogleLoading(false);
         }
     };
 
+    const validateForm = () => {
+        const newErrors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        
+        if (!emailRegex.test(formData.email.trim())) newErrors.email = 'Please enter a valid email address.';
+        if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters.';
+        if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match.';
+        if (!agreeTerms) newErrors.terms = 'You must agree to the Terms of Service.';
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        if (!agreeTerms) {
-            return setError('You must agree to the Terms of Service and Privacy Policy to register.');
-        }
-
-        // Email format validation — Firebase accepts syntactically valid emails even if they don't exist
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        if (!emailRegex.test(formData.email.trim())) {
-            return setError('Please enter a valid email address (e.g. name@example.com).');
-        }
-
-        if (formData.password !== formData.confirmPassword) {
-            return setError('Passwords do not match');
-        }
-        if (formData.password.length < 6) {
-            return setError('Password should be at least 6 characters');
-        }
+        if (!validateForm()) return;
 
         analytics.logEvent('signup_attempt');
-
         try {
-            setError('');
             setLoading(true);
-            const userCredential = await signup(formData.email, formData.password, formData.name);
+            const userCredential = await signup(formData.email.trim(), formData.password, formData.name);
             analytics.logEvent('signup_success');
             navigate(`/profile/${userCredential.user.uid}`, { state: { justSignedUp: true } });
         } catch (err) {
-            console.error(err);
             analytics.logEvent('signup_error', { reason: err.code || err.message });
-            // Translate Firebase error codes into human-readable messages
             const friendlyErrors = {
-                'auth/email-already-in-use': 'An account with this email already exists. Try signing in instead.',
+                'auth/email-already-in-use': 'This email is already registered.',
                 'auth/invalid-email': 'The email address is not valid.',
-                'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
-                'auth/network-request-failed': 'No internet connection. Please check your network and try again.',
+                'auth/network-request-failed': 'No internet connection.',
             };
-            setError(friendlyErrors[err.code] || 'Failed to create an account. ' + err.message);
+            setErrors({ email: friendlyErrors[err.code] || err.message });
         } finally {
             setLoading(false);
         }
     };
 
-    const containerVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.6,
-                staggerChildren: 0.08,
-                when: "beforeChildren"
-            }
-        }
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, x: -10 },
-        visible: { opacity: 1, x: 0 }
-    };
-
     return (
         <div className="auth-page">
             <div className="auth-logo-section">
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0, rotate: 10 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 100, damping: 15 }}
-                >
-                    <svg width="80" height="70" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '12px' }}>
+                <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.3 }}>
+                    <svg width="80" height="70" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginBottom: '16px' }}>
                         <path d="M60 80 C60 80 20 55 20 32 C20 20 29 12 40 12 C48 12 55 17 60 23 C65 17 72 12 80 12 C91 12 100 20 100 32 C100 55 60 80 60 80Z" fill="white" />
-                        <motion.path 
-                            d="M38 28 C38 28 42 20 50 24 C58 28 52 36 58 38 C64 40 68 34 72 32" 
-                            stroke="#3d7a72" 
-                            strokeWidth="3.5" 
-                            strokeLinecap="round" 
-                            fill="none"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: 1 }}
-                            transition={{ duration: 1.5, delay: 0.5 }}
-                        />
                     </svg>
                 </motion.div>
-                <motion.h1 
-                    className="auth-logo-title" 
-                    style={{ fontSize: '32px' }}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                >
-                    Join Sanctuary
-                </motion.h1>
-                <motion.p 
-                    className="auth-logo-subtitle"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                >
-                    Begin your journey to a peaceful mind
-                </motion.p>
+                <h1 className="auth-logo-title" style={{ color: 'white', margin: 0 }}>Join Sanctuary</h1>
+                <p className="auth-logo-subtitle" style={{ color: 'rgba(255,255,255,0.8)', marginTop: '8px' }}>Begin your journey to a peaceful mind</p>
             </div>
 
-            <motion.main 
-                className="auth-container"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-            >
-                <div className="auth-handle-bar" />
+            <main className="auth-container" style={{ padding: '24px', maxWidth: '450px', margin: '0 auto' }}>
+                <Card premium style={{ padding: '32px' }}>
+                    <h2 style={{ marginBottom: '8px' }}>Create Account</h2>
+                    <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px' }}>Join our supportive community and find your soul space.</p>
 
-                <motion.h2 variants={itemVariants} className="auth-title">Create Account</motion.h2>
-                <motion.p variants={itemVariants} className="auth-subtitle">Join our supportive community and find your soul space.</motion.p>
+                    {errors.global && (
+                        <div style={{ padding: '12px', background: 'var(--st-error, #fef2f2)', color: '#991b1b', borderRadius: '8px', marginBottom: '16px' }}>
+                            {errors.global}
+                        </div>
+                    )}
 
-                {error && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="auth-alert auth-alert-error">
-                        <span>⚠️</span> {error}
-                    </motion.div>
-                )}
-
-                <form onSubmit={handleSubmit} className="auth-form" noValidate>
-                    <motion.div variants={itemVariants} className="auth-input-group">
-                        <label className="auth-label">Soul Name</label>
-                        <input
-                            type="text"
+                    <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <Input
+                            label="Soul Name"
                             name="name"
                             placeholder="Your Name (or Pseudonym)"
-                            className="auth-input"
                             value={formData.name}
                             onChange={handleChange}
                             required
                             disabled={loading}
                         />
-                    </motion.div>
 
-                    <motion.div variants={itemVariants} className="auth-input-group">
-                        <label className="auth-label">Email Address</label>
-                        <input
+                        <Input
+                            label="Email Address"
                             type="email"
                             name="email"
                             placeholder="you@email.com"
-                            className="auth-input"
                             value={formData.email}
                             onChange={handleChange}
                             required
                             disabled={loading}
+                            error={errors.email}
                         />
-                    </motion.div>
 
-                    <motion.div variants={itemVariants} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div className="auth-input-group">
-                            <label className="auth-label">Password</label>
-                            <input
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <Input
+                                label="Password"
                                 type="password"
                                 name="password"
                                 placeholder="Min 6 chars"
-                                className="auth-input"
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
+                                error={errors.password}
                             />
-                        </div>
-                        <div className="auth-input-group">
-                            <label className="auth-label">Confirm</label>
-                            <input
+                            <Input
+                                label="Confirm"
                                 type="password"
                                 name="confirmPassword"
                                 placeholder="Match password"
-                                className="auth-input"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 required
                                 disabled={loading}
+                                error={errors.confirmPassword}
                             />
                         </div>
-                    </motion.div>
 
-                    <motion.div variants={itemVariants} className="auth-checkbox-group" style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', margin: '18px 0', paddingLeft: '4px' }}>
-                        <input
-                            type="checkbox"
-                            id="termsAccept"
-                            checked={agreeTerms}
-                            onChange={(e) => setAgreeTerms(e.target.checked)}
-                            required
-                            style={{ 
-                                marginTop: '3px',
-                                width: '16px',
-                                height: '16px',
-                                accentColor: '#3d7a72',
-                                cursor: 'pointer'
-                            }}
-                        />
-                        <label htmlFor="termsAccept" style={{ fontSize: '13px', color: 'var(--color-text-secondary)', lineHeight: '1.4', cursor: 'pointer', textAlign: 'left' }}>
-                            I agree to the <Link to="/terms" style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'underline' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'underline' }}>Privacy Policy</Link>.
-                        </label>
-                    </motion.div>
+                        {/* Since Checkbox is scaffolded as a div in our earlier script, let's just make it a real HTML input wrapper for now inside the design system */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', margin: '8px 0' }}>
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={agreeTerms}
+                                onChange={(e) => {
+                                    setAgreeTerms(e.target.checked);
+                                    if (errors.terms) setErrors({ ...errors, terms: null });
+                                }}
+                                style={{ marginTop: '4px' }}
+                            />
+                            <label htmlFor="terms" style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>
+                                I agree to the <Link to="/terms" style={{ color: 'var(--color-primary)' }}>Terms of Service</Link> and <Link to="/privacy" style={{ color: 'var(--color-primary)' }}>Privacy Policy</Link>.
+                            </label>
+                        </div>
+                        {errors.terms && <span style={{ color: 'var(--st-error, #ef4444)', fontSize: '12px', marginTop: '-8px' }}>{errors.terms}</span>}
 
-                    <motion.button
-                        variants={itemVariants}
-                        type="submit"
-                        disabled={loading}
-                        className="auth-submit-btn"
-                        whileTap={{ scale: 0.98 }}
-                    >
-                        {loading ? (
-                            <AuthStepIndicator steps={["Creating secure profile...", "Generating anonymous ID...", "Opening sanctuary..."]} />
-                        ) : 'Sign Up'}
-                    </motion.button>
-                </form>
+                        <Button type="submit" variant="primary" isLoading={loading} style={{ width: '100%', marginTop: '8px' }}>
+                            Sign Up
+                        </Button>
+                    </form>
 
-                <div className="auth-social-divider" style={{ margin: '0 0 16px' }}>
-                    <div className="auth-divider-line" />
-                    <span className="auth-divider-text">or sign up with</span>
-                    <div className="auth-divider-line" />
-                </div>
+                    <div style={{ margin: '24px 0', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
+                        <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>or sign up with</span>
+                        <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
+                    </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                    <button
-                        onClick={() => navigate('/login/phone')}
-                        className="auth-phone-btn"
-                        disabled={loading}
-                    >
-                        <span>📱</span> Mobile Number
-                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <Button variant="secondary" onClick={() => navigate('/login/phone')} disabled={loading}>
+                            📱 Mobile Number
+                        </Button>
+                        <Button variant="ghost" onClick={handleGoogleSignup} isLoading={googleLoading} disabled={loading}>
+                            Continue with Google
+                        </Button>
+                    </div>
 
-                    <button
-                        onClick={handleGoogleSignup}
-                        disabled={googleLoading || loading}
-                        className="auth-google-btn"
-                    >
-                        {googleLoading ? (
-                            <AuthStepIndicator steps={["Connecting to Google...", "Verifying identity...", "Creating Soul..."]} />
-                        ) : (
-                            <>
-                                <svg width="20" height="20" viewBox="0 0 48 48">
-                                    <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                                    <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                                    <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                                    <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                                </svg>
-                                Continue with Google
-                            </>
-                        )}
-                    </button>
-                </div>
-
-                <div className="auth-footer">
-                    Already have an account?{' '}
-                    <Link to="/login" className="auth-footer-link">
-                        Log In
-                    </Link>
-                </div>
-            </motion.main>
+                    <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px' }}>
+                        Already have an account?{' '}
+                        <Link to="/login" style={{ color: 'var(--color-primary)', fontWeight: '700' }}>
+                            Log In
+                        </Link>
+                    </div>
+                </Card>
+            </main>
         </div>
     );
 };

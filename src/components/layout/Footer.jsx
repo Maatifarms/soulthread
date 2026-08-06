@@ -1,69 +1,98 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
-import { Heart, Phone } from 'lucide-react';
+import { Phone, ShieldCheck, Heart } from 'lucide-react';
 import './Footer.css';
 
 const Footer = () => {
-    const location = useLocation();
-    
-    // Hide footer on mobile/native app or specific high-focus pages if needed
+    // Native mobile app hides standard web footer to maintain clean native bottom navigation
     if (Capacitor.isNativePlatform()) return null;
 
     return (
         <footer className="footer-main">
+            {/* National Crisis Banner */}
             <div className="crisis-pin">
-                <Phone size={14} color="#C0392B" />
-                <span>In crisis? <Link to="/crisis" className="crisis-link">Get help now</Link> <span style={{opacity: 0.5}}>·</span> iCall: <a href="tel:9152987821" className="crisis-link">9152987821</a></span>
+                <Phone size={14} className="crisis-icon" />
+                <span>
+                    In immediate crisis? <Link to="/crisis" className="crisis-link">Get help now</Link>
+                    &nbsp;·&nbsp; Tele-MANAS: <a href="tel:14416" className="crisis-link">14416</a> (24/7)
+                    &nbsp;·&nbsp; iCall: <a href="tel:9152987821" className="crisis-link">9152987821</a>
+                </span>
             </div>
+
             <div className="container footer-content">
-                <div className="footer-branding">
-                    <Link to="/" className="footer-logo">
-                        <img src="/logo.jpg" alt="SoulThread Logo" />
-                        <span>SoulThread</span>
-                    </Link>
-                    <p className="footer-tagline">
-                        India's first platform combining patient care and mental health support. Built for families going through something hard.
-                    </p>
-                    <div className="footer-socials">
-                        {/* Placeholder for future socials */}
-                        <span>Stay Connected</span>
-                    </div>
-                </div>
-
-                <div className="footer-links-grid">
-                    <div className="link-group">
-                        <h4>Community</h4>
-                        <Link to="/explore">Explore Stories</Link>
-                        <Link to="/groups">Peer Support Circles</Link>
-                        <Link to="/series">Learning Series</Link>
-                        <Link to="/crisis">Emergency Support</Link>
+                <div className="footer-top-grid">
+                    {/* Brand Column */}
+                    <div className="footer-col brand-col">
+                        <Link to="/" className="footer-logo">
+                            <img src="/logo.jpg" alt="SoulThread Logo" className="f-logo-img" />
+                            <span className="f-logo-text">SoulThread</span>
+                        </Link>
+                        <p className="footer-tagline">
+                            India's anonymous mental health sanctuary and clinical care platform. Share what you feel, connect with verified psychologists, and heal without judgment or names.
+                        </p>
+                        <div className="f-security-badge">
+                            <ShieldCheck size={14} /> 100% On-Device Privacy Guard
+                        </div>
                     </div>
 
-                    <div className="link-group">
-                        <h4>Platform</h4>
-                        <Link to="/about">Our Story</Link>
-                        <Link to="/pricing">Sponsorship</Link>
-                        <a href="https://play.google.com/store/apps/details?id=in.soulthread.app" target="_blank" rel="noopener noreferrer">Get Android App</a>
-                        <Link to="/status">Site Status</Link>
-                        <Link to="/join-as-expert">Apply as Expert</Link>
+                    {/* Column 1: Community */}
+                    <div className="footer-col">
+                        <h4 className="f-col-title">Community</h4>
+                        <ul className="f-links">
+                            <li><Link to="/explore">Explore Feed</Link></li>
+                            <li><Link to="/groups">Support Circles</Link></li>
+
+                            <li><Link to="/crisis">Crisis Resources</Link></li>
+                        </ul>
                     </div>
 
-                    <div className="link-group">
-                        <h4>Legal</h4>
-                        <Link to="/privacy">Privacy Policy</Link>
-                        <Link to="/terms">Terms of Service</Link>
-                        <Link to="/safety">Safety Guidelines</Link>
+                    {/* Column 2: Condition Hubs */}
+                    <div className="footer-col">
+                        <h4 className="f-col-title">Condition Hubs</h4>
+                        <ul className="f-links">
+                            <li><Link to="/explore?category=anxiety">Anxiety & Panic</Link></li>
+                            <li><Link to="/explore?category=depression">Depression & Low Mood</Link></li>
+                            <li><Link to="/explore?category=burnout">Work Stress & Burnout</Link></li>
+                            <li><Link to="/explore?category=relationships">Relationships & Trust</Link></li>
+                            <li><Link to="/explore?category=caretaker">Caretaker Support</Link></li>
+                        </ul>
+                    </div>
+
+                    {/* Column 3: Clinical & Enterprise */}
+                    <div className="footer-col">
+                        <h4 className="f-col-title">Clinical & Enterprise</h4>
+                        <ul className="f-links">
+                            <li><Link to="/experts">Find a Psychologist</Link></li>
+                            <li><Link to="/join-as-expert">Join as Clinical Expert</Link></li>
+                            <li><Link to="/#enterprise">Enterprise EAP Solutions</Link></li>
+                            <li><a href="mailto:support@soulthread.in">Clinical Advisory</a></li>
+                        </ul>
+                    </div>
+
+                    {/* Column 4: Trust & Legal */}
+                    <div className="footer-col">
+                        <h4 className="f-col-title">Trust & Legal</h4>
+                        <ul className="f-links">
+                            <li><Link to="/about">Our Story</Link></li>
+                            <li><Link to="/privacy">Privacy Policy</Link></li>
+                            <li><Link to="/terms">Terms of Service</Link></li>
+                            <li><a href="mailto:support@soulthread.in">Contact Support</a></li>
+                        </ul>
                     </div>
                 </div>
             </div>
 
+            {/* Footer Bottom Bar */}
             <div className="footer-bottom">
                 <div className="container bottom-flex">
-                    <p>© 2026 SoulThread Sanctuary. All rights reserved.</p>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        Built with <Heart size={14} fill="var(--color-primary)" color="var(--color-primary)" /> for your mental wellness
+                    <p>© {new Date().getFullYear()} SoulThread Sanctuary. All rights reserved.</p>
+                    <span className="bottom-heart">
+                        Built with <Heart size={13} fill="#0d9488" color="#0d9488" /> for mental wellness in India
                     </span>
+                </div>
+                <div className="container disclaimer-row">
+                    SoulThread provides peer support and professional therapy connections. If you are experiencing a medical emergency or severe crisis, please contact Tele-MANAS (14416) or visit a hospital immediately.
                 </div>
             </div>
         </footer>

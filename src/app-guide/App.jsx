@@ -9,33 +9,43 @@ import { markAppLaunch } from '../services/performanceMonitor';
 
 const GuideLogin     = lazy(() => import('./pages/GuideLogin'));
 const GuideDashboard = lazy(() => import('../pages/GuideDashboard'));
+const GuideCalendar  = lazy(() => import('../pages/GuideCalendar'));
+const GuidePatients  = lazy(() => import('../pages/GuidePatients'));
+const PatientTimeline = lazy(() => import('../pages/PatientTimeline'));
+const GuideMore      = lazy(() => import('../pages/GuideMore'));
+const GuideLedger    = lazy(() => import('../pages/GuideLedger'));
+const GuideSessionWorkspace = lazy(() => import('../pages/GuideSessionWorkspace'));
+const GuideResourceLibrary = lazy(() => import('../pages/GuideResourceLibrary'));
 const GuideProfile   = lazy(() => import('../pages/Profile'));
-const Notifications  = lazy(() => import('../pages/Notifications'));
 const Crisis         = lazy(() => import('../pages/Crisis'));
 const Privacy        = lazy(() => import('../pages/Privacy'));
 const Terms          = lazy(() => import('../pages/Terms'));
 const NotFound       = lazy(() => import('../pages/NotFound'));
 const Chat           = lazy(() => import('../pages/Chat'));
+const ExecutiveDashboard = lazy(() => import('../pages/admin/ExecutiveDashboard'));
 
-// Simple bottom nav for the guide app — 4 tabs only
+// Simple bottom nav for the guide app — 5 tabs (OS Workflow)
 function GuideNav() {
   const { pathname } = useLocation();
   const { currentUser } = useAuth();
   if (!currentUser) return null;
 
+  // Do not show GuideNav on admin routes
+  if (pathname.startsWith('/admin')) return null;
+
   const tabs = [
-    { to: '/dashboard', label: 'Dashboard', icon: '🏠' },
-    { to: '/bookings',  label: 'Bookings',  icon: '📅' },
-    { to: '/messages',  label: 'Messages',  icon: '💬' },
-    { to: '/activity',  label: 'Get Support',  icon: '🔔' },
-    { to: `/profile/${currentUser.uid}`, label: 'Me', icon: '👤' },
+    { to: '/dashboard', label: 'Home',     icon: '🏠' },
+    { to: '/calendar',  label: 'Calendar', icon: '📅' },
+    { to: '/patients',  label: 'Patients', icon: '👥' },
+    { to: '/library',   label: 'Library',  icon: '📚' },
+    { to: '/more',      label: 'More',     icon: '⚙️' },
   ];
 
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, height: '64px',
       background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)',
-      display: 'flex', alignItems: 'center', zIndex: 100
+      display: 'flex', alignItems: 'center', zIndex: 100, paddingBottom: 'env(safe-area-inset-bottom)'
     }}>
       {tabs.map(tab => {
         const active = pathname === tab.to || pathname.startsWith(tab.to + '/');
@@ -79,11 +89,20 @@ export default function App() {
           <Routes>
             <Route path="/login"     element={<GuideLogin />} />
             <Route path="/dashboard" element={<RequireAuth><GuideDashboard /></RequireAuth>} />
-            <Route path="/bookings"  element={<RequireAuth><GuideDashboard tab="bookings" /></RequireAuth>} />
-            <Route path="/activity"  element={<RequireAuth><Notifications /></RequireAuth>} />
+            <Route path="/calendar"  element={<RequireAuth><GuideCalendar /></RequireAuth>} />
+            <Route path="/patients"  element={<RequireAuth><GuidePatients /></RequireAuth>} />
+            <Route path="/patients/:patientId" element={<RequireAuth><PatientTimeline /></RequireAuth>} />
+            <Route path="/session/:bookingId" element={<RequireAuth><GuideSessionWorkspace /></RequireAuth>} />
+            <Route path="/library"   element={<RequireAuth><GuideResourceLibrary /></RequireAuth>} />
             <Route path="/messages"  element={<RequireAuth><Chat /></RequireAuth>} />
             <Route path="/messages/:chatId" element={<RequireAuth><Chat /></RequireAuth>} />
+            <Route path="/more"      element={<RequireAuth><GuideMore /></RequireAuth>} />
+            <Route path="/ledger"    element={<RequireAuth><GuideLedger /></RequireAuth>} />
             <Route path="/profile/:userId" element={<RequireAuth><GuideProfile /></RequireAuth>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<RequireAuth><ExecutiveDashboard /></RequireAuth>} />
+
             <Route path="/crisis"    element={<Crisis />} />
             <Route path="/privacy"   element={<Privacy />} />
             <Route path="/terms"     element={<Terms />} />

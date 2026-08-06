@@ -1,55 +1,93 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow anyone to read posts and profiles
-    match /posts/{post} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && (resource.data.authorId == request.auth.uid || request.auth.token.role == 'admin');
+    
+    // Function: Check if user is authenticated
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Function: Check if user has an admin token
+    function isAdmin() {
+      return isAuth() && (request.auth.token.role == 'admin' || request.auth.token.admin == true);
     }
     
+    // Function: Check if user is a guide
+    function isGuide() {
+      return isAuth() && request.auth.token.role == 'guide';
+    }
+
+    // Function: Verify patient ownership
+    function isPatient(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Users Collection (Patients)
     match /users/{userId} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuth(); // Basic profile readable by community/guides
+      allow create: if isAuth() && request.auth.uid == userId;
+      allow update: if isPatient(userId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
-    match /psychologists/{psychId} {
-      allow read: if true;
-      allow write: if request.auth != null && (request.auth.uid == psychId || request.auth.token.role == 'admin');
+    // Guides Collection
+    match /guides/{guideId} {
+      allow read: if true; // Public directory for patients to browse
+      allow create, update: if isAdmin() || (isGuide() && request.auth.uid == guideId);
+      allow delete: if isAdmin();
     }
 
-    match /booking_slots/{slotId} {
-      allow read, write: if request.auth != null;
-    }
-
-    match /conversations/{convId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participantIds;
-    }
-
-    match /messages/{msgId} {
-      allow read, create: if request.auth != null;
-    }
-
+    // Bookings Collection (CRITICAL)
     match /bookings/{bookingId} {
-      allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         request.auth.uid == resource.data.guideId);
-      allow create: if request.auth != null;
-      allow update: if request.auth != null &&
-        (request.auth.uid == resource.data.userId ||
-         request.auth.uid == resource.data.guideId);
-      allow delete: if false;
+      // Patients can see their bookings. Guides can see their assigned bookings. Admins see all.
+      allow read: if isAuth() && (
+        resource.data.userId == request.auth.uid || 
+        resource.data.guideId == request.auth.uid || 
+        isAdmin()
+      );
+      // V2 SECURITY: Client-side booking creation is STRICTLY PROHIBITED.
+      // All bookings MUST be routed through the secure createBooking Cloud Function
+      // to prevent arbitrary session fee manipulation and support Guest bookings.
+      allow create: if false;
+      
+      // Updates allowed for status changes, but restricted. 
+      // V2 SECURITY: Client-side booking updates are STRICTLY PROHIBITED.
+      // All state transitions (Accept, Reject, Cancel, Check-in) must route through Cloud Functions.
+      allow update: if false;
+      allow delete: if isAdmin();
     }
 
-    match /notifications/{notifId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid == resource.data.recipientId;
-      allow create: if request.auth != null;
+    // Journals Collection (CRITICAL PRIVACY)
+    match /journals/{journalId} {
+      // ONLY the author can read their journal. Guides cannot. Admins cannot.
+      allow read, update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
     }
-    
-    // Default fallback
+
+    // Community Posts
+    match /posts/{postId} {
+      allow read: if isAuth(); // Must be logged in to read community
+      allow create: if isAuth() && request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAuth() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read, update: if isAuth() && resource.data.recipientId == request.auth.uid;
+      allow create: if isAuth(); // System/Users can trigger notifications
+      allow delete: if isAuth() && resource.data.recipientId == request.auth.uid;
+    }
+
+    // Timeline Events
+    match /timeline/{eventId} {
+      allow read: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // Closed by default
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }

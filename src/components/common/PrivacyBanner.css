@@ -1,0 +1,51 @@
+.st-privacy-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: var(--st-color-surface-elevated, #F0F4F8);
+  border: 1px solid var(--st-color-border, #E2E8F0);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.st-privacy-banner-icon {
+  color: var(--st-color-primary, #3B82F6);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.st-privacy-banner-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.st-privacy-banner-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--st-color-text-primary, #1E293B);
+  margin: 0 0 2px 0;
+}
+
+.st-privacy-banner-message {
+  font-size: 0.75rem;
+  color: var(--st-color-text-secondary, #64748B);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Dark mode overrides if design system supports it */
+@media (prefers-color-scheme: dark) {
+  .st-privacy-banner {
+    background-color: var(--st-color-surface-elevated, #1E293B);
+    border-color: var(--st-color-border, #334155);
+  }
+  .st-privacy-banner-title {
+    color: var(--st-color-text-primary, #F8FAFC);
+  }
+  .st-privacy-banner-message {
+    color: var(--st-color-text-secondary, #94A3B8);
+  }
+}

@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
+import { PrivacyBanner } from '../components/common/PrivacyBanner';
 
 import './Chat.css';
 
@@ -612,6 +613,9 @@ const Chat = () => {
 
                         {/* Messages */}
                         <div className="chat-messages">
+                            <div style={{ padding: '16px' }}>
+                                <PrivacyBanner type="chat" />
+                            </div>
                             <AnimatePresence initial={false}>
                                 {messages.map(msg => (
                                     <MessageBubble

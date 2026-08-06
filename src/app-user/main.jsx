@@ -3,6 +3,7 @@ if (window.logToScreen) window.logToScreen('[1] main.jsx execution started');
 import { createRoot } from 'react-dom/client'
 import '../styles/global.css'
 import '../index.css'
+import '../styles/tailwind-utilities.css'
 import App from './App.jsx'
 import { AuthProvider } from '../contexts/AuthContext'
 import GlobalErrorBoundary from '../components/common/GlobalErrorBoundary'
@@ -13,7 +14,7 @@ if ('serviceWorker' in navigator) {
     for (let registration of registrations) {
       registration.unregister();
     }
-  }).catch(err => console.log('SW unregister failed:', err));
+  }).catch(err => console.error('SW unregister failed:', err));
 }
 
 if (window.logToScreen) window.logToScreen('[2] Unregistering SW');

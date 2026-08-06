@@ -8,7 +8,7 @@ import { db, auth } from './firebase';
 
 export const classifyStory = async (storyId, content) => {
     try {
-        console.log(`[AI] Starting classification for story: ${storyId}`);
+        // Starting classification for story
 
         // 1. Get Security Token
         const user = auth.currentUser;
@@ -94,7 +94,7 @@ async function updateStoryWithResult(storyId, result) {
         });
     }
 
-    console.log(`[AI] Story ${storyId} categorized as ${categoryId}. Moderation Attention: ${dataToUpdate.requiresModeratorAttention}`);
+    // Story categorized
 }
 
 /** Log moderation events without raw content for security (R59) */

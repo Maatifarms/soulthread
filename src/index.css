@@ -3,6 +3,9 @@
    A warm, safe space where souls can breathe and connect.
    ═══════════════════════════════════════════════════════════ */
 
+@tailwind base;
+@tailwind components;
+
 /* Font defined in HTML */
 
 /* ─── DESIGN TOKENS ──────────────────────────────────────── */
@@ -1326,6 +1329,13 @@ label {
   color: var(--color-text-muted);
   cursor: not-allowed;
 }
+
+.nav-btn-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
 
 /* ─── DIVIDER ───────────────────────────────────────────── */
 .divider {

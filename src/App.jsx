@@ -17,22 +17,20 @@ const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
 const Signup = lazy(() => import('./pages/Signup'));
 const PhoneLogin = lazy(() => import('./pages/PhoneLogin'));
-const Explore = lazy(() => import('./pages/Explore'));
 const Profile = lazy(() => import('./pages/Profile'));
 const PostDetail = lazy(() => import('./pages/PostDetail'));
-const SeriesGallery = lazy(() => import('./pages/SeriesGallery'));
-const HyperfocusSeries = lazy(() => import('./pages/HyperfocusSeries'));
-const MeditationSeries = lazy(() => import('./pages/MeditationSeries'));
-const EgoIdSeries = lazy(() => import('./pages/EgoIdSeries'));
-const MemorySeries = lazy(() => import('./pages/MemorySeries'));
-const BiologicalSoulSeries = lazy(() => import('./pages/BiologicalSoulSeries'));
-const NeverFinishedSeries = lazy(() => import('./pages/NeverFinishedSeries'));
-const RelationshipSeries = lazy(() => import('./pages/RelationshipSeries'));
-const LustDecodedSeries = lazy(() => import('./pages/LustDecodedSeries'));
-const PromptEngineeringSeries = lazy(() => import('./pages/PromptEngineeringSeries'));
+const CommunityHome = lazy(() => import('./pages/CommunityHome'));
+const CommunityPage = lazy(() => import('./pages/CommunityPage'));
+const SessionsManager = lazy(() => import('./pages/SessionsManager'));
+const JournalManager = lazy(() => import('./pages/JournalManager'));
+const Settings = lazy(() => import('./pages/Settings'));
+const SessionRoom = lazy(() => import('./pages/SessionRoom'));
+const SessionDetail = lazy(() => import('./pages/SessionDetail'));
+const MyJourney = lazy(() => import('./pages/MyJourney'));
 const Chat = lazy(() => import('./pages/Chat'));
 const Circles = lazy(() => import('./pages/Circles'));
 const Experts = lazy(() => import('./pages/Experts'));
+const GuideProfile = lazy(() => import('./pages/GuideProfile'));
 const JoinAsExpert = lazy(() => import('./pages/JoinAsExpert'));
 const GuideDashboard = lazy(() => import('./pages/GuideDashboard'));
 const Notifications = lazy(() => import('./pages/Notifications'));
@@ -44,7 +42,11 @@ const About = lazy(() => import('./pages/About'));
 const Privacy = lazy(() => import('./pages/Privacy'));
 const Terms = lazy(() => import('./pages/Terms'));
 const Onboarding = lazy(() => import('./pages/Onboarding'));
+const BookingFlow = lazy(() => import('./pages/BookingFlow'));
+const BookingSuccess = lazy(() => import('./pages/BookingSuccess'));
 const NotFound = lazy(() => import('./pages/NotFound'));
+const DesignSystemShowcase = lazy(() => import('./pages/DesignSystemShowcase'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 
 const ProfileRedirect = () => {
   const { currentUser, loading } = useAuth();
@@ -53,31 +55,17 @@ const ProfileRedirect = () => {
   return <Navigate to={`/profile/${currentUser.uid}`} replace />;
 };
 
-// Immersive series pages have their own sticky header — hide global Navbar + Footer
-const IMMERSIVE_SERIES_ROUTES = [
-  '/series/hyperfocus',
-  '/series/never-finished',
-  '/series/prompt-engineering',
-  '/series/ego-id',
-  '/series/biological-soul',
-  '/series/relationship',
-  '/series/lust-decoded',
-  '/series/memory',
-];
-const isImmersiveSeries = (pathname) => IMMERSIVE_SERIES_ROUTES.includes(pathname);
-
 // Inner component so we can use useLocation (must be inside <Router>)
 function AppShell({ children, activeJobs, isNativeApp }) {
   const location = useLocation();
-  const immersive = isImmersiveSeries(location.pathname);
 
   return (
     <div className={`app-container ${isNativeApp ? 'native-app' : 'web-app'}`}>
-      {!immersive && <Navbar />}
+      <Navbar />
       <main style={{ flex: 1 }}>
         {children}
       </main>
-      {!immersive && <Footer />}
+      <Footer />
       <UploadProgressBar jobs={activeJobs} />
     </div>
   );
@@ -124,7 +112,6 @@ function App() {
     // Pre-fetch critical chunks after the initial UI is painted
     const prefetchRoutes = () => {
       import('./pages/Home');
-      import('./pages/Explore');
       import('./pages/Login');
       import('./pages/Chat');
     };
@@ -148,27 +135,30 @@ function App() {
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login/phone" element={<PhoneLogin />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/register" element={<Signup />} />
             <Route path="/phone-login" element={<PhoneLogin />} />
-            <Route path="/explore" element={<Explore />} />
             <Route path="/profile" element={<ProfileRedirect />} />
             <Route path="/profile/:userId" element={<Profile />} />
             <Route path="/post/:postId" element={<PostDetail />} />
-            <Route path="/series" element={<SeriesGallery />} />
-            <Route path="/series/hyperfocus" element={<HyperfocusSeries />} />
-            <Route path="/series/meditation" element={<MeditationSeries />} />
-            <Route path="/series/ego-id" element={<EgoIdSeries />} />
-            <Route path="/series/memory" element={<MemorySeries />} />
-            <Route path="/series/biological-soul" element={<BiologicalSoulSeries />} />
-            <Route path="/series/never-finished" element={<NeverFinishedSeries />} />
-            <Route path="/series/relationship" element={<RelationshipSeries />} />
-            <Route path="/series/lust-decoded" element={<LustDecodedSeries />} />
-            <Route path="/series/prompt-engineering" element={<PromptEngineeringSeries />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/sessions" element={<SessionsManager />} />
+            <Route path="/session/:sessionId" element={<SessionDetail />} />
+            <Route path="/session-room/:sessionId" element={<SessionRoom />} />
+            <Route path="/journey" element={<MyJourney />} />
+            <Route path="/journal" element={<JournalManager />} />
+            <Route path="/community" element={<CommunityHome />} />
+            <Route path="/community/:communityId" element={<CommunityPage />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/circles" element={<Circles />} />
             <Route path="/experts" element={<Experts />} />
             <Route path="/experts/join" element={<JoinAsExpert />} />
+            <Route path="/experts/:guideId" element={<GuideProfile />} />
+            <Route path="/book/:psychologistId" element={<BookingFlow />} />
+            <Route path="/booking-success/:psychologistId" element={<BookingSuccess />} />
             <Route path="/guide-dashboard" element={<GuideDashboard />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/pricing" element={<Pricing />} />
@@ -179,6 +169,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/design-system" element={<DesignSystemShowcase />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

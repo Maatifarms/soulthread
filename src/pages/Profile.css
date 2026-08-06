@@ -90,7 +90,23 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.stat-item.clickable {
   cursor: pointer;
+}
+
+.stat-item.clickable:hover {
+  background: var(--color-surface-hover, rgba(255, 255, 255, 0.08));
+  transform: translateY(-1px);
+}
+
+.stat-item.clickable:active {
+  transform: scale(0.96);
 }
 
 .stat-value {

@@ -104,7 +104,7 @@ export const clearFCMToken = async (userId) => {
     try {
         const { deleteField } = await import('firebase/firestore');
         await updateDoc(doc(db, 'users', userId), { fcmToken: deleteField() });
-        console.log('[FCM] Token cleared on logout');
+        // Token cleared on logout
     } catch (e) {
         console.warn('[FCM] Could not clear token:', e.message);
     }

@@ -15,61 +15,6 @@ const DesktopSidebar = () => {
 
     return (
         <aside className="desktop-sidebar">
-            {/* Series CTA */}
-            <div style={{
-                background: 'linear-gradient(135deg, #1a2e2c 0%, #2a4f4a 100%)',
-                borderRadius: '20px',
-                padding: '22px',
-                marginBottom: '16px',
-                border: '1px solid rgba(61,139,127,0.3)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
-            }}>
-                <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    background: 'rgba(61,139,127,0.3)', color: '#7ecdc4',
-                    padding: '3px 10px', borderRadius: '999px',
-                    fontSize: '10px', fontWeight: '800', letterSpacing: '0.1em',
-                    textTransform: 'uppercase', marginBottom: '12px',
-                }}>🎓 Learning Series</div>
-                <h3 style={{ color: 'white', fontWeight: '800', fontSize: '17px', lineHeight: '1.3', marginBottom: '10px', margin: '0 0 10px 0' }}>
-                    Upgrade Your Mind
-                </h3>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', lineHeight: '1.6', margin: '0 0 18px 0' }}>
-                    Structured 30-day paths for focus mastery, mental toughness, and emotional resilience.
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '18px' }}>
-                    {[
-                        { name: 'Hyperfocus Architect', path: '/hyperfocus-series', tag: 'Neuroscience' },
-                        { name: 'Never Finished', path: '/never-finished-series', tag: 'Mental Toughness' },
-                    ].map(s => (
-                        <Link key={s.path} to={s.path} style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                            background: 'rgba(255,255,255,0.06)', borderRadius: '12px', padding: '10px 14px',
-                            border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', transition: 'all 0.2s',
-                        }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
-                        >
-                            <div>
-                                <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{s.name}</div>
-                                <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '11px', marginTop: '2px' }}>{s.tag}</div>
-                            </div>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 18l6-6-6-6" />
-                            </svg>
-                        </Link>
-                    ))}
-                </div>
-                <Link to="/series" style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                    background: 'var(--color-primary)', color: 'white',
-                    padding: '10px', borderRadius: '12px', fontWeight: '700', fontSize: '13px',
-                    textDecoration: 'none', transition: 'all 0.2s',
-                }}
-                    onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                >Browse All Series →</Link>
-            </div>
 
             {/* Crisis Help */}
             <div style={{

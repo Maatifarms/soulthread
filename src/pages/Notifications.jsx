@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    collection, query, where, orderBy, onSnapshot, 
-    doc, updateDoc, writeBatch, deleteDoc, 
-    serverTimestamp, limit
-} from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { BellOff } from 'lucide-react';
-import { db } from '../services/firebase';
+import { NotificationRepository } from '../repositories/NotificationRepository';
 import { useAuth } from '../contexts/AuthContext';
 import Loading from '../components/common/Loading';
 
@@ -20,22 +15,12 @@ const Notifications = () => {
     useEffect(() => {
         if (!currentUser) return;
 
-        const q = query(
-            collection(db, 'notifications'),
-            where('recipientId', '==', currentUser.uid),
-            orderBy('createdAt', 'desc'),
-            limit(50)
-        );
-
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const notifs = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setNotifications(notifs);
-            setLoading(false);
-        }, (error) => {
-            console.error("Error fetching notifications:", error);
+        const unsubscribe = NotificationRepository.listenForUser(currentUser.uid, (data, error) => {
+            if (error) {
+                setLoading(false);
+                return;
+            }
+            setNotifications(data);
             setLoading(false);
         });
 
@@ -45,7 +30,7 @@ const Notifications = () => {
     const handleNotifClick = async (notif) => {
         try {
             if (!notif.read) {
-                await updateDoc(doc(db, 'notifications', notif.id), { read: true });
+                await NotificationRepository.markAsRead(notif.id);
             }
             
             // Navigation logic based on type
@@ -77,34 +62,17 @@ const Notifications = () => {
             console.error("Error handling notification click:", error);
         }
     };
-
     const markAllAsRead = async () => {
-        const unread = notifications.filter(n => !n.read);
-        if (unread.length === 0) return;
-
-        const batch = writeBatch(db);
-        unread.forEach(n => {
-            batch.update(doc(db, 'notifications', n.id), { read: true });
-        });
-        
         try {
-            await batch.commit();
+            await NotificationRepository.markAllAsRead(notifications);
         } catch (error) {
             console.error("Error marking all as read:", error);
         }
     };
 
     const clearAllRead = async () => {
-        const readNotifs = notifications.filter(n => n.read);
-        if (readNotifs.length === 0) return;
-
-        const batch = writeBatch(db);
-        readNotifs.forEach(n => {
-            batch.delete(doc(db, 'notifications', n.id));
-        });
-
         try {
-            await batch.commit();
+            await NotificationRepository.clearAllRead(notifications);
         } catch (error) {
             console.error("Error clearing notifications:", error);
         }

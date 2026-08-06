@@ -33,7 +33,7 @@ class GlobalCrisisInterventionNetwork {
         await this.notifyCrisisVolunteers(contextPayload);
 
         // 3. (Production) Call external Partner Webhooks (e.g. 988 API if partnered)
-        console.log(`[CrisisNetwork] Dispatching P0 alarm to internal Listener Dashboard.`);
+        // Dispatching P0 alarm
 
         return uiPayload;
     }
@@ -42,7 +42,7 @@ class GlobalCrisisInterventionNetwork {
         // Mocking WebSockets / PubSub alert
         return new Promise(resolve => {
             setTimeout(() => {
-                console.log(`[CrisisNetwork] Alert broadcasted to 12 available Crisis Volunteers.`);
+                // Alert broadcasted
                 resolve(true);
             }, 500);
         });

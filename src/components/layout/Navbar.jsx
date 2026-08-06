@@ -22,6 +22,9 @@ import {
     Layers,
     MessageSquare,
     Home,
+    Users,
+    Calendar,
+    BookHeart,
     User,
     Sparkles,
     Search,
@@ -32,9 +35,12 @@ import {
     LogOut,
     PhoneCall,
     Stethoscope,
-    LifeBuoy
+    LifeBuoy,
+    ShieldAlert
 } from 'lucide-react';
 import './Navbar.css';
+
+import CrisisModal from './CrisisModal';
 
 const Navbar = () => {
     const { currentUser, logout } = useAuth();
@@ -48,6 +54,7 @@ const Navbar = () => {
     const [unreadMessageCount, setUnreadMessageCount] = React.useState(0);
     const [showNotifs, setShowNotifs] = React.useState(false);
     const [showBreathe, setShowBreathe] = React.useState(false);
+    const [showCrisisModal, setShowCrisisModal] = React.useState(false);
     const [breathePhase, setBreathePhase] = React.useState('Ready');
     const [showUserMenu, setShowUserMenu] = React.useState(false);
     const notifRef = React.useRef(null);
@@ -126,7 +133,7 @@ const Navbar = () => {
         const handleKeyDown = (e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
                 e.preventDefault();
-                if (location.pathname !== '/explore') navigate('/explore');
+                if (location.pathname !== '/community') navigate('/community');
                 searchRef.current?.focus();
             }
         };
@@ -254,7 +261,7 @@ const Navbar = () => {
     };
 
     const isActive = (path) => {
-        if (path === '/') return location.pathname === '/' || location.pathname === '/feed';
+        if (path === '/') return location.pathname === '/';
         return location.pathname.startsWith(path);
     };
 
@@ -309,21 +316,30 @@ const Navbar = () => {
                         {/* Desktop Navigation Links */}
                         <div className="nav-links-desktop">
                             <NavLink to="/" label="Home" />
-                            <NavLink to="/explore" label="Explore" />
-                            <NavLink to="/messages" label="Messages" />
+                            <NavLink to="/community" label="Community" />
+                            <NavLink to="/experts" label="Book" />
+                            {currentUser && (
+                                <>
+                                    <NavLink to="/sessions" label="Sessions" />
+                                    <NavLink to="/journal" label="Journal" />
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <div className="nav-right-group">
-                        <Link to="/crisis" className="nav-get-support-btn hide-mobile">
-                            Get Support
-                        </Link>
+                        <button 
+                            className="bg-red-500 hover:bg-red-600 text-white font-bold px-4 py-2 rounded-full text-sm flex items-center gap-2 transition-colors shadow-sm"
+                            onClick={() => setShowCrisisModal(true)}
+                        >
+                            <ShieldAlert className="w-4 h-4" /> I need help
+                        </button>
 
                         <div className="nav-actions">
                             {/* Desktop Search Icon Button */}
                             <button 
                                 className="nav-btn-icon hide-mobile" 
-                                onClick={() => { if (location.pathname !== '/explore') navigate('/explore'); }}
+                                onClick={() => { if (location.pathname !== '/community') navigate('/community'); }}
                                 title="Search"
                             >
                                 <Search size={20} color="rgba(255,255,255,0.6)" />
@@ -457,6 +473,11 @@ const Navbar = () => {
                 </div>
             </nav>
 
+            {/* ── CRISIS MODAL ── */}
+            {showCrisisModal && (
+                <CrisisModal onClose={() => setShowCrisisModal(false)} />
+            )}
+
             {/* ── BREATHE OVERLAY ── */}
             {showBreathe && (
                 <div style={{
@@ -492,9 +513,9 @@ const Navbar = () => {
                 {currentUser ? (
                     <>
                         <TabItem to="/" label="Home" icon={Home} />
-                        <TabItem to="/explore" label="Explore" icon={Compass} />
-                        <TabItem to="/experts" label="Get Support" icon={LifeBuoy} />
-                        <TabItem to="/messages" label="Messages" icon={MessageSquare} />
+                        <TabItem to="/community" label="Community" icon={Users} />
+                        <TabItem to="/experts" label="Book" icon={LifeBuoy} />
+                        <TabItem to="/sessions" label="Sessions" icon={Calendar} />
                         <TabItem to={`/profile/${currentUser.uid}`} label="Me" highlightPath="/profile" icon={User} />
                     </>
                 ) : (

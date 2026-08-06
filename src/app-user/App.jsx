@@ -16,27 +16,18 @@ const Home = lazy(() => import('../pages/Home'));
 const Auth = lazy(() => import('../pages/Auth'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Chat = lazy(() => import('../pages/Chat'));
-const SupportGroups = lazy(() => import('../pages/SupportGroups'));
-
+const Community = lazy(() => import('../pages/Community'));
 const Crisis = lazy(() => import('../pages/Crisis'));
 const PostDetail = lazy(() => import('../pages/PostDetail'));
 const Onboarding = lazy(() => import('../pages/Onboarding'));
-const Explore = lazy(() => import('../pages/Explore'));
 const Experts = lazy(() => import('../pages/Experts'));
+const GuideProfile = lazy(() => import('../pages/GuideProfile'));
 const JoinAsExpert = lazy(() => import('../pages/JoinAsExpert'));
-const PhoneLogin = lazy(() => import('../pages/PhoneLogin'));
+const BookingFlow = lazy(() => import('../pages/BookingFlow'));
+const BookingSuccess = lazy(() => import('../pages/BookingSuccess'));
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 const GuideDashboard = lazy(() => import('../pages/GuideDashboard'));
-const HyperfocusSeries = lazy(() => import('../pages/HyperfocusSeries'));
-const SeriesGallery = lazy(() => import('../pages/SeriesGallery'));
-const NeverFinishedSeries = lazy(() => import('../pages/NeverFinishedSeries'));
-const PromptEngineeringSeries = lazy(() => import('../pages/PromptEngineeringSeries'));
-const EgoIdSeries = lazy(() => import('../pages/EgoIdSeries'));
-const MeditationSeries = lazy(() => import('../pages/MeditationSeries'));
-const BiologicalSoulSeries = lazy(() => import('../pages/BiologicalSoulSeries'));
-const RelationshipSeries = lazy(() => import('../pages/RelationshipSeries'));
-const LustDecodedSeries = lazy(() => import('../pages/LustDecodedSeries'));
-const MemorySeries = lazy(() => import('../pages/MemorySeries'));
+
 const Pricing = lazy(() => import('../pages/Pricing'));
 const About = lazy(() => import('../pages/About'));
 const Privacy = lazy(() => import('../pages/Privacy'));
@@ -63,29 +54,21 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// Immersive series pages have their own sticky header — hide global Navbar + Footer
-const IMMERSIVE_SERIES_ROUTES = [
-  '/hyperfocus-series',
-  '/never-finished-series',
-  '/prompt-engineering-series',
-  '/ego-id-series',
-  '/biological-soul-series',
-  '/relationship-series',
-  '/lust-decoded',
-  '/memory-series',
-];
-const isImmersiveSeries = (pathname) => IMMERSIVE_SERIES_ROUTES.includes(pathname);
-
 // Inner component so we can use useLocation (must be inside <Router>)
 function AppShell({ children, activeJobs, isNativeApp }) {
   const location = useLocation();
-  const immersive = isImmersiveSeries(location.pathname);
-  const hideNavAndFooter = immersive || location.pathname === '/onboarding';
+  const { currentUser } = useAuth();
+  
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup' || location.pathname === '/forgot-password';
+  const isGuestLanding = location.pathname === '/' && !currentUser;
+  
+  const hideNavAndFooter = location.pathname === '/onboarding' || isAuthPage || isGuestLanding;
+
 
   return (
     <div className={`app-container ${isNativeApp ? 'native-app' : 'web-app'}`}>
       {!hideNavAndFooter && <Navbar />}
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {children}
       </main>
       {!hideNavAndFooter && <Footer />}
@@ -127,9 +110,8 @@ function App() {
 
     // Pre-fetch critical chunks after the initial UI is painted
     const prefetchRoutes = () => {
-      // Home, Explore, and Login are the most likely next steps
       import('../pages/Home');
-      import('../pages/Explore');
+      import('../pages/Community');
       import('../pages/Login');
       import('../pages/Chat');
     };
@@ -155,45 +137,30 @@ function App() {
           <Suspense fallback={<Loading />}>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/feed" element={<Home />} />
-              <Route path="/post" element={<Home />} />
-              <Route path="/explore" element={<Explore />} />
+              <Route path="/community" element={<Community />} />
               <Route path="/experts" element={<Experts />} />
+              <Route path="/experts/:guideId" element={<GuideProfile />} />
               <Route path="/join-as-expert" element={<JoinAsExpert />} />
+              <Route path="/book/:psychologistId" element={<BookingFlow />} />
+              <Route path="/booking-success/:psychologistId" element={<BookingSuccess />} />
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
-              <Route path="/login/phone" element={<PhoneLogin />} />
+              <Route path="/register" element={<Auth />} />
               <Route path="/profile" element={<ProfileRedirect />} />
               <Route path="/profile/:userId" element={<Profile />} />
               <Route path="/messages" element={<Chat />} />
-              <Route path="/groups" element={<SupportGroups />} />
-              <Route path="/crisis" element={<Navigate to="/experts" replace />} />
-              <Route path="/care" element={<Navigate to="/experts" replace />} />
-              
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/onboarding" element={<Onboarding />} />
               
               <Route path="/post/:postId" element={<PostDetail />} />
-              <Route path="/hyperfocus-series" element={<HyperfocusSeries />} />
-              <Route path="/series" element={<SeriesGallery />} />
-              <Route path="/series/:id" element={<Navigate to="/series" replace />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/payment-status" element={<PaymentStatus />} />
               <Route path="/subscribe" element={<Subscribe />} />
               <Route path="/about" element={<About />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
-              <Route path="/never-finished-series" element={<NeverFinishedSeries />} />
-              <Route path="/prompt-engineering-series" element={<PromptEngineeringSeries />} />
-              <Route path="/ego-id-series" element={<EgoIdSeries />} />
-              <Route path="/meditation-series" element={<MeditationSeries />} />
-              <Route path="/biological-soul-series" element={<BiologicalSoulSeries />} />
-              <Route path="/relationship-series" element={<RelationshipSeries />} />
-              <Route path="/lust-decoded" element={<LustDecodedSeries />} />
-              <Route path="/memory-series" element={<MemorySeries />} />
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/guide-dashboard" element={<GuideDashboard />} />
-              <Route path="/status" element={<NotFound />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

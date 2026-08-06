@@ -19,7 +19,7 @@ class EnhancedSafetyCore {
      * Deep-scans Text payloads generating a risk-matrix asynchronously.
      */
     async scanContent(authorId, textContent, contextThread = []) {
-        console.log(`[SafetyCore] Scanning payload from ${authorId}...`);
+        // Scanning payload
 
         // Mock inference latency
         const inferenceTime = new Promise(resolve => setTimeout(resolve, 300));

@@ -91,7 +91,7 @@ class AnalyticsService {
                 events: batch,
                 uploadedAt: serverTimestamp()
             });
-            console.log(`[Analytics] Flushed ${batch.length} events.`);
+            // Flushed events
         } catch (error) {
             console.error('[Analytics] Flush failed, restoring queue.', error);
             // Restore failed events to queue

@@ -211,7 +211,7 @@ export const getCachedPosts = async () => {
         const syncTime = lastSync?.value;
 
         if (syncTime && Date.now() - syncTime > TTL_MS) {
-            console.log('[FeedCache] Cache expired — serving stale until refresh');
+            
             // Don't clear here — still serve stale data, let Firestore update it
         }
 

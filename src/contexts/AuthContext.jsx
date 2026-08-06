@@ -97,7 +97,7 @@ export function AuthProvider({ children }) {
 
         try {
             if (isNative) {
-                console.log('📱 [Auth] Triggering native phone OTP flow...');
+                // Triggering native phone OTP flow
                 const { FirebaseAuthentication } = await import('@capacitor-firebase/authentication');
 
                 return new Promise((resolve, reject) => {
@@ -115,7 +115,7 @@ export function AuthProvider({ children }) {
                     };
 
                     listenerCodeSentPromise = FirebaseAuthentication.addListener('phoneCodeSent', (event) => {
-                        console.log('✅ Native phone code sent:', event.verificationId);
+                        // Native phone code sent
                         setConfirmationResult({ isNative: true, verificationId: event.verificationId });
                         if (!resolved) {
                             resolved = true;
