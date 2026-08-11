@@ -4,6 +4,7 @@ import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import FeedList from '../components/feed/FeedList';
 import CreatePostModal from '../components/community/CreatePostModal';
+import CommunityTabs from '../components/community/CommunityTabs';
 import { Capacitor } from '@capacitor/core';
 import { Sparkles, Wind, Heart, PenLine } from 'lucide-react';
 
@@ -28,7 +29,9 @@ export default function Community() {
             <SEO title="Community Sanctuary | SoulThread" />
             <div className={`min-h-screen bg-[#fafafa] pb-24 pt-6 ${isNativeApp ? 'is-native' : ''}`}>
                 <div className="max-w-2xl mx-auto px-4 space-y-6">
-                    
+
+                    <CommunityTabs active="feed" />
+
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Sanctuary</h1>

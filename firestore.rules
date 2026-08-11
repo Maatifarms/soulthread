@@ -24,9 +24,15 @@ service cloud.firestore {
 
     // Users Collection (Patients)
     match /users/{userId} {
-      allow read: if isAuth(); // Basic profile readable by community/guides
+      // Profile docs carry email/phone/age/gender — owner or admin only, not the whole community.
+      allow read: if isPatient(userId) || isAdmin();
       allow create: if isAuth() && request.auth.uid == userId;
-      allow update: if isPatient(userId) || isAdmin();
+      // Owners can update their own profile fields, but role/isAdmin are admin-only —
+      // otherwise a user could self-grant admin by writing their own doc.
+      allow update: if isAdmin() || (
+        isPatient(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'isAdmin'])
+      );
       allow delete: if isAdmin();
     }
 
@@ -40,9 +46,12 @@ service cloud.firestore {
     // Bookings Collection (CRITICAL)
     match /bookings/{bookingId} {
       // Patients can see their bookings. Guides can see their assigned bookings. Admins see all.
-      allow read: if isAuth() && (
-        resource.data.userId == request.auth.uid || 
-        resource.data.guideId == request.auth.uid || 
+      // resource == null guard: looking up a bookingId that doesn't exist must fail cleanly
+      // (client sees exists()==false) rather than crash rule evaluation on a null resource,
+      // which Firestore otherwise reports as permission-denied instead of "not found".
+      allow read: if isAuth() && resource != null && (
+        resource.data.userId == request.auth.uid ||
+        resource.data.guideId == request.auth.uid ||
         isAdmin()
       );
       // V2 SECURITY: Client-side booking creation is STRICTLY PROHIBITED.
@@ -83,6 +92,108 @@ service cloud.firestore {
       allow read: if isAuth() && resource.data.userId == request.auth.uid;
       allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAdmin();
+    }
+
+    // Mood Logs (personal wellness data — same privacy bar as journals: owner only)
+    match /mood_logs/{logId} {
+      allow read, update, delete: if isAuth() && resource.data.userId == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+    }
+
+    // Healing Circles (support-group micro-communities)
+    match /circles/{circleId} {
+      // Read is open to any authenticated user, not just members: Circles.jsx's
+      // "Recommended for You" discovery view intentionally queries circles the
+      // current user hasn't joined yet, same reasoning as the public guides directory.
+      allow read: if isAuth();
+      // No client UI creates circles yet (they're seeded/admin-managed) — client-side
+      // creation stays closed until that flow exists.
+      allow create: if isAdmin();
+      // The only client-side write today is the join flow: arrayUnion'ing yourself into
+      // memberIds and bumping memberCount. Scope update to exactly that shape so a user
+      // can add themselves but can't remove other members, rename the circle, or add
+      // someone else.
+      allow update: if isAdmin() || (
+        isAuth() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberIds', 'memberCount']) &&
+        request.resource.data.memberIds.hasAll(resource.data.memberIds) &&
+        request.resource.data.memberIds.hasAny([request.auth.uid])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Circle membership records (id pattern: member_{circleId}_{uid})
+    match /circle_members/{memberDocId} {
+      allow read: if isAuth() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      // No "leave circle" flow exists yet — don't build permissions for a feature
+      // that isn't there. Admin can still correct/remove records if needed.
+      allow update, delete: if isAdmin();
+    }
+
+    // Direct messages between two participants (guide<->patient support chat)
+    match /conversations/{conversationId} {
+      allow read, update, delete: if isAuth() && resource.data.participants.hasAny([request.auth.uid]);
+      allow create: if isAuth() && request.resource.data.participants.hasAny([request.auth.uid]);
+
+      match /messages/{messageId} {
+        allow read, create, update, delete: if isAuth() &&
+          get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants.hasAny([request.auth.uid]);
+      }
+    }
+
+    // Payment records (written server-side only, by functions/finance/PaymentService.js —
+    // note: not currently invoked by the live booking flow, which is test-mode/no real
+    // payment yet, so this rule has nothing to actually serve until that ships).
+    match /payments/{paymentId} {
+      allow read: if isAuth() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.guideId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create, update: if false;
+      allow delete: if isAdmin();
+    }
+
+    // Clinical resource library (GuideResourceLibrary.jsx) — professional-facing
+    // content, not patient-facing, so scoped to guides specifically rather than any
+    // authenticated user. No content-creation flow exists yet (admin-curated,
+    // matching the guides directory's admin-write pattern) — genuinely empty
+    // today, not just rules-blocked; see the Batch 4 report for details.
+    match /resources/{resourceId} {
+      allow read: if isGuide() || isAdmin();
+      allow write: if isAdmin();
+    }
+    match /protocols/{protocolId} {
+      allow read: if isGuide() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Real, live payment orders (functions/payments.js — createSubscriptionOrder/
+    // createPaymentOrder, called from Pricing.jsx/Subscribe.jsx via a real Cashfree
+    // integration; this is a genuinely separate, live payment path from the
+    // test-mode booking flow). No rule existed at all before, so AdminDashboard.jsx's
+    // "Manual Fulfillments" tab — the only way to resolve a real, stuck payment
+    // order — was permission-denied. Client never writes orders directly; only the
+    // Cloud Functions do, via the Admin SDK.
+    match /orders/{orderId} {
+      allow read: if isAuth() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // Platform event bus (src/services/EventPublisher.js) — publishEvent() is
+    // called by authenticated guides today (GuideSessionWorkspace.jsx on session
+    // completion / homework assignment); read by ExecutiveDashboard.jsx's admin
+    // Recent Platform Events feed. No rule existed at all before, so every
+    // publishEvent() call has been silently failing (the publisher swallows
+    // errors on purpose, "to prevent blocking critical UI paths") since this
+    // collection was introduced. Gated on role rather than a userId-equality
+    // check because the field named `userId` in the payload is actually a
+    // bookingId at both real call sites today — a pre-existing mislabeling in
+    // GuideSessionWorkspace.jsx, not something this rule should assume.
+    match /platform_events/{eventId} {
+      allow create: if isGuide() || isAdmin();
+      allow read, update, delete: if isAdmin();
     }
 
     // Closed by default

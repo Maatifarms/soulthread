@@ -6,6 +6,7 @@ import ScrollToTop from '../components/common/ScrollToTop';
 import { useAuth } from '../contexts/AuthContext';
 import { Capacitor } from '@capacitor/core';
 import { markAppLaunch } from '../services/performanceMonitor';
+import { Home, Calendar, Users, BookOpen, Settings } from 'lucide-react';
 
 const GuideLogin     = lazy(() => import('./pages/GuideLogin'));
 const GuideDashboard = lazy(() => import('../pages/GuideDashboard'));
@@ -34,11 +35,11 @@ function GuideNav() {
   if (pathname.startsWith('/admin')) return null;
 
   const tabs = [
-    { to: '/dashboard', label: 'Home',     icon: '🏠' },
-    { to: '/calendar',  label: 'Calendar', icon: '📅' },
-    { to: '/patients',  label: 'Patients', icon: '👥' },
-    { to: '/library',   label: 'Library',  icon: '📚' },
-    { to: '/more',      label: 'More',     icon: '⚙️' },
+    { to: '/dashboard', label: 'Home',     Icon: Home },
+    { to: '/calendar',  label: 'Calendar', Icon: Calendar },
+    { to: '/patients',  label: 'Patients', Icon: Users },
+    { to: '/library',   label: 'Library',  Icon: BookOpen },
+    { to: '/more',      label: 'More',     Icon: Settings },
   ];
 
   return (
@@ -56,7 +57,7 @@ function GuideNav() {
             color: active ? 'var(--color-primary)' : 'var(--color-text-muted)',
             fontSize: '10px', fontWeight: active ? '700' : '500'
           }}>
-            <span style={{ fontSize: '20px' }}>{tab.icon}</span>
+            <tab.Icon size={20} strokeWidth={active ? 2.5 : 2} />
             {tab.label}
           </a>
         );
@@ -69,6 +70,20 @@ function RequireAuth({ children }) {
   const { currentUser, loading } = useAuth();
   if (loading) return <Loading />;
   if (!currentUser) return <Navigate to="/login" replace />;
+  return children;
+}
+
+// Security fix: /admin/dashboard was previously gated by plain RequireAuth —
+// any authenticated guide could reach it, not just admins. Same check
+// app-user/App.jsx's AdminRoute already uses (role/isAdmin, mirrored onto the
+// user's Firestore doc by functions/system/adminBootstrap.js from the real
+// server-side custom claim — never client-settable).
+function AdminRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  if (loading) return <Loading />;
+  if (!currentUser || (currentUser.role !== 'admin' && !currentUser.isAdmin)) {
+    return <Navigate to="/dashboard" replace />;
+  }
   return children;
 }
 
@@ -101,7 +116,7 @@ export default function App() {
             <Route path="/profile/:userId" element={<RequireAuth><GuideProfile /></RequireAuth>} />
             
             {/* Admin Routes */}
-            <Route path="/admin/dashboard" element={<RequireAuth><ExecutiveDashboard /></RequireAuth>} />
+            <Route path="/admin/dashboard" element={<AdminRoute><ExecutiveDashboard /></AdminRoute>} />
 
             <Route path="/crisis"    element={<Crisis />} />
             <Route path="/privacy"   element={<Privacy />} />

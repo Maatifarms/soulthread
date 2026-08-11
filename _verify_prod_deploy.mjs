@@ -1,0 +1,11 @@
+import { chromium } from 'playwright';
+const OUT = 'C:/Users/ojhar/AppData/Local/Temp/claude/c--Users-ojhar-soulthread/943c1372-f0d8-475a-8fd3-4ec6f3d8f0ec/scratchpad';
+const browser = await chromium.launch();
+const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+const errors = [];
+page.on('pageerror', e => errors.push(e.message));
+await page.goto('https://soulthread.in/', { waitUntil: 'load', timeout: 20000 });
+await page.waitForTimeout(3000);
+await page.screenshot({ path: `${OUT}/prod-verify-latest.png`, fullPage: false });
+console.log('errors:', errors.filter(e => !e.includes('recaptcha')));
+await browser.close();

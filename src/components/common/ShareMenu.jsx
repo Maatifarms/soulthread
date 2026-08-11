@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MessageCircle, Twitter, Share2 } from 'lucide-react';
 
 const ShareMenu = ({ postId, authorId, onClose }) => {
     const [copied, setCopied] = useState(false);
@@ -40,9 +41,9 @@ const ShareMenu = ({ postId, authorId, onClose }) => {
                 </div>
 
                 <div style={styles.grid}>
-                    <button onClick={() => handleShareExternally('whatsapp')} style={styles.shareBtn}>💬 WhatsApp</button>
-                    <button onClick={() => handleShareExternally('twitter')} style={styles.shareBtn}>🐦 Twitter</button>
-                    <button onClick={() => handleShareExternally('native')} style={styles.shareBtn}>📤 More</button>
+                    <button onClick={() => handleShareExternally('whatsapp')} style={styles.shareBtn}><span style={styles.btnContent}><MessageCircle size={16} /> WhatsApp</span></button>
+                    <button onClick={() => handleShareExternally('twitter')} style={styles.shareBtn}><span style={styles.btnContent}><Twitter size={16} /> Twitter</span></button>
+                    <button onClick={() => handleShareExternally('native')} style={styles.shareBtn}><span style={styles.btnContent}><Share2 size={16} /> More</span></button>
                 </div>
 
                 <div style={styles.linkRow}>
@@ -63,6 +64,7 @@ const styles = {
     closeBtn: { background: 'none', border: 'none', fontSize: '28px', color: 'var(--color-text-muted)', cursor: 'pointer', lineHeight: 1 },
     grid: { display: 'flex', gap: '12px', overflowX: 'auto', paddingBottom: '16px' },
     shareBtn: { flexShrink: 0, padding: '12px 24px', borderRadius: '12px', border: '1px solid var(--color-border)', background: 'transparent', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', color: 'var(--color-text-primary)' },
+    btnContent: { display: 'inline-flex', alignItems: 'center', gap: '8px' },
     linkRow: { display: 'flex', gap: '8px', marginTop: '16px' },
     input: { flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--color-border)', background: 'var(--color-background)', color: 'var(--color-text-primary)' },
     copyBtn: { padding: '0 16px', borderRadius: '8px', border: '1px solid var(--color-border)', fontWeight: 'bold', cursor: 'pointer', color: 'var(--color-text-primary)' }

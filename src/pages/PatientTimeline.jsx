@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { doc, getDoc, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { functions } from '../services/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -34,77 +34,71 @@ export default function PatientTimeline() {
     const [error, setError] = useState(null);
     const [patient, setPatient] = useState(null);
     const [timelineEvents, setTimelineEvents] = useState([]);
+    const [nextSessionDate, setNextSessionDate] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
-        
+
         const loadData = async () => {
             try {
                 setLoading(true);
-                
-                // Fetch real patient profile from 'users' collection
-                const pSnap = await getDoc(doc(db, 'users', patientId));
-                if (!pSnap.exists()) {
+
+                // users/{patientId} and timeline/{eventId} are both otherwise owner-only
+                // (patient profile carries email/phone/age/gender; timeline is personal
+                // wellness/journey data) — this callable verifies a real booking links
+                // this guide to this patient before returning anything, same reasoning
+                // as getPatientProfileForGuide used elsewhere in the guide app.
+                const getWorkspace = httpsCallable(functions, 'getPatientWorkspaceForGuide');
+                const result = await getWorkspace({ patientId });
+                const data = result.data;
+
+                // The callable already throws permission-denied (caught below) if no
+                // booking links this guide to this patient at all — reaching here with
+                // no displayName means the patient's profile doc itself is gone.
+                if (!data.displayName) {
                     throw new Error("Patient not found.");
                 }
-                const pData = pSnap.data();
 
-                // Fetch completed bookings for clinical notes
-                const bQuery = query(
-                    collection(db, 'bookings'),
-                    where('patientId', '==', patientId),
-                    where('status', '==', 'completed'),
-                    orderBy('date', 'desc')
-                );
-                const bSnap = await getDocs(bQuery);
-                const bookingEvents = bSnap.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
+                // Real bookings only — scoped to bookings between this guide and this
+                // patient specifically (the callable never returns bookings with other
+                // guides). `date`/`type` never existed on real booking docs; real fields
+                // are scheduledStartTime and sessionType.
+                const now = new Date();
+                const bookingEvents = data.bookings
+                    .filter(b => b.status === 'completed')
+                    .map(b => ({
+                        id: b.id,
                         type: 'session',
-                        title: data.type === 'assessment' ? 'Clinical Assessment' : 'Therapy Session',
-                        date: data.date,
-                        notes: data.clinicalNotes || 'No notes available.',
-                        isBooking: true
-                    };
-                });
+                        title: b.sessionType === 'assessment' ? 'Clinical Assessment' : 'Therapy Session',
+                        date: b.scheduledStartTime,
+                        notes: b.clinicalNotes || 'No notes available.'
+                    }));
 
-                // Fetch patient timeline events (mood, journal, care tasks)
-                const tlQuery = query(
-                    collection(db, 'timeline'),
-                    where('userId', '==', patientId),
-                    orderBy('timestamp', 'desc')
-                );
-                const tlSnap = await getDocs(tlQuery);
-                const tlEvents = tlSnap.docs.map(doc => {
-                    const data = doc.data();
-                    return {
-                        id: doc.id,
-                        type: data.type || 'activity',
-                        title: data.title || 'Activity',
-                        date: data.timestamp?.toDate()?.toISOString() || new Date().toISOString(),
-                        notes: data.description || '',
-                        isBooking: false
-                    };
-                });
+                const upcoming = data.bookings
+                    .filter(b => b.scheduledStartTime && new Date(b.scheduledStartTime) > now && !b.status?.startsWith('cancelled_'))
+                    .sort((a, b) => new Date(a.scheduledStartTime) - new Date(b.scheduledStartTime));
 
-                // Merge and sort chronologically
+                const tlEvents = data.timelineEvents.map(t => ({ ...t }));
+
                 const fetchedEvents = [...bookingEvents, ...tlEvents].sort((a, b) => new Date(b.date) - new Date(a.date));
 
                 if (isMounted) {
                     setPatient({
-                        name: pData.displayName || 'Unknown Patient',
-                        preferredName: pData.displayName?.split(' ')[0] || 'Unknown',
-                        age: pData.age || 30,
-                        language: pData.language || 'English',
-                        goals: pData.goals || ['General Wellbeing'],
-                        riskIndicators: pData.riskIndicators || [],
-                        circles: pData.circles || [],
+                        name: data.displayName || 'Unknown Patient',
+                        preferredName: data.displayName?.split(' ')[0] || 'Unknown',
+                        age: data.age || 'Unknown',
+                        language: data.language || 'Unknown',
+                        goals: data.goals?.length > 0 ? data.goals : ['General Wellbeing'],
+                        // No real field backs risk indicators or circle membership on the
+                        // guide-visible profile subset — left empty rather than fabricated.
+                        riskIndicators: [],
+                        circles: [],
                         carePlanProgress: 0,
-                        lastMood: 'Stable',
-                        lastJournal: 'No recent entries'
+                        lastMood: 'No data yet',
+                        lastJournal: 'Journals are private to the patient'
                     });
                     setTimelineEvents(fetchedEvents);
+                    setNextSessionDate(upcoming[0]?.scheduledStartTime || null);
                 }
             } catch (err) {
                 console.error("Timeline error:", err);
@@ -173,10 +167,14 @@ export default function PatientTimeline() {
                     </div>
                     
                     <div className="flex items-center gap-4">
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-full" aria-label="Next session timing">
-                            <Clock className="w-4 h-4 text-orange-600" aria-hidden="true" />
-                            <span className="text-xs font-bold text-orange-800">Next Session: in 2 days</span>
-                        </div>
+                        {nextSessionDate && (
+                            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-orange-50 border border-orange-100 rounded-full" aria-label="Next session timing">
+                                <Clock className="w-4 h-4 text-orange-600" aria-hidden="true" />
+                                <span className="text-xs font-bold text-orange-800">
+                                    Next Session: {new Date(nextSessionDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                </span>
+                            </div>
+                        )}
                         <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hidden sm:flex" aria-label="Initiate Crisis Protocol">
                             <PhoneCall className="w-4 h-4 mr-2" aria-hidden="true" /> Crisis Protocol
                         </Button>

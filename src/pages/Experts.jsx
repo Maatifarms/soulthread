@@ -5,6 +5,7 @@ import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
 import { ShieldCheck, HeartHandshake, ArrowRight, AlertCircle } from 'lucide-react';
 import { Button } from '../components/common/Button';
+import AvatarImage from '../components/common/AvatarImage';
 
 // `specialization` is stored as a single comma-separated string (not an array).
 const parseSpecializations = (specialization) =>
@@ -62,7 +63,11 @@ export default function Experts() {
     }, [guides, specializationFilter, languageFilter]);
 
     return (
-        <DesktopLayoutWrapper>
+        // wide: this page renders a 3-column card grid, not a reading-width feed —
+        // without it, DesktopLayoutWrapper's default max-width (--max-width-feed,
+        // sized for post/community-feed content) squeezed the whole directory into
+        // a ~600px column, wrapping guide names and specializations badly.
+        <DesktopLayoutWrapper wide>
             <div className="bg-[#fafafa] min-h-screen pb-24 font-sans text-[#111827]">
                 <SEO
                     title="Browse Verified Therapists | SoulThread"
@@ -75,7 +80,7 @@ export default function Experts() {
                         <span className="text-emerald-600 font-semibold tracking-widest text-sm uppercase mb-4 block">
                             Clinical Directory
                         </span>
-                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight leading-tight" style={{ fontFamily: 'Georgia, serif' }}>
+                        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight leading-tight" style={{ fontFamily: 'var(--font-header)' }}>
                             Find the right guide for your journey.
                         </h1>
                         <p className="text-xl text-gray-500 max-w-2xl mx-auto font-light leading-relaxed">
@@ -121,7 +126,7 @@ export default function Experts() {
                     ) : error ? (
                         <div className="max-w-xl mx-auto mt-16 text-center bg-white p-12 rounded-3xl border border-red-100 shadow-sm">
                             <AlertCircle className="w-16 h-16 text-red-200 mx-auto mb-6" />
-                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Georgia, serif' }}>Something went wrong</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'var(--font-header)' }}>Something went wrong</h3>
                             <p className="text-gray-500 mb-8 text-lg">{error}</p>
                             <Button variant="primary" onClick={fetchGuides} className="px-8 py-3 rounded-full bg-[#111827] text-white hover:bg-black font-semibold">
                                 Try Again
@@ -130,7 +135,7 @@ export default function Experts() {
                     ) : guides.length === 0 ? (
                         <div className="max-w-xl mx-auto mt-16 text-center bg-white p-12 rounded-3xl border border-gray-100 shadow-sm">
                             <HeartHandshake className="w-16 h-16 text-emerald-100 mx-auto mb-6" />
-                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Georgia, serif' }}>We are here for you</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'var(--font-header)' }}>We are here for you</h3>
                             <p className="text-gray-500 mb-8 text-lg">
                                 Our Care Coordinators can help match you with the perfect Guide for your specific journey.
                             </p>
@@ -141,7 +146,7 @@ export default function Experts() {
                     ) : filteredGuides.length === 0 ? (
                         <div className="max-w-xl mx-auto mt-16 text-center bg-white p-12 rounded-3xl border border-gray-100 shadow-sm">
                             <HeartHandshake className="w-16 h-16 text-emerald-100 mx-auto mb-6" />
-                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Georgia, serif' }}>No matches for these filters</h3>
+                            <h3 className="text-2xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'var(--font-header)' }}>No matches for these filters</h3>
                             <p className="text-gray-500 mb-8 text-lg">Try a different specialization or language.</p>
                             <Button variant="secondary" onClick={() => { setSpecializationFilter('all'); setLanguageFilter('all'); }} className="px-8 py-3 rounded-full font-semibold">
                                 Clear Filters
@@ -157,20 +162,23 @@ export default function Experts() {
                                     <div key={guide.id} className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col h-full transform hover:-translate-y-1 group">
 
                                         <div className="flex items-start justify-between mb-6">
-                                            {guide.photoURL ? (
-                                                <img src={guide.photoURL} alt={guide.name} className="w-20 h-20 rounded-full object-cover shadow-sm border border-gray-100 ring-4 ring-white" loading="lazy" />
-                                            ) : (
-                                                <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-2xl font-bold text-emerald-600 border border-emerald-100 ring-4 ring-white shadow-sm">
-                                                    {firstName[0]}
-                                                </div>
-                                            )}
+                                            <AvatarImage
+                                                src={guide.photoURL}
+                                                alt={guide.name}
+                                                className="w-20 h-20 rounded-full object-cover shadow-sm border border-gray-100 ring-4 ring-white"
+                                                fallback={
+                                                    <div className="w-20 h-20 rounded-full bg-emerald-50 flex items-center justify-center text-2xl font-bold text-emerald-600 border border-emerald-100 ring-4 ring-white shadow-sm">
+                                                        {firstName[0]}
+                                                    </div>
+                                                }
+                                            />
                                             <span className="inline-flex items-center gap-1 text-xs font-bold bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-100">
                                                 <ShieldCheck className="w-4 h-4" /> Verified
                                             </span>
                                         </div>
 
                                         <div className="flex-1 flex flex-col">
-                                            <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'Georgia, serif' }}>{guide.name}</h2>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-1" style={{ fontFamily: 'var(--font-header)' }}>{guide.name}</h2>
                                             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6">
                                                 {guide.title || guide.degree || 'Clinical Psychologist'}
                                             </p>

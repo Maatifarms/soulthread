@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, getDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
@@ -14,6 +14,7 @@ const AdminDashboard = () => {
     const [manualFulfillments, setManualFulfillments] = useState([]);
     const [flaggedPosts, setFlaggedPosts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -21,11 +22,23 @@ const AdminDashboard = () => {
 
     const fetchData = async () => {
         setLoading(true);
+        setError(false);
         try {
             if (activeTab === 'approvals') {
                 const q = query(collection(db, 'guides'), where('verified', '==', false));
                 const snap = await getDocs(q);
-                setPendingGuides(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+                const guides = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                // guides is publicly readable, so contact email isn't stored there —
+                // pull it from the applicant's own users/{uid} doc for this admin-only view.
+                const withEmails = await Promise.all(guides.map(async (g) => {
+                    try {
+                        const userSnap = await getDoc(doc(db, 'users', g.id));
+                        return { ...g, email: userSnap.exists() ? userSnap.data().email : null };
+                    } catch {
+                        return { ...g, email: null };
+                    }
+                }));
+                setPendingGuides(withEmails);
             } else if (activeTab === 'fulfillments') {
                 const q = query(collection(db, 'orders'), where('needsManualFulfillment', '==', true));
                 const snap = await getDocs(q);
@@ -37,6 +50,7 @@ const AdminDashboard = () => {
             }
         } catch (err) {
             console.error('Error fetching admin data:', err);
+            setError(true);
         } finally {
             setLoading(false);
         }
@@ -127,7 +141,15 @@ const AdminDashboard = () => {
                 </div>
 
                 {loading ? (
-                    <div style={{ padding: '40px', textAlign: 'center' }}>Loading...</div>
+                    <div style={{ padding: '40px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Loading...</div>
+                ) : error ? (
+                    <div style={{ padding: '40px', textAlign: 'center', background: '#fef2f2', borderRadius: '12px', border: '1px solid #fecaca' }}>
+                        <AlertTriangle size={32} color="#dc2626" style={{ marginBottom: '12px' }} />
+                        <p style={{ color: '#991b1b', fontSize: '1.1rem', margin: '0 0 16px 0' }}>Couldn't load this data. Please try again.</p>
+                        <button onClick={fetchData} style={{ padding: '8px 20px', borderRadius: '8px', border: 'none', background: 'var(--color-primary)', color: 'white', fontWeight: 'bold', cursor: 'pointer' }}>
+                            Retry
+                        </button>
+                    </div>
                 ) : (
                     <div>
                         {/* Approvals Tab */}
@@ -144,9 +166,9 @@ const AdminDashboard = () => {
                                                 <div>
                                                     <h3 style={{ margin: '0 0 8px 0', color: 'var(--color-text-primary)' }}>{guide.name}</h3>
                                                     <div style={{ color: 'var(--color-text-secondary)', fontSize: '0.95rem', marginBottom: '12px' }}>
-                                                        <div><strong>Email:</strong> {guide.email}</div>
-                                                        <div><strong>Title:</strong> {guide.title}</div>
-                                                        <div><strong>Experience:</strong> {guide.experience} years</div>
+                                                        <div><strong>Email:</strong> {guide.email || 'Not provided'}</div>
+                                                        <div><strong>Title:</strong> {guide.title || guide.degree || 'Clinical Psychologist'}</div>
+                                                        <div><strong>Experience:</strong> {guide.experience || 'Not specified'}</div>
                                                     </div>
                                                 </div>
                                                 <div style={{ display: 'flex', gap: '12px' }}>

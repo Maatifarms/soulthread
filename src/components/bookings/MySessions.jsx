@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, getDoc } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
-import { Star } from 'lucide-react'
+import { Star, MessageCircle } from 'lucide-react'
 
 export default function MySessions() {
   const { currentUser } = useAuth()
@@ -113,7 +113,7 @@ export default function MySessions() {
                    background: 'transparent', color: 'var(--color-text-secondary)',
                    fontSize: '13px', fontWeight: '600', textDecoration: 'none'
                }}>
-               💬 Message
+               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><MessageCircle size={14} /> Message</span>
             </a>
           )}
 

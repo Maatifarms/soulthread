@@ -32,7 +32,7 @@
 }
 
 .crisis-card-header { display: flex; gap: 14px; margin-bottom: 20px; }
-.crisis-card-icon { font-size: 28px; flex-shrink: 0; }
+.crisis-card-icon { flex-shrink: 0; display: flex; align-items: center; color: #0ea5e9; }
 .crisis-card-title { font-size: 17px; font-weight: 700; color: var(--color-text-primary); margin: 0 0 6px; font-family: var(--font-body); }
 .crisis-card-subtitle { font-size: 14px; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
 
@@ -57,7 +57,7 @@
 .crisis-resource-hours { font-size: 11px; color: var(--color-text-muted); margin: 0; }
 
 .crisis-resource-call { text-align: right; flex-shrink: 0; }
-.crisis-call-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+.crisis-call-icon { display: flex; justify-content: flex-end; margin-bottom: 2px; color: #0ea5e9; }
 .crisis-call-number { font-size: 12px; font-weight: 700; color: #0ea5e9; }
 
 .crisis-card-actions { display: flex; flex-direction: column; gap: 8px; }

@@ -1,1 +1,5 @@
-@tailwind utilities;
+/* Intentionally empty. Utilities now come from src/index.css's
+   `@import "tailwindcss" source(none);` (see the comment there for why) — this
+   file previously duplicated `@tailwind utilities;` on its own, which is now
+   redundant. Left in place (and still imported from main.jsx) rather than
+   removing the import, to keep this change minimal and easy to revert. */

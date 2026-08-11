@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellOff } from 'lucide-react';
+import { BellOff, Calendar, CheckCircle2, XCircle, Send, AlarmClock, Link2, UserPlus, Handshake, MessageCircle, Heart, Bell } from 'lucide-react';
 import { NotificationRepository } from '../repositories/NotificationRepository';
 import { useAuth } from '../contexts/AuthContext';
 import Loading from '../components/common/Loading';
@@ -226,20 +226,20 @@ const Notifications = () => {
                                 }}>
                                     {(() => {
                                         const NOTIF_ICONS = {
-                                            booking_request:   '📅',
-                                            booking_confirmed: '✅',
-                                            booking_cancelled: '❌',
-                                            booking_sent:      '📤',
-                                            session_reminder:  '⏰',
-                                            meet_link_added:   '🔗',
-                                            new_follow:        '👤',
-                                            connection_request:'🤝',
-                                            message:           '💬',
-                                            like:              '❤️',
-                                            comment:           '💬',
+                                            booking_request:   Calendar,
+                                            booking_confirmed: CheckCircle2,
+                                            booking_cancelled: XCircle,
+                                            booking_sent:      Send,
+                                            session_reminder:  AlarmClock,
+                                            meet_link_added:   Link2,
+                                            new_follow:        UserPlus,
+                                            connection_request:Handshake,
+                                            message:           MessageCircle,
+                                            like:              Heart,
+                                            comment:           MessageCircle,
                                         };
-                                        const notifIcon = NOTIF_ICONS[n.type] || '🔔';
-                                        return <>{notifIcon} {n.title || n.message}</>;
+                                        const NotifIcon = NOTIF_ICONS[n.type] || Bell;
+                                        return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><NotifIcon size={16} style={{ flexShrink: 0 }} /> {n.title || n.message}</span>;
                                     })()}
                                 </div>
                                 {n.title && n.message && n.title !== n.message && (

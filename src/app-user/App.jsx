@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Navbar from '../components/layout/Navbar';
 import Loading from '../components/common/Loading';
 import { useAuth } from '../contexts/AuthContext';
+import { RequireAuth } from '../components/auth/RequireAuth';
 import { markAppLaunch, captureWebVitals } from '../services/performanceMonitor';
 import UploadProgressBar from '../components/upload/UploadProgressBar';
 import { getActiveJobs } from '../services/uploadPipeline';
@@ -17,9 +18,15 @@ const Auth = lazy(() => import('../pages/Auth'));
 const Profile = lazy(() => import('../pages/Profile'));
 const Chat = lazy(() => import('../pages/Chat'));
 const Community = lazy(() => import('../pages/Community'));
+const Circles = lazy(() => import('../pages/Circles'));
 const Crisis = lazy(() => import('../pages/Crisis'));
 const PostDetail = lazy(() => import('../pages/PostDetail'));
 const Onboarding = lazy(() => import('../pages/Onboarding'));
+const JournalManager = lazy(() => import('../pages/JournalManager'));
+const MyJourney = lazy(() => import('../pages/MyJourney'));
+const SessionsManager = lazy(() => import('../pages/SessionsManager'));
+const SessionDetail = lazy(() => import('../pages/SessionDetail'));
+const SessionRoom = lazy(() => import('../pages/SessionRoom'));
 const Experts = lazy(() => import('../pages/Experts'));
 const GuideProfile = lazy(() => import('../pages/GuideProfile'));
 const JoinAsExpert = lazy(() => import('../pages/JoinAsExpert'));
@@ -138,11 +145,13 @@ function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/circles" element={<RequireAuth><Circles /></RequireAuth>} />
+              <Route path="/circles/:circleId" element={<RequireAuth><Circles /></RequireAuth>} />
               <Route path="/experts" element={<Experts />} />
               <Route path="/experts/:guideId" element={<GuideProfile />} />
               <Route path="/join-as-expert" element={<JoinAsExpert />} />
-              <Route path="/book/:psychologistId" element={<BookingFlow />} />
-              <Route path="/booking-success/:psychologistId" element={<BookingSuccess />} />
+              <Route path="/book/:psychologistId" element={<RequireAuth><BookingFlow /></RequireAuth>} />
+              <Route path="/booking-success/:psychologistId" element={<RequireAuth><BookingSuccess /></RequireAuth>} />
               <Route path="/login" element={<Auth />} />
               <Route path="/signup" element={<Auth />} />
               <Route path="/register" element={<Auth />} />
@@ -151,7 +160,12 @@ function App() {
               <Route path="/messages" element={<Chat />} />
               <Route path="/notifications" element={<Notifications />} />
               <Route path="/onboarding" element={<Onboarding />} />
-              
+              <Route path="/journal" element={<RequireAuth><JournalManager /></RequireAuth>} />
+              <Route path="/journey" element={<RequireAuth><MyJourney /></RequireAuth>} />
+              <Route path="/sessions" element={<RequireAuth><SessionsManager /></RequireAuth>} />
+              <Route path="/session/:sessionId" element={<RequireAuth><SessionDetail /></RequireAuth>} />
+              <Route path="/session-room/:sessionId" element={<RequireAuth><SessionRoom /></RequireAuth>} />
+
               <Route path="/post/:postId" element={<PostDetail />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/payment-status" element={<PaymentStatus />} />

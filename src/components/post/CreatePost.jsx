@@ -35,8 +35,26 @@ import {
     User as UserIcon,
     Camera,
     Info,
-    CheckCircle
+    CheckCircle,
+    AlertTriangle,
+    Heart,
+    HeartHandshake,
+    IndianRupee,
+    Briefcase,
+    HeartPulse as PhysicalHealthIcon
 } from 'lucide-react';
+
+// Maps ISSUE_CATEGORIES' plain-string `icon` keys (config/issueCategories.js)
+// to real lucide icon components — kept here rather than in the config file
+// so that file stays framework-agnostic.
+const CATEGORY_ICONS = {
+    brain: Brain,
+    heart: Heart,
+    caretaker: HeartHandshake,
+    financial: IndianRupee,
+    career: Briefcase,
+    physical_health: PhysicalHealthIcon,
+};
 
 const isNativeApp = Capacitor.isNativePlatform();
 
@@ -429,7 +447,9 @@ const CreatePost = ({ circleId = null, onPostCreated = null }) => {
             className={`cp-anon-toggle ${isAnonymous ? 'active' : ''}`}
             onClick={() => setIsAnonymous(!isAnonymous)}
           >
-            {isAnonymous ? '🛡️ Anonymous' : '👤 Named'}
+            {isAnonymous
+              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Shield size={14} /> Anonymous</span>
+              : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><UserIcon size={14} /> Named</span>}
           </button>
         )}
       </div>
@@ -470,7 +490,9 @@ const CreatePost = ({ circleId = null, onPostCreated = null }) => {
         {/* Category chips — below textarea, minimal */}
         {currentUser && (
           <div className="cp-category-row no-scrollbar">
-            {CATEGORY_LIST.map(cat => (
+            {CATEGORY_LIST.map(cat => {
+              const CatIcon = CATEGORY_ICONS[cat.icon];
+              return (
               <button
                 key={cat.id}
                 type="button"
@@ -480,9 +502,10 @@ const CreatePost = ({ circleId = null, onPostCreated = null }) => {
                   : {}}
                 onClick={() => { setSelectedCategory(cat.id); setSelectedSubCategory(''); }}
               >
-                {cat.icon} {cat.label}
+                {CatIcon && <CatIcon size={14} style={{ marginRight: '4px', verticalAlign: '-2px' }} />}{cat.label}
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
 
@@ -565,7 +588,7 @@ const CreatePost = ({ circleId = null, onPostCreated = null }) => {
           </div>
         )}
 
-        {uploadError && <div className="cp-error">⚠ {uploadError}</div>}
+        {uploadError && <div className="cp-error" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><AlertTriangle size={14} /> {uploadError}</div>}
         {showSuccess && (
           <div className="cp-success">
             <CheckCircle size={16} /> Shared! It will appear shortly.

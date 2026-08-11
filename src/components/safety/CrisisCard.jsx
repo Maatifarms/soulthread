@@ -1,5 +1,6 @@
 import React from 'react';
 import { CRISIS_RESOURCES } from '../../services/safetyEngine';
+import { Heart, Phone } from 'lucide-react';
 import './CrisisCard.css';
 
 export default function CrisisCard({ language = 'en', onClose, onContinue }) {
@@ -9,7 +10,7 @@ export default function CrisisCard({ language = 'en', onClose, onContinue }) {
 
         {/* Header */}
         <div className="crisis-card-header">
-          <span className="crisis-card-icon">💙</span>
+          <span className="crisis-card-icon"><Heart size={26} /></span>
           <div>
             <h3 className="crisis-card-title">
               {language === 'hi'
@@ -42,7 +43,7 @@ export default function CrisisCard({ language = 'en', onClose, onContinue }) {
                 </p>
               </div>
               <div className="crisis-resource-call">
-                <span className="crisis-call-icon">📞</span>
+                <span className="crisis-call-icon"><Phone size={16} /></span>
                 <span className="crisis-call-number">{resource.phone}</span>
               </div>
             </a>

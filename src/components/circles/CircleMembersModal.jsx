@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 
 const CircleMembersModal = ({ circle, onClose }) => {
     const [members, setMembers] = useState([]);
@@ -110,7 +111,7 @@ const CircleMembersModal = ({ circle, onClose }) => {
                     </div>
                 ) : members.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--color-text-secondary)' }}>
-                        <div style={{ fontSize: '40px', marginBottom: '20px', filter: 'grayscale(1)', opacity: 0.5 }}>🫂</div>
+                        <div style={{ marginBottom: '20px', opacity: 0.5, display: 'flex', justifyContent: 'center' }}><Users size={36} /></div>
                         <p style={{ fontSize: '16px', fontWeight: '500', marginBottom: '8px' }}>No members yet</p>
                         <p style={{ fontSize: '14px', lineHeight: '1.5', maxWidth: '240px', margin: '0 auto' }}>
                             This circle is waiting for its first souls. Invite your connections to begin the journey.

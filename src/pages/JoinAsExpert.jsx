@@ -110,12 +110,13 @@ const JoinAsExpert = () => {
             const freshAvailability = {};
             ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(day => freshAvailability[day] = []);
 
+            // `guides` is publicly readable (Discover browsing needs no auth), so contact
+            // PII doesn't belong here — email/phone stay only on the applicant's own
+            // users/{uid} doc, which is owner/admin-only per firestore.rules.
             await setDoc(doc(db, 'guides', currentUser.uid), {
                 id: currentUser.uid,
                 name: fullName,
                 photoURL: currentUser.photoURL || null,
-                email,
-                phone,
                 title,
                 qualification,
                 rciNumber: title === "Clinical Psychologist" ? rciNumber : (rciNumber || ''),

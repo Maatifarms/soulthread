@@ -5,18 +5,20 @@ const https = require('https');
 const BASE_URL = 'https://soulthread.in';
 const PROJECT_ID = 'soulthread-15a72';
 
+// Only real, public, indexable routes from src/app-user/App.jsx. This list
+// previously included 9 routes (/explore, /series, /crisis, /care, /groups,
+// /hyperfocus-series, /never-finished-series, /ego-id-series,
+// /prompt-engineering-series) that were never registered anywhere — Google
+// was being told to crawl and index pages that 404 to NotFound, wasted
+// crawl budget and a real soft-404 risk. Auth-gated routes (/journal,
+// /sessions, /admin, etc.) are intentionally excluded too — nothing for an
+// anonymous crawler to index there.
 const staticRoutes = [
     { path: '/', priority: '1.0', changefreq: 'daily' },
-    { path: '/explore', priority: '0.9', changefreq: 'daily' },
-    { path: '/series', priority: '0.9', changefreq: 'weekly' },
+    { path: '/community', priority: '0.8', changefreq: 'daily' },
+    { path: '/experts', priority: '0.9', changefreq: 'weekly' },
+    { path: '/join-as-expert', priority: '0.6', changefreq: 'monthly' },
     { path: '/pricing', priority: '0.8', changefreq: 'monthly' },
-    { path: '/crisis', priority: '0.8', changefreq: 'weekly' },
-    { path: '/care', priority: '0.8', changefreq: 'weekly' },
-    { path: '/groups', priority: '0.7', changefreq: 'weekly' },
-    { path: '/hyperfocus-series', priority: '0.9', changefreq: 'weekly' },
-    { path: '/never-finished-series', priority: '0.9', changefreq: 'weekly' },
-    { path: '/ego-id-series', priority: '0.9', changefreq: 'weekly' },
-    { path: '/prompt-engineering-series', priority: '0.9', changefreq: 'weekly' },
     { path: '/about', priority: '0.8', changefreq: 'monthly' },
     { path: '/privacy', priority: '0.5', changefreq: 'monthly' },
     { path: '/terms', priority: '0.5', changefreq: 'monthly' },

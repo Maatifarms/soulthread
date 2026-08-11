@@ -86,8 +86,29 @@ const reminderController = require('./calendar/reminderController');
 exports.seriesDailyReminder = reminderController.seriesDailyReminder;
 exports.sessionReminder = reminderController.sessionReminder;
 
+const bookingAPI = require('./booking/bookingAPI');
+exports.createBooking = bookingAPI.createBooking;
+exports.acceptBooking = bookingAPI.acceptBooking;
+exports.rejectBooking = bookingAPI.rejectBooking;
+exports.cancelBooking = bookingAPI.cancelBooking;
+exports.checkIn = bookingAPI.checkIn;
+
+const patientLookupAPI = require('./booking/patientLookupAPI');
+exports.getPatientProfileForGuide = patientLookupAPI.getPatientProfileForGuide;
+exports.getPatientWorkspaceForGuide = patientLookupAPI.getPatientWorkspaceForGuide;
+
+const calendarAPI = require('./calendar/calendarAPI');
+exports.getAvailableSlots = calendarAPI.getAvailableSlots;
+exports.updateAvailability = calendarAPI.updateAvailability;
+exports.blockDate = calendarAPI.blockDate;
+exports.reserveSlot = calendarAPI.reserveSlot;
+exports.releaseSlot = calendarAPI.releaseSlot;
+
 const backupController = require('./system/backupController');
 exports.scheduledFirestoreBackup = backupController.scheduledFirestoreBackup;
 
 const healthAPI = require('./system/healthAPI');
 exports.healthCheck = healthAPI.healthCheck;
+
+const adminBootstrap = require('./system/adminBootstrap');
+exports.grantAdminClaimsOnCreate = adminBootstrap.grantAdminClaimsOnCreate;

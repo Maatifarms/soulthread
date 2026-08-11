@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import Cropper from 'react-easy-crop';
+import { RotateCw } from 'lucide-react';
 
 const ASPECT_RATIOS = [
     { label: '1:1', value: 1 },
@@ -131,7 +132,7 @@ const ImageCropper = ({ image, onCropComplete, onCancel }) => {
                         fontSize: '14px'
                     }}
                 >
-                    🔄 Rotate
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><RotateCw size={14} /> Rotate</span>
                 </button>
             </div>
 

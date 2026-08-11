@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Check, X } from 'lucide-react';
 
 /**
  * UploadProgressBar — floating global upload progress UI
@@ -17,11 +18,12 @@ const statusColors = {
     cancelled: '#9ca3af',
 };
 
+const iconSpan = { display: 'inline-flex', alignItems: 'center', gap: '4px' };
 const statusLabels = {
     compressing: 'Compressing…',
     uploading: 'Uploading…',
-    done: '✓ Done',
-    error: '✗ Failed',
+    done: <span style={iconSpan}><Check size={12} /> Done</span>,
+    error: <span style={iconSpan}><X size={12} /> Failed</span>,
     cancelled: 'Cancelled',
 };
 

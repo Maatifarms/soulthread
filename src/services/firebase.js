@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
-import { initializeFirestore, persistentLocalCache, persistentSingleTabManager, memoryLocalCache } from "firebase/firestore";
+import { initializeFirestore, memoryLocalCache } from "firebase/firestore";
 import { Capacitor } from '@capacitor/core';
 
 export const firebaseConfig = {
@@ -15,17 +15,20 @@ export const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-
-// ── Firestore: optimised persistence ──────────────────────────────────────
-// Use memory cache on native platform to bypass IndexedDB locks, race conditions,
-// and fatal assertion crashes (Unexpected state ID: ca9 / b815).
 const isNative = Capacitor.isNativePlatform();
+
+// ── Firestore: memory cache everywhere ─────────────────────────────────────
+// persistentLocalCache (IndexedDB-backed) hits an intermittent Firestore SDK bug —
+// a fatal internal assertion (Unexpected state ID: ca9 / b815) — under a burst of
+// listener churn, e.g. right after signup (user-doc listener + compliance-modal
+// write + notification listeners all racing IndexedDB persistence init). This was
+// already worked around for native with memoryLocalCache(); confirmed via a real
+// production build (5 signup attempts, no dev-only StrictMode involved) that web
+// hits the exact same crash, so it gets the same fix. Trade-off: no offline
+// Firestore cache across page reloads — acceptable here since booking already
+// requires a live network round-trip to Cloud Functions regardless.
 export const db = initializeFirestore(app, {
-  localCache: isNative 
-    ? memoryLocalCache() 
-    : persistentLocalCache({
-        tabManager: persistentSingleTabManager({})
-      })
+  localCache: memoryLocalCache()
 });
 
 import { getFunctions } from "firebase/functions";

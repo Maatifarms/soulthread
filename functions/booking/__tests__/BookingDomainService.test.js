@@ -56,14 +56,24 @@ describe('BookingDomainService', () => {
       const bookingId = await BookingDomainService.createBooking(payload, mockUserId);
       
       expect(bookingId).toBe('mock_booking_id');
-      
-      // Verify transaction.set was called to create the booking
-      expect(mockTransaction.set).toHaveBeenCalledTimes(3); // Booking, Audit, Event
-      
+
+      // Initial booking write: Booking, Audit, Event (3 sets). TEST MODE then
+      // walks REQUESTED -> ACCEPTED -> AWAITING_PAYMENT -> PAYMENT_SUCCESSFUL
+      // -> CONFIRMED via the real BookingStateMachine, each transition adding
+      // its own audit_log + booking_event set (2 sets each) — see
+      // BookingDomainService.createBooking's TEST MODE block.
+      expect(mockTransaction.set).toHaveBeenCalledTimes(3 + 4 * 2);
+
       const bookingPayload = mockTransaction.set.mock.calls[0][1];
       expect(bookingPayload.userId).toBe(mockUserId);
       expect(bookingPayload.status).toBe(BOOKING_STATES.REQUESTED);
       expect(bookingPayload.bookingNumber).toMatch(/^ST-\d{5}$/);
+
+      // TEST MODE: the booking should end up CONFIRMED (not stuck at REQUESTED),
+      // since no real guide-acceptance/payment flow exists yet to move it there.
+      const updateCalls = mockTransaction.update.mock.calls;
+      const lastStatusUpdate = updateCalls[updateCalls.length - 1][1];
+      expect(lastStatusUpdate.status).toBe(BOOKING_STATES.CONFIRMED);
     });
   });
 

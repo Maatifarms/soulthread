@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Sun, Scissors, Image as ImageIcon, VolumeX, Volume2 } from 'lucide-react';
 
 /**
  * MediaEditor — Built-in image/video editor before posting
@@ -139,13 +140,13 @@ function ImageEditor({ file, onDone, onCancel }) {
 
                     {/* Sliders */}
                     {[
-                        { label: '☀️ Brightness', value: brightness, set: setBrightness, min: 50, max: 200 },
+                        { label: 'Brightness', Icon: Sun, value: brightness, set: setBrightness, min: 50, max: 200 },
                         { label: '◑ Contrast', value: contrast, set: setContrast, min: 50, max: 200 },
                         { label: '◈ Saturation', value: saturation, set: setSaturation, min: 0, max: 200 },
-                    ].map(({ label, value, set, min, max }) => (
+                    ].map(({ label, Icon, value, set, min, max }) => (
                         <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)' }}>{label}</span>
+                                <span style={{ fontSize: '13px', color: 'var(--color-text-secondary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>{Icon && <Icon size={13} />} {label}</span>
                                 <span style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>{value}%</span>
                             </div>
                             <input
@@ -243,8 +244,8 @@ function VideoEditor({ file, onDone, onCancel }) {
                     {/* Trim range */}
                     {duration > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)' }}>
-                                ✂️ Trim — {trimStart.toFixed(1)}s → {trimEnd.toFixed(1)}s
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                                <Scissors size={13} /> Trim — {trimStart.toFixed(1)}s → {trimEnd.toFixed(1)}s
                             </span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 <span style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>Start</span>
@@ -267,8 +268,8 @@ function VideoEditor({ file, onDone, onCancel }) {
 
                     {/* Thumbnail picker */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)' }}>
-                            🖼️ Thumbnail frame — {thumbTime.toFixed(1)}s
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--color-text-primary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <ImageIcon size={13} /> Thumbnail frame — {thumbTime.toFixed(1)}s
                         </span>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <input type="range" min="0" max={duration || 10} step="0.5"
@@ -292,7 +293,9 @@ function VideoEditor({ file, onDone, onCancel }) {
                             onClick={() => setMuted(m => !m)}
                             style={{ ...styles.chip, background: muted ? 'var(--color-primary)' : 'var(--color-background)', color: muted ? 'white' : 'var(--color-text-primary)' }}
                         >
-                            {muted ? '🔇 Muted' : '🔊 Audio on'}
+                            {muted
+                              ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><VolumeX size={14} /> Muted</span>
+                              : <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Volume2 size={14} /> Audio on</span>}
                         </button>
                     </div>
                 </div>

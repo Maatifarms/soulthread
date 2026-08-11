@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '../services/firebase';
+import { collection, query, where, getDocs, orderBy, doc, getDoc } from 'firebase/firestore';
+import { db, functions } from '../services/firebase';
+import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../contexts/AuthContext';
 import { format } from 'date-fns';
 import { Card } from '../components/common/Card';
@@ -36,16 +37,45 @@ export default function GuideDashboard() {
             if (gSnap.exists()) setGuideProfile(gSnap.data());
 
             // 2. Fetch Today's Bookings
-            const todayStr = new Date().toISOString().split('T')[0];
+            // Real bookings store `scheduledStartTime` (a Firestore Timestamp), never a
+            // separate `date`/`startTime` pair — those fields don't exist on any real
+            // booking doc, so the old date/startTime-filtered query always silently
+            // returned zero results. This range query matches the existing
+            // guideId+scheduledStartTime composite index (same one SessionsManager-style
+            // patient queries already rely on), so no new index is needed.
+            const todayStart = new Date();
+            todayStart.setHours(0, 0, 0, 0);
+            const todayEnd = new Date(todayStart);
+            todayEnd.setDate(todayEnd.getDate() + 1);
+
             const bRef = collection(db, 'bookings');
             const bQuery = query(
-                bRef, 
-                where('guideId', '==', currentUser.uid), 
-                where('date', '==', todayStr),
-                orderBy('startTime')
+                bRef,
+                where('guideId', '==', currentUser.uid),
+                where('scheduledStartTime', '>=', todayStart),
+                where('scheduledStartTime', '<', todayEnd),
+                orderBy('scheduledStartTime')
             );
             const bSnap = await getDocs(bQuery);
-            const bookingsData = bSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+            const rawBookings = bSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+            // Bookings only store userId, never a denormalized patient name. Patient
+            // profile docs aren't guide-readable directly (they carry email/phone/
+            // age/gender) — this goes through a callable that checks a real booking
+            // links this guide to this patient before returning just the name.
+            const getPatientProfile = httpsCallable(functions, 'getPatientProfileForGuide');
+            const bookingsData = await Promise.all(rawBookings.map(async (b) => {
+                let patientName = 'Patient';
+                if (b.userId) {
+                    try {
+                        const result = await getPatientProfile({ patientId: b.userId });
+                        if (result.data?.displayName) patientName = result.data.displayName;
+                    } catch {
+                        // Keep the fallback name — a lookup failure shouldn't break the schedule.
+                    }
+                }
+                return { ...b, patientName };
+            }));
             setTodayBookings(bookingsData);
 
             // 3. Fetch Unread Messages
@@ -58,9 +88,15 @@ export default function GuideDashboard() {
             const cSnap = await getDocs(cQuery);
             const unreadCount = cSnap.docs.filter(d => d.data().lastMessageSenderId !== currentUser.uid).length;
 
-            // 4. Calculate Pending Notes (past bookings today without clinical notes)
-            const nowTime = format(new Date(), 'HH:mm');
-            const pendingNotesCount = bookingsData.filter(b => b.startTime < nowTime && !b.carePlanId).length;
+            // 4. Calculate Pending Notes (past bookings today without clinical notes).
+            // `carePlanId` never existed on any real booking — GuideSessionWorkspace.jsx
+            // actually reads/writes `clinicalNotes` directly on the booking doc, so that's
+            // the real field to check here.
+            const now = new Date();
+            const pendingNotesCount = bookingsData.filter(b => {
+                const start = b.scheduledStartTime?.toDate ? b.scheduledStartTime.toDate() : new Date(b.scheduledStartTime);
+                return start < now && !b.clinicalNotes;
+            }).length;
 
             setActionItems(prev => ({
                 ...prev,
@@ -182,9 +218,14 @@ export default function GuideDashboard() {
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <Clock className="w-3.5 h-3.5 text-gray-400" />
-                                                                <span className="text-xs font-bold text-gray-500">{session.startTime || session.slot} (45m)</span>
+                                                                <span className="text-xs font-bold text-gray-500">
+                                                                    {(() => {
+                                                                        const start = session.scheduledStartTime?.toDate ? session.scheduledStartTime.toDate() : new Date(session.scheduledStartTime);
+                                                                        return `${format(start, 'h:mm a')} (${session.sessionDurationMins || 50}m)`;
+                                                                    })()}
+                                                                </span>
                                                             </div>
-                                                            <h4 className="font-bold text-gray-900 text-lg">{session.userName}</h4>
+                                                            <h4 className="font-bold text-gray-900 text-lg">{session.patientName}</h4>
                                                         </div>
                                                         <Badge variant={isNext ? 'success' : 'secondary'}>{isNext ? 'Next Up' : 'Scheduled'}</Badge>
                                                     </div>

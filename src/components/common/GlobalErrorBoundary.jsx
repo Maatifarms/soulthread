@@ -1,4 +1,5 @@
 import React from 'react';
+import { Wind } from 'lucide-react';
 
 class GlobalErrorBoundary extends React.Component {
     constructor(props) {
@@ -23,7 +24,7 @@ class GlobalErrorBoundary extends React.Component {
         if (this.state.hasError) {
             return (
                 <div style={{ padding: '40px 20px', textAlign: 'center', fontFamily: 'sans-serif', backgroundColor: 'var(--color-background)', minHeight: '100vh', color: 'var(--color-text-primary)' }}>
-                    <div style={{ fontSize: '64px', marginBottom: '20px' }}>🧘</div>
+                    <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}><Wind size={56} color="var(--color-primary)" /></div>
                     <h1 style={{ color: 'var(--color-primary)', fontSize: '24px', marginBottom: '10px' }}>Breathe in, breathe out...</h1>
                     <p style={{ color: 'var(--color-text-secondary)', marginBottom: '30px' }}>Something unexpected happened. We've notified our team.</p>
                     

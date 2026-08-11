@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+import { Scale } from 'lucide-react';
 
 const ComplianceModal = ({ user, termsVersion, onAccept }) => {
     const [accepting, setAccepting] = useState(false);
@@ -47,7 +48,7 @@ const ComplianceModal = ({ user, termsVersion, onAccept }) => {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
                 textAlign: 'center'
             }}>
-                <div style={{ fontSize: '48px', marginBottom: '20px' }}>⚖️</div>
+                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}><Scale size={40} color="var(--color-primary)" /></div>
                 <h1 style={{ color: 'var(--color-primary)', marginBottom: '16px' }}>Updated Terms of Service</h1>
                 <p style={{ color: 'var(--color-text-secondary)', lineHeight: '1.6', marginBottom: '24px' }}>
                     Welcome to SoulThread Round 66. To ensure a safe and secure environment for all our users,

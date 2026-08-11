@@ -7,6 +7,7 @@ import { Languages, IndianRupee, ArrowLeft } from 'lucide-react';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Spinner } from '../components/common/Spinner';
+import AvatarImage from '../components/common/AvatarImage';
 
 export default function GuideProfile() {
     const { guideId } = useParams();
@@ -83,13 +84,16 @@ export default function GuideProfile() {
 
                     <Card className="p-8">
                         <div className="flex items-start gap-6 mb-6">
-                            {guide.photoURL ? (
-                                <img src={guide.photoURL} alt={guide.name} className="w-24 h-24 rounded-full object-cover border border-gray-100 shadow-sm" />
-                            ) : (
-                                <div className="w-24 h-24 rounded-full bg-emerald-50 flex items-center justify-center text-3xl font-bold text-emerald-600 border border-emerald-100">
-                                    {guide.name?.[0] || '?'}
-                                </div>
-                            )}
+                            <AvatarImage
+                                src={guide.photoURL}
+                                alt={guide.name}
+                                className="w-24 h-24 rounded-full object-cover border border-gray-100 shadow-sm"
+                                fallback={
+                                    <div className="w-24 h-24 rounded-full bg-emerald-50 flex items-center justify-center text-3xl font-bold text-emerald-600 border border-emerald-100">
+                                        {guide.name?.[0] || '?'}
+                                    </div>
+                                }
+                            />
                             <div className="flex-1">
                                 <h1 className="text-2xl font-bold text-gray-900">{guide.name}</h1>
                                 <p className="text-sm text-gray-400 uppercase tracking-wide font-semibold mt-1">

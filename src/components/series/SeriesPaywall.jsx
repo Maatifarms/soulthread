@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { db } from '../../services/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Lock } from 'lucide-react';
 import './SeriesPaywall.css';
 
 const SeriesPaywall = ({ seriesId, seriesTitle, onUnlock, isProcessing, paymentError }) => {
@@ -23,7 +24,7 @@ const SeriesPaywall = ({ seriesId, seriesTitle, onUnlock, isProcessing, paymentE
 
     return (
         <div className="series-paywall">
-            <div className="series-paywall-icon">🔒</div>
+            <div className="series-paywall-icon"><Lock size={28} /></div>
             <h3 className="series-paywall-title">
                 You've reached the halfway point
             </h3>

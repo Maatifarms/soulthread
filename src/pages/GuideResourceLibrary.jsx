@@ -157,14 +157,16 @@ export default function GuideResourceLibrary() {
                                     <List className="w-4 h-4" />
                                 </button>
                             </div>
-                            <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700">
-                                <Plus className="w-4 h-4 mr-2" /> Build Protocol
+                            <Button variant="primary" className="bg-indigo-600 hover:bg-indigo-700" disabled title="Coming soon">
+                                <Plus className="w-4 h-4 mr-2" /> Build Protocol (Coming Soon)
                             </Button>
                         </div>
                     </div>
 
-                    {/* Pre-built Protocols Section (Only show when searching or in 'All') */}
-                    {(activeCategory === 'All' && !searchQuery) && (
+                    {/* Pre-built Protocols Section (Only show when searching or in 'All', and
+                        only if there are any — no real content exists yet, so this section
+                        stays hidden entirely rather than showing a header over nothing) */}
+                    {(activeCategory === 'All' && !searchQuery && protocols.length > 0) && (
                         <div className="mb-10">
                             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
                                 <CheckCircle className="w-5 h-5 text-green-500" /> Recommended Protocols
@@ -179,7 +181,7 @@ export default function GuideResourceLibrary() {
                                         <p className="text-sm text-gray-500 mb-4">A complete care journey designed to span {protocol.duration}.</p>
                                         <div className="flex justify-between items-center">
                                             <span className="text-xs font-medium text-gray-400">By {protocol.author}</span>
-                                            <Button variant="outline" size="sm" className="text-xs py-1.5">Preview Protocol</Button>
+                                            <Button variant="outline" size="sm" className="text-xs py-1.5" disabled title="Coming soon">Preview Protocol</Button>
                                         </div>
                                     </Card>
                                 ))}
@@ -208,7 +210,7 @@ export default function GuideResourceLibrary() {
                                             <div className="flex-1">
                                                 <div className="flex justify-between items-start">
                                                     <h4 className="font-bold text-gray-900 leading-tight mb-1 group-hover:text-indigo-600 transition-colors">{res.title}</h4>
-                                                    <button className="text-gray-300 hover:text-red-500 transition-colors ml-2">
+                                                    <button className="text-gray-300 cursor-not-allowed ml-2" disabled title="Coming soon">
                                                         <Heart className={`w-4 h-4 ${res.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                                                     </button>
                                                 </div>
@@ -226,7 +228,7 @@ export default function GuideResourceLibrary() {
                                                     <Badge key={i} variant="secondary" className="bg-gray-50 text-gray-600 text-[10px] px-1.5 py-0 border-gray-200">{tag}</Badge>
                                                 ))}
                                             </div>
-                                            <Button variant="outline" size="sm" className="text-xs px-2 py-1 bg-white hover:bg-gray-50">Assign</Button>
+                                            <Button variant="outline" size="sm" className="text-xs px-2 py-1 bg-white hover:bg-gray-50" disabled title="Coming soon">Assign</Button>
                                         </div>
                                     </Card>
                                 ))}

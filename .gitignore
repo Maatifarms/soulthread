@@ -66,3 +66,4 @@ scripts/reports/
 dist-user/
 dist-guide/
 temp_extracted*/
+appcheck-debug-token.local.txt

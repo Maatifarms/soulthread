@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { CheckCircle2, AlertTriangle, Mail } from 'lucide-react';
 
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -46,13 +47,13 @@ const ForgotPassword = () => {
                     <p style={{ color: 'var(--color-text-secondary)', marginBottom: '24px' }}>We'll send a recovery link to your email.</p>
 
                     {message && (
-                        <div style={{ padding: '12px', background: 'var(--st-success-soft, #f0fdf4)', color: 'var(--st-success, #15803d)', borderRadius: '8px', marginBottom: '16px' }}>
-                            ✅ {message}
+                        <div style={{ padding: '12px', background: 'var(--st-success-soft, #f0fdf4)', color: 'var(--st-success, #15803d)', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <CheckCircle2 size={18} style={{ flexShrink: 0 }} /> {message}
                         </div>
                     )}
                     {error && (
-                        <div style={{ padding: '12px', background: 'var(--st-error-soft, #fef2f2)', color: 'var(--st-error, #b91c1c)', borderRadius: '8px', marginBottom: '16px' }}>
-                            ⚠️ {error}
+                        <div style={{ padding: '12px', background: 'var(--st-error-soft, #fef2f2)', color: 'var(--st-error, #b91c1c)', borderRadius: '8px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <AlertTriangle size={18} style={{ flexShrink: 0 }} /> {error}
                         </div>
                     )}
 
@@ -68,7 +69,7 @@ const ForgotPassword = () => {
                         />
 
                         <Button type="submit" variant="primary" isLoading={loading} style={{ width: '100%', marginTop: '8px' }}>
-                            📧 Send Reset Link
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Mail size={16} /> Send Reset Link</span>
                         </Button>
                         
                         <Button 

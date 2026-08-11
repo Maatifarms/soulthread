@@ -1,4 +1,5 @@
 import React from 'react';
+import { Heart, ShieldX, AlertTriangle } from 'lucide-react';
 
 /**
  * ModerationWarning — in-app UI component for AI moderation responses
@@ -36,7 +37,7 @@ export default function ModerationWarning({ result, onContinue, onEdit, onClose 
                     boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
                     textAlign: 'center',
                 }}>
-                    <div style={{ fontSize: '40px', marginBottom: '12px' }}>💙</div>
+                    <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'center', color: 'var(--color-primary)' }}><Heart size={36} /></div>
                     <h3 style={{ margin: '0 0 12px', fontSize: '20px', fontWeight: '700', color: 'var(--color-text-primary)' }}>
                         {headline}
                     </h3>
@@ -98,7 +99,7 @@ export default function ModerationWarning({ result, onContinue, onEdit, onClose 
                 display: 'flex', gap: '12px', alignItems: 'flex-start',
                 animation: 'fadeIn 0.2s',
             }}>
-                <span style={{ fontSize: '20px', flexShrink: 0 }}>🚫</span>
+                <span style={{ flexShrink: 0, display: 'flex', color: '#dc2626' }}><ShieldX size={20} /></span>
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#dc2626', marginBottom: '4px' }}>
                         Content blocked
@@ -128,7 +129,7 @@ export default function ModerationWarning({ result, onContinue, onEdit, onClose 
                 display: 'flex', gap: '12px', alignItems: 'flex-start',
                 animation: 'fadeIn 0.2s',
             }}>
-                <span style={{ fontSize: '20px', flexShrink: 0 }}>⚠️</span>
+                <span style={{ flexShrink: 0, display: 'flex', color: '#d97706' }}><AlertTriangle size={20} /></span>
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#92400e', marginBottom: '6px' }}>
                         Community guideline reminder

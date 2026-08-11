@@ -320,28 +320,27 @@ export function AuthProvider({ children }) {
         if (!user) return;
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
-        const adminEmails = ['rupesh2510@gmail.com', 'anchalmaurya406@gmail.com', 'bhavyajha.bhu@gmail.com'];
-        const isAdmin = adminEmails.includes(user.email?.toLowerCase());
-        
+
         if (!userSnap.exists()) {
             const random4 = Math.random().toString(36).substring(2, 6).toUpperCase();
+            // Admin status is never granted here — it's set server-side via Firebase
+            // custom claims (functions/system/adminBootstrap.js) on account creation,
+            // which also mirrors role/isAdmin onto this doc through the Admin SDK.
             await setDoc(userRef, {
                 uid: user.uid,
                 displayName: user.displayName || 'Soul Searcher',
                 email: user.email,
                 anonymousHandle: `Soul${random4}`,
                 photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-                role: isAdmin ? 'admin' : 'user',
-                isAdmin: isAdmin,
+                role: 'user',
+                isAdmin: false,
                 createdAt: new Date().toISOString()
-            });
+            }, { merge: true });
             // Redirect new google users to onboarding ONLY in the User App
             if (!document.title.includes('SoulThread Pro')) {
                 window.location.assign('/onboarding');
                 return new Promise(() => {});
             }
-        } else if (isAdmin && userSnap.data().role !== 'admin') {
-            await updateDoc(userRef, { role: 'admin', isAdmin: true });
         }
     }
 
@@ -370,9 +369,11 @@ export function AuthProvider({ children }) {
     async function signup(email, password, displayName, extras = {}) {
         try {
             const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
-            const adminEmails = ['rupesh2510@gmail.com', 'anchalmaurya406@gmail.com', 'bhavyajha.bhu@gmail.com'];
-            const isAdmin = adminEmails.includes(email.toLowerCase());
 
+            // Admin status is never decided here — functions/system/adminBootstrap.js
+            // grants it server-side via custom claims on the same account-creation
+            // event and mirrors role/isAdmin onto this doc. merge:true so that write
+            // (which can land before or after this one) is never clobbered.
             await setDoc(doc(db, "users", result.user.uid), {
                 uid: result.user.uid,
                 email: email,
@@ -382,10 +383,10 @@ export function AuthProvider({ children }) {
                 place: extras.place || '',
                 gender: extras.gender || '',
                 photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${result.user.uid}`,
-                role: isAdmin ? 'admin' : 'user',
-                isAdmin: isAdmin,
+                role: 'user',
+                isAdmin: false,
                 createdAt: new Date().toISOString()
-            });
+            }, { merge: true });
 
             try {
                 await sendEmailVerification(result.user);

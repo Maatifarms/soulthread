@@ -1,19 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
-import { FileText, Plus, X, Lock, CheckCircle2, Loader2, Feather } from 'lucide-react';
+import { FileText, Plus, X, Lock, CheckCircle2, Loader2, Feather, AlertCircle } from 'lucide-react';
 import { collection, query, where, orderBy, getDocs, addDoc, updateDoc, doc, serverTimestamp, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import Loading from '../components/common/Loading';
+import { Button } from '../components/common/Button';
 
 export default function JournalManager() {
     const { currentUser } = useAuth();
+    const location = useLocation();
     const [journals, setJournals] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+    const [fetchError, setFetchError] = useState(false);
+
     // Compose State
-    const [isComposing, setIsComposing] = useState(false);
+    const [isComposing, setIsComposing] = useState(!!location.state?.autoCompose);
     const [draftContent, setDraftContent] = useState('');
     const [draftId, setDraftId] = useState(null); // Firestore doc ID if already created
     
@@ -23,26 +27,31 @@ export default function JournalManager() {
     const autoSaveTimeoutRef = useRef(null);
 
     // Initial Fetch
-    useEffect(() => {
+    const fetchJournals = async () => {
         if (!currentUser) return;
-        const fetchJournals = async () => {
-            try {
-                // Optimized fetch: strict limit
-                const q = query(
-                    collection(db, 'journals'),
-                    where('userId', '==', currentUser.uid),
-                    orderBy('createdAt', 'desc'),
-                    limit(50)
-                );
-                const snap = await getDocs(q);
-                setJournals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (error) {
-                console.error("Failed to fetch journals", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        setLoading(true);
+        setFetchError(false);
+        try {
+            // Optimized fetch: strict limit
+            const q = query(
+                collection(db, 'journals'),
+                where('userId', '==', currentUser.uid),
+                orderBy('createdAt', 'desc'),
+                limit(50)
+            );
+            const snap = await getDocs(q);
+            setJournals(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Failed to fetch journals", error);
+            setFetchError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchJournals();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     // Offline Recovery / Local Draft
@@ -118,6 +127,28 @@ export default function JournalManager() {
     };
 
     if (loading) return <Loading />;
+
+    if (fetchError) {
+        return (
+            <DesktopLayoutWrapper>
+                <SEO title="My Journal | SoulThread" />
+                <div className="min-h-screen bg-[#fafafa] pb-24 pt-8">
+                    <div className="max-w-3xl mx-auto px-4">
+                        <div className="bg-white rounded-3xl p-12 border border-red-100 shadow-sm flex flex-col items-center justify-center text-center mt-10">
+                            <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mb-6">
+                                <AlertCircle className="w-8 h-8 text-red-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">Couldn't load your journal</h3>
+                            <p className="text-gray-500 max-w-sm mb-8">Something went wrong reaching your entries. Your past entries are safe — please try again.</p>
+                            <Button variant="primary" onClick={fetchJournals} className="px-6 py-3 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-colors shadow-sm">
+                                Try Again
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </DesktopLayoutWrapper>
+        );
+    }
 
     return (
         <DesktopLayoutWrapper>

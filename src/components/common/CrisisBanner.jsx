@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AlertTriangle, Phone } from 'lucide-react';
 
 /**
  * CrisisBanner.jsx — Crisis Support System (Task 15)
@@ -20,7 +21,7 @@ const CrisisBanner = ({
     return (
         <div style={styles.bannerContainer}>
             <div style={styles.header}>
-                <span style={styles.icon}>⚠️</span>
+                <span style={styles.icon}><AlertTriangle size={20} /></span>
                 <h3 style={styles.title}>You are not alone.</h3>
                 <button onClick={onDismiss} style={styles.closeBtn}>×</button>
             </div>
@@ -33,7 +34,7 @@ const CrisisBanner = ({
             <div style={styles.actions}>
                 {contactMethods.map((method, i) => (
                     <a key={i} href={method.url} style={styles.contactBtn} title={method.label}>
-                        📞 {method.phone || method.email}
+                        <Phone size={14} /> {method.phone || method.email}
                     </a>
                 ))}
             </div>
@@ -60,6 +61,13 @@ const styles = {
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: '8px'
+    },
+    icon: {
+        display: 'flex',
+        alignItems: 'center',
+        color: '#ef4444',
+        marginRight: '4px',
+        flexShrink: 0
     },
     title: {
         fontSize: '16px',

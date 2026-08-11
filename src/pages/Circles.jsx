@@ -12,6 +12,7 @@ import { Users, ShieldCheck, Heart, AlertCircle, Bookmark, Compass } from 'lucid
 import FeedList from '../components/feed/FeedList';
 import DesktopLayoutWrapper from '../components/layout/DesktopLayoutWrapper';
 import SEO from '../components/common/SEO';
+import CommunityTabs from '../components/community/CommunityTabs';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -25,6 +26,7 @@ export default function Circles() {
     const [discoverCircles, setDiscoverCircles] = useState([]);
     const [activeCircle, setActiveCircle] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [circlesError, setCirclesError] = useState(false);
 
     const [memberProfiles, setMemberProfiles] = useState([]);
     const [showJoinModal, setShowJoinModal] = useState(false);
@@ -39,8 +41,16 @@ export default function Circles() {
             where('memberIds', 'array-contains', currentUser.uid),
             orderBy('createdAt', 'desc')
         );
+        setCirclesError(false);
         const unsubCircles = onSnapshot(qCircles, (snap) => {
             setMyCircles(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+            setLoading(false);
+        }, (err) => {
+            // Without this, a permission or missing-index error left loading stuck on
+            // the skeleton forever with no way for the user to know anything was wrong —
+            // exactly what happened here until the underlying index type was fixed.
+            console.error('Failed to load your circles', err);
+            setCirclesError(true);
             setLoading(false);
         });
 
@@ -156,6 +166,7 @@ export default function Circles() {
                 {/* Global Discovery View */}
                 {!activeCircle ? (
                     <div className="max-w-6xl mx-auto px-4 pt-10 space-y-12">
+                        <CommunityTabs active="circles" />
                         <div className="text-center space-y-4 mb-12">
                             <h1 className="text-4xl font-bold text-gray-900">Your Healing Circles</h1>
                             <p className="text-gray-500 text-lg">Intimate, guided spaces for shared growth and confidentiality.</p>
@@ -170,6 +181,10 @@ export default function Circles() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     {[1, 2, 3].map(i => <Card key={i} className="h-48 animate-pulse bg-gray-100" />)}
                                 </div>
+                            ) : circlesError ? (
+                                <Card className="py-12 text-center border-dashed border-2 border-red-100">
+                                    <p className="text-gray-500 font-medium">Couldn't load your circles. Please try refreshing the page.</p>
+                                </Card>
                             ) : myCircles.length === 0 ? (
                                 <Card className="py-12 text-center border-dashed border-2">
                                     <p className="text-gray-500 font-medium">You haven't joined any circles yet.</p>
@@ -227,7 +242,8 @@ export default function Circles() {
                 ) : (
                     /* Active Circle Dashboard View */
                     <div className="max-w-6xl mx-auto px-4 pt-6 space-y-6">
-                        
+                        <CommunityTabs active="circles" />
+
                         {/* Weekly Check-in Banner */}
                         <div className="bg-indigo-900 rounded-3xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
                             <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -292,7 +308,7 @@ export default function Circles() {
             {/* Join Circle Modal */}
             {showJoinModal && selectedCircleToJoin && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <Card className="w-full max-w-md animate-in fade-in zoom-in duration-200">
+                    <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
                         <h2 className="text-xl font-bold text-gray-900 mb-2">Join {selectedCircleToJoin.name}</h2>
                         <p className="text-sm text-gray-500 mb-6">You are committing to a safe, confidential space with {selectedCircleToJoin.memberCount || 0} other individuals.</p>
                         

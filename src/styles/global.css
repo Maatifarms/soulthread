@@ -1,24 +1,65 @@
 @import './variables.css';
 
 /* ── FONT DISPLAY: swap — eliminates FOIT on slow connections ────── */
-/* Overrides Google Fonts default (block) so text stays visible */
+/* Self-hosted (public/fonts/), not fetched from fonts.gstatic.com — the old
+   URL pointed at a specific Google Fonts build hash (v11) that Google has
+   since retired, so it 404'd sitewide with no visible failure (font-display:
+   swap just silently falls back to the system sans). Self-hosting means this
+   can't go stale again, and avoids a third-party request on every pageview,
+   consistent with the "we don't sell data, we don't run ads" privacy pledge
+   on the landing page. */
 @font-face {
   font-family: 'Outfit';
   font-style: normal;
   font-weight: 400 800;
   font-display: swap;
-  src: url('https://fonts.gstatic.com/s/outfit/v11/Q_kS9S5vGbg9S5vGp0en369H.woff2') format('woff2');
+  src: url('/fonts/outfit-variable.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+/* index.css's --font-header token (used by the sitewide h1-h6 base rule below)
+   has named 'DM Serif Display' as the real headline face all along, but no
+   @font-face or <link> for it existed anywhere — every heading on every page
+   has been silently rendering in the Georgia fallback instead. Self-hosted,
+   same reasoning as Outfit above. DM Serif Display only ships one real
+   weight (400); the base rule below asks for 900, so the browser will
+   synthesize bold on top of it — verified this still renders cleanly. */
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/dm-serif-display-normal.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'DM Serif Display';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/dm-serif-display-italic.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* ── BASE RESET ───────────────────────────────── */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-font-smoothing: antialiased;
+/* @layer base, same reason as every other fix in this pass: unlayered, this
+   universal selector's margin:0/padding:0 beat EVERY Tailwind spacing
+   utility (p-*, px-*, m-*, mt-*, etc.) sitewide, in both apps, regardless of
+   specificity — confirmed live: a `p-10 md:p-14` card was rendering at
+   literal 0 padding, text touching the card's rounded corners. Safe to
+   layer: Tailwind's own Preflight (part of the real @import "tailwindcss")
+   already applies the identical box-sizing/margin/padding reset at the same
+   base layer, so the zero-by-default baseline doesn't change — what changes
+   is that real Tailwind spacing utilities can now actually override it. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
 }
 
 html {
@@ -58,10 +99,17 @@ button {
   font-size: 16px;
 }
 
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: opacity 0.2s ease;
+/* @layer base: a second, duplicate copy of this same reset also existed in
+   index.css (now fixed) — this one in global.css was still unlayered and
+   still beating any Tailwind text-color utility applied directly to a
+   <Link>/<a>, e.g. UpcomingSessionWidget.jsx's "Book a Psychologist" button
+   rendering near-invisible dark text instead of white. */
+@layer base {
+  a {
+    text-decoration: none;
+    color: inherit;
+    transition: opacity 0.2s ease;
+  }
 }
 
 img,
@@ -71,46 +119,66 @@ video {
   display: block;
 }
 
-button {
-  cursor: pointer;
-  border: none;
-  background: none;
+/* @layer base: unlayered, this was beating any Tailwind bg-*/border-*
+   utility applied directly to a <button> — confirmed live: Landing.jsx's
+   "Start Healing Now" button (bg-[#111827]) rendered fully transparent
+   instead, leaving white text invisible against the light page background. */
+@layer base {
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
 }
 
 /* ── TYPOGRAPHY ───────────────────────────────── */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-family-header);
-  font-weight: 700;
-  line-height: 1.25;
-  color: var(--color-text-primary);
-  letter-spacing: -0.02em;
+/* @layer base is load-bearing, not decorative — see the matching comment in
+   src/index.css. This file is a SEPARATE, second global stylesheet that
+   independently defines its own unlayered h1-h6 rules; it's imported before
+   index.css in both app-user/main.jsx and app-guide/main.jsx, so it was
+   actually the one winning over index.css's (also unlayered, until this same
+   fix) h1 rule — fixing index.css alone was not sufficient. Both need
+   @layer base for Tailwind utility overrides to work anywhere in either app. */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-family-header);
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: clamp(1.6rem, 5vw, 2.5rem);
+    font-weight: 800;
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 4vw, 2rem);
+  }
+
+  h3 {
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+  }
+
+  h4 {
+    font-size: 1rem;
+  }
 }
 
-h1 {
-  font-size: clamp(1.6rem, 5vw, 2.5rem);
-  font-weight: 800;
-}
-
-h2 {
-  font-size: clamp(1.3rem, 4vw, 2rem);
-}
-
-h3 {
-  font-size: clamp(1.1rem, 3vw, 1.4rem);
-}
-
-h4 {
-  font-size: 1rem;
-}
-
-p {
-  line-height: 1.7;
-  color: var(--color-text-secondary);
+/* @layer base: same duplicate-file issue as the h1-h6 and a{} rules above —
+   index.css has an identical p{} rule (already fixed), but this unlayered
+   copy in global.css was still winning since global.css imports first. */
+@layer base {
+  p {
+    line-height: 1.7;
+    color: var(--color-text-secondary);
+  }
 }
 
 /* ── CONTAINER ────────────────────────────────── */
@@ -128,6 +196,13 @@ p {
   margin: 0 auto;
   width: 100%;
 }
+
+/* @layer base: same duplicate-file issue as a{}/p{}/h1-h6 above — index.css
+   has its own near-identical .card/.btn-primary/.btn-secondary (now fixed),
+   but this unlayered copy in global.css was still winning since global.css
+   imports first. Confirmed live: ExecutiveDashboard's dark metric cards
+   (bg-[#141419]) were still rendering white until this was fixed too. */
+@layer base {
 
 /* ── CARDS ────────────────────────────────────── */
 .card {
@@ -223,6 +298,8 @@ p {
   color: var(--color-primary);
   background: var(--color-primary-soft);
 }
+
+} /* end @layer base (cards/buttons) */
 
 /* ── HERO BANNER ──────────────────────────────── */
 .hero-sanctuary {

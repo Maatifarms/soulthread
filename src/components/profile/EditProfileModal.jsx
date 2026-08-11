@@ -4,6 +4,7 @@ import { doc, updateDoc, arrayRemove, getDoc, setDoc, deleteDoc } from 'firebase
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage, auth } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
+import { X } from 'lucide-react';
 import useTheme from '../../hooks/useTheme';
 import ImageCropper from '../common/ImageCropper';
 
@@ -241,7 +242,7 @@ const EditProfileModal = ({ userProfile, onClose, onUpdate }) => {
                 </div>
                 <div style={{ padding: '4px 20px 16px', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <h2 style={{ margin: 0, color: 'var(--color-text-primary)', fontSize: '18px', fontWeight: '700' }}>Edit Profile</h2>
-                    <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: 'var(--color-text-muted)', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+                    <button onClick={handleClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', padding: '4px 8px', lineHeight: 1, display: 'flex' }}><X size={20} /></button>
                 </div>
 
                 {/* Tabs */}

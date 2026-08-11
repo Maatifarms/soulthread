@@ -9,6 +9,7 @@ import { Calendar as CalendarIcon, Video, UserPlus, X, Heart, Mail } from 'lucid
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Spinner } from '../components/common/Spinner';
+import AvatarImage from '../components/common/AvatarImage';
 
 // Builds a "Add to Google Calendar" link from the actual booked slot — no backend needed.
 const buildGoogleCalendarUrl = (guideName, slot) => {
@@ -23,12 +24,43 @@ const buildGoogleCalendarUrl = (guideName, slot) => {
     return `https://calendar.google.com/calendar/render?${params.toString()}`;
 };
 
+// Builds a plain-text receipt from the actual booking data — no backend/PDF service needed.
+const buildReceiptText = ({ bookingId, guestName, guideName, guideTitle, slot, amountPaid }) => {
+    const lines = [
+        'SoulThread — Booking Receipt',
+        '=============================',
+        '',
+        `Booking ID: ${bookingId || 'N/A'}`,
+        `Booked for: ${guestName || 'N/A'}`,
+        `Guide: ${guideName || 'N/A'}${guideTitle ? ` (${guideTitle})` : ''}`,
+        slot?.start
+            ? `Date & Time: ${new Date(slot.start).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} at ${new Date(slot.start).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} (IST)`
+            : 'Date & Time: See confirmation email',
+        `Amount Paid: ₹${amountPaid ?? 'N/A'} (Test Mode — no real payment charged)`,
+        '',
+        'This is a test-mode receipt. No real payment was processed.'
+    ];
+    return lines.join('\n');
+};
+
+const downloadReceipt = (receiptText, bookingId) => {
+    const blob = new Blob([receiptText], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `soulthread-receipt-${bookingId || 'booking'}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+};
+
 export default function BookingSuccess() {
     const { psychologistId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const { currentUser } = useAuth();
-    const { scheduledSlot } = location.state || {};
+    const { scheduledSlot, bookingId, amountPaid, guestName } = location.state || {};
     const [guide, setGuide] = useState(null);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState(null);
@@ -83,11 +115,14 @@ export default function BookingSuccess() {
                     ) : guide ? (
                         <div className="bg-gray-50/50 border border-gray-200 rounded-2xl p-6 mb-10 text-left shadow-sm">
                             <div className="flex items-center gap-4 mb-4 pb-4 border-b border-gray-200">
-                                {guide.photoURL ? (
-                                    <img src={guide.photoURL} alt={guide.name} className="w-14 h-14 rounded-full border border-gray-200 object-cover shadow-sm" />
-                                ) : (
-                                    <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 shadow-sm">{guide.name?.[0]}</div>
-                                )}
+                                <AvatarImage
+                                    src={guide.photoURL}
+                                    alt={guide.name}
+                                    className="w-14 h-14 rounded-full border border-gray-200 object-cover shadow-sm"
+                                    fallback={
+                                        <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-500 shadow-sm">{guide.name?.[0]}</div>
+                                    }
+                                />
                                 <div>
                                     <p className="font-bold text-gray-900 text-lg">{guide.name}</p>
                                     <p className="text-sm text-gray-500">{guide.title || 'Clinical Psychologist'}</p>
@@ -157,6 +192,25 @@ export default function BookingSuccess() {
                                 onClick={() => window.open(calendarUrl, '_blank', 'noopener,noreferrer')}
                             >
                                 Add to Google Calendar
+                            </Button>
+                        )}
+                        {guide && (
+                            <Button
+                                variant="outline"
+                                style={{ width: '100%' }}
+                                onClick={() => downloadReceipt(
+                                    buildReceiptText({
+                                        bookingId,
+                                        guestName,
+                                        guideName: guide.name,
+                                        guideTitle: guide.title,
+                                        slot: scheduledSlot,
+                                        amountPaid
+                                    }),
+                                    bookingId
+                                )}
+                            >
+                                Download Receipt
                             </Button>
                         )}
                         <Button variant="secondary" onClick={() => navigate(currentUser ? '/' : '/experts')} style={{ width: '100%' }}>

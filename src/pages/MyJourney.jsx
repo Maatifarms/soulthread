@@ -4,32 +4,39 @@ import SEO from '../components/common/SEO';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import { Calendar, Video, FileText, CheckCircle, Gift, Users, MessageSquare } from 'lucide-react';
+import { Calendar, Video, FileText, CheckCircle, Gift, Users, MessageSquare, AlertCircle } from 'lucide-react';
 import Loading from '../components/common/Loading';
+import { Button } from '../components/common/Button';
 
 export default function MyJourney() {
     const { currentUser } = useAuth();
     const [events, setEvents] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [fetchError, setFetchError] = useState(false);
+
+    const fetchTimeline = async () => {
+        if (!currentUser) return;
+        setLoading(true);
+        setFetchError(false);
+        try {
+            const q = query(
+                collection(db, 'timeline'),
+                where('userId', '==', currentUser.uid),
+                orderBy('timestamp', 'desc')
+            );
+            const snap = await getDocs(q);
+            setEvents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } catch (error) {
+            console.error("Failed to fetch timeline", error);
+            setFetchError(true);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        if (!currentUser) return;
-        const fetchTimeline = async () => {
-            try {
-                const q = query(
-                    collection(db, 'timeline'),
-                    where('userId', '==', currentUser.uid),
-                    orderBy('timestamp', 'desc')
-                );
-                const snap = await getDocs(q);
-                setEvents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-            } catch (error) {
-                console.error("Failed to fetch timeline", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchTimeline();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentUser]);
 
     const getIcon = (type) => {
@@ -53,8 +60,19 @@ export default function MyJourney() {
                 <div className="max-w-3xl mx-auto px-4">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">My Healing Journey</h1>
                     <p className="text-gray-500 mb-8">A timeline of your progress and milestones.</p>
-                    
-                    {events.length === 0 ? (
+
+                    {fetchError ? (
+                        <div className="bg-white rounded-3xl p-8 border border-red-100 shadow-sm flex flex-col items-center justify-center text-center min-h-[300px]">
+                            <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                <AlertCircle className="w-6 h-6 text-red-400" />
+                            </div>
+                            <h3 className="text-lg font-bold text-gray-900 mb-2">Couldn't load your journey</h3>
+                            <p className="text-sm text-gray-500 max-w-sm mb-6">Something went wrong reaching your timeline. Please try again.</p>
+                            <Button variant="primary" onClick={fetchTimeline} className="px-6 py-2.5 bg-black text-white font-bold rounded-full hover:bg-gray-800 transition-colors">
+                                Try Again
+                            </Button>
+                        </div>
+                    ) : events.length === 0 ? (
                         <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm flex flex-col items-center justify-center text-center min-h-[300px]">
                             <h3 className="text-lg font-bold text-gray-900 mb-2">Your journey begins here</h3>
                             <p className="text-sm text-gray-500 max-w-sm">As you book sessions, write in your journal, and complete assessments, your timeline will grow.</p>

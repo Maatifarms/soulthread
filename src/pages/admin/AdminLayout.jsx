@@ -1,31 +1,34 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-    LayoutDashboard, Users, UserCog, ShieldAlert, FileText, 
-    BriefcaseMedical, Building2, Headset, ActivitySquare, Settings, 
+import {
+    LayoutDashboard,
     LogOut, Search, Bell
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import SEO from '../../components/common/SEO';
 
 export default function AdminLayout({ children }) {
     const navigate = useNavigate();
     const location = useLocation();
-    
-    // Enterprise Admin Role Mock
-    const [adminRole] = useState('Super Admin');
+    const { currentUser, logout } = useAuth();
 
+    // Only /admin/dashboard (ExecutiveDashboard) actually exists as a route.
+    // This sidebar previously listed 9 more sections (Professional Mgmt,
+    // Patient Management, Community Moderation, Clinical Content, Healthcare
+    // Operations, Organization Mgmt, Support Center, Platform Health,
+    // Configuration) that were never built or routed — clicking any of them
+    // hit the app's catch-all NotFound route. Removed rather than stubbed:
+    // per CLAUDE.md's priority order, the admin surface beyond what's live
+    // today is explicitly paused, and empty stub pages would just be a
+    // different flavor of the same "implies a feature that doesn't exist"
+    // problem this whole pass has been fixing.
     const navigation = [
         { name: 'Executive Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Professional Mgmt', path: '/admin/professionals', icon: UserCog },
-        { name: 'Patient Management', path: '/admin/patients', icon: Users },
-        { name: 'Community Moderation', path: '/admin/moderation', icon: ShieldAlert },
-        { name: 'Clinical Content', path: '/admin/content', icon: FileText },
-        { name: 'Healthcare Operations', path: '/admin/operations', icon: BriefcaseMedical },
-        { name: 'Organization Mgmt', path: '/admin/organizations', icon: Building2 },
-        { name: 'Support Center', path: '/admin/support', icon: Headset },
-        { name: 'Platform Health', path: '/admin/health', icon: ActivitySquare },
-        { name: 'Configuration', path: '/admin/settings', icon: Settings },
     ];
+
+    const adminInitials = (currentUser?.displayName || currentUser?.email || 'A')
+        .trim().charAt(0).toUpperCase();
+    const adminName = currentUser?.displayName || currentUser?.email || 'Admin';
 
     return (
         <div className="min-h-screen bg-[#0a0a0f] text-gray-200 flex">
@@ -41,11 +44,11 @@ export default function AdminLayout({ children }) {
 
                 <div className="p-4 flex items-center gap-3 border-b border-[#22222a] bg-[#1a1a20]">
                     <div className="w-10 h-10 rounded-full bg-indigo-900/50 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30">
-                        SA
+                        {adminInitials}
                     </div>
-                    <div>
-                        <div className="text-sm font-bold text-white">System Admin</div>
-                        <div className="text-xs text-indigo-400">{adminRole}</div>
+                    <div className="min-w-0">
+                        <div className="text-sm font-bold text-white truncate">{adminName}</div>
+                        <div className="text-xs text-indigo-400">Admin</div>
                     </div>
                 </div>
 
@@ -70,7 +73,7 @@ export default function AdminLayout({ children }) {
                 </nav>
 
                 <div className="p-4 border-t border-[#22222a]">
-                    <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
+                    <button onClick={logout} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors">
                         <LogOut className="w-4 h-4" /> Sign Out
                     </button>
                 </div>

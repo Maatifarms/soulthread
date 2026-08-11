@@ -88,9 +88,11 @@
   <!-- Preload critical logo for LCP -->
   <link rel="preload" href="/logo.jpg" as="image" fetchpriority="high" type="image/jpeg" />
 
-  <!-- Fonts: Playfair Display (display) + Nunito (approachable body) + Outfit (splash only) -->
+  <!-- Playfair Display (serif headline font, --font-family-header) via Google
+       Fonts. Outfit (body font) is self-hosted (public/fonts/, see global.css)
+       — dropped from this link, one less third-party request. -->
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Outfit:wght@300;400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" />
 
   <!-- Structured Data -->
   <script type="application/ld+json">

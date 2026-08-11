@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../services/firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { Check } from 'lucide-react';
 
 const NotificationSettings = () => {
     const { currentUser } = useAuth();
@@ -146,7 +147,7 @@ const NotificationSettings = () => {
                 background: saved ? '#16a34a' : 'var(--color-primary)',
                 transition: 'background 0.3s ease'
             }}>
-                {saving ? 'Saving...' : saved ? '✓ Saved' : 'Save Preferences'}
+                {saving ? 'Saving...' : saved ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}><Check size={16} /> Saved</span> : 'Save Preferences'}
             </button>
         </div>
     );

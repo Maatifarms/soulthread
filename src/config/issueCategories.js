@@ -3,12 +3,15 @@
 // Used by: feed, create post, moderation, Soul Guide matching
 // ═══════════════════════════════════════════════════════
 
+// icon: a lucide-react icon key, not an emoji — CreatePost.jsx (the only
+// consumer) maps this to a real <Icon> component. Kept as a plain string
+// here so this config stays framework-agnostic (no JSX import needed).
 export const ISSUE_CATEGORIES = {
   mental_health: {
     id: 'mental_health',
     label: 'Mental wellness',
     label_hi: 'मानसिक स्वास्थ्य',
-    icon: '🧠',
+    icon: 'brain',
     color: '#0d9488',
     colorSoft: 'rgba(13,148,136,0.12)',
     borderColor: 'rgba(13,148,136,0.30)',
@@ -29,7 +32,7 @@ export const ISSUE_CATEGORIES = {
     id: 'relationships',
     label: 'Relationships',
     label_hi: 'रिश्ते',
-    icon: '💙',
+    icon: 'heart',
     color: '#8b5cf6',
     colorSoft: 'rgba(139,92,246,0.12)',
     borderColor: 'rgba(139,92,246,0.30)',
@@ -52,7 +55,7 @@ export const ISSUE_CATEGORIES = {
     id: 'caretaker',
     label: 'Caretaker support',
     label_hi: 'देखभाल करने वाले',
-    icon: '🏥',
+    icon: 'caretaker',
     color: '#0ea5e9',
     colorSoft: 'rgba(14,165,233,0.12)',
     borderColor: 'rgba(14,165,233,0.30)',
@@ -75,7 +78,7 @@ export const ISSUE_CATEGORIES = {
     id: 'financial',
     label: 'Financial stress',
     label_hi: 'आर्थिक तनाव',
-    icon: '💰',
+    icon: 'financial',
     color: '#f59e0b',
     colorSoft: 'rgba(245,158,11,0.12)',
     borderColor: 'rgba(245,158,11,0.30)',
@@ -98,7 +101,7 @@ export const ISSUE_CATEGORIES = {
     id: 'career',
     label: 'Career and purpose',
     label_hi: 'करियर और मकसद',
-    icon: '💼',
+    icon: 'career',
     color: '#ec4899',
     colorSoft: 'rgba(236,72,153,0.12)',
     borderColor: 'rgba(236,72,153,0.30)',
@@ -121,7 +124,7 @@ export const ISSUE_CATEGORIES = {
     id: 'physical_health',
     label: 'Physical health',
     label_hi: 'शारीरिक स्वास्थ्य',
-    icon: '🩺',
+    icon: 'physical_health',
     color: '#22c55e',
     colorSoft: 'rgba(34,197,94,0.12)',
     borderColor: 'rgba(34,197,94,0.30)',

@@ -8,6 +8,7 @@ import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Card } from '../components/common/Card';
 import { Checkbox } from '../components/common/Checkbox'; // We scaffolded this!
+import { Smartphone } from 'lucide-react';
 
 
 const Signup = () => {
@@ -195,7 +196,7 @@ const Signup = () => {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         <Button variant="secondary" onClick={() => navigate('/login/phone')} disabled={loading}>
-                            📱 Mobile Number
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><Smartphone size={16} /> Mobile Number</span>
                         </Button>
                         <Button variant="ghost" onClick={handleGoogleSignup} isLoading={googleLoading} disabled={loading}>
                             Continue with Google

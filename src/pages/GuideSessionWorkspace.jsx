@@ -53,24 +53,33 @@ export default function GuideSessionWorkspace() {
                 }
 
                 // 2. Fetch Patient Profile & Clinical Context
-                if (bData.patientId) {
-                    const pSnap = await getDoc(doc(db, 'users', bData.patientId));
+                // Real bookings store `userId`, never `patientId` — that field never
+                // existed, so this whole block silently never ran before.
+                if (bData.userId) {
+                    const pSnap = await getDoc(doc(db, 'users', bData.userId));
                     let goals = [];
                     if (pSnap.exists() && pSnap.data().goals) {
                         goals = pSnap.data().goals;
                     }
 
-                    // Try to fetch the most recent care plan
+                    // Try to fetch the most recent care plan. Wrapped separately from the
+                    // goals fetch above: `carePlans` has no Firestore rule yet (tracked as
+                    // Batch 2 work), so this currently always denies — that shouldn't also
+                    // wipe out the goals data we already successfully fetched.
                     let carePlanText = 'No active care plan';
-                    const cpQuery = query(
-                        collection(db, 'carePlans'), 
-                        where('patientId', '==', bData.patientId),
-                        orderBy('createdAt', 'desc'),
-                        limit(1)
-                    );
-                    const cpSnap = await getDocs(cpQuery);
-                    if (!cpSnap.empty) {
-                        carePlanText = cpSnap.docs[0].data().title || 'Active Care Plan';
+                    try {
+                        const cpQuery = query(
+                            collection(db, 'carePlans'),
+                            where('userId', '==', bData.userId),
+                            orderBy('createdAt', 'desc'),
+                            limit(1)
+                        );
+                        const cpSnap = await getDocs(cpQuery);
+                        if (!cpSnap.empty) {
+                            carePlanText = cpSnap.docs[0].data().title || 'Active Care Plan';
+                        }
+                    } catch (cpErr) {
+                        console.error('Failed to fetch care plan', cpErr);
                     }
 
                     setPatientContext({

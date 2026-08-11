@@ -322,6 +322,7 @@ const Navbar = () => {
                                 <>
                                     <NavLink to="/sessions" label="Sessions" />
                                     <NavLink to="/journal" label="Journal" />
+                                    <NavLink to="/journey" label="Journey" />
                                 </>
                             )}
                         </div>

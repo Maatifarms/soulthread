@@ -11,6 +11,7 @@ import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Spinner } from '../components/common/Spinner';
+import AvatarImage from '../components/common/AvatarImage';
 import { functions } from '../services/firebase';
 import { httpsCallable } from 'firebase/functions';
 
@@ -114,12 +115,22 @@ export default function BookingFlow() {
     const handlePayment = async () => {
         setIsProcessingPayment(true);
         setBookingError('');
+
+        // RequireAuth (the route guard) should make this unreachable, but sessions can
+        // expire mid-flow — fail with an honest message instead of the generic one
+        // BookingClientService throws for actual network/server failures.
+        if (!currentUser) {
+            setBookingError('Your session expired. Please log in again to complete this booking.');
+            setIsProcessingPayment(false);
+            return;
+        }
+
         try {
             // Mocking payment gateway network delay
             await new Promise(res => setTimeout(res, 1500));
-            
+
             // V2: Delegate logic to client service
-            await BookingClientService.submitBooking({
+            const bookingId = await BookingClientService.submitBooking({
                 psychologistId,
                 guideName: guide.name,
                 guidePhotoURL: guide.photoURL,
@@ -129,9 +140,14 @@ export default function BookingFlow() {
                 selectedSlot,
                 amountPaid: guide.sessionRate || 1000
             });
-            
+
             navigate(`/booking-success/${psychologistId}`, {
-                state: { scheduledSlot: selectedSlot }
+                state: {
+                    scheduledSlot: selectedSlot,
+                    bookingId,
+                    amountPaid: guide.sessionRate || 1000,
+                    guestName: guestDetails.name
+                }
             });
         } catch (err) {
             console.error("Payment or booking failed", err);
@@ -379,13 +395,16 @@ export default function BookingFlow() {
                         <div className="lg:w-1/3">
                             <Card className="sticky top-24 shadow-sm">
                                 <div className="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
-                                    {guide.photoURL ? (
-                                        <img src={guide.photoURL} alt={guide.name} className="w-16 h-16 rounded-full object-cover border border-gray-100 shadow-sm" />
-                                    ) : (
-                                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-sm">
-                                            {guide.name[0]}
-                                        </div>
-                                    )}
+                                    <AvatarImage
+                                        src={guide.photoURL}
+                                        alt={guide.name}
+                                        className="w-16 h-16 rounded-full object-cover border border-gray-100 shadow-sm"
+                                        fallback={
+                                            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-400 border border-gray-100 shadow-sm">
+                                                {guide.name[0]}
+                                            </div>
+                                        }
+                                    />
                                     <div>
                                         <h4 className="font-bold text-gray-900">{guide.name}</h4>
                                         <p className="text-xs text-gray-500 font-medium">{guide.title || 'Clinical Psychologist'}</p>

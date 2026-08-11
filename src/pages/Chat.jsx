@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { db, functions } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, MessageCircle } from 'lucide-react';
 import { httpsCallable } from 'firebase/functions';
 import { PrivacyBanner } from '../components/common/PrivacyBanner';
 
@@ -529,7 +529,7 @@ const Chat = () => {
     if (!currentUser) {
         return (
             <div className="chat-gate">
-                <div className="chat-gate-icon">💬</div>
+                <div className="chat-gate-icon"><MessageCircle size={40} /></div>
                 <h3>Sign in to access messages</h3>
                 <button className="btn-primary" onClick={() => navigate('/login')}>Sign In</button>
             </div>
@@ -559,7 +559,7 @@ const Chat = () => {
                         ))
                     ) : conversations.length === 0 ? (
                         <div className="chat-empty-state">
-                            <div style={{ fontSize: 48, opacity: 0.3 }}>💬</div>
+                            <div style={{ opacity: 0.3, display: 'flex', justifyContent: 'center' }}><MessageCircle size={44} /></div>
                             <p style={{ fontWeight: 700, color: 'var(--color-text-secondary)' }}>No messages yet</p>
                             <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Visit someone's profile to start a conversation</p>
                         </div>
@@ -680,7 +680,7 @@ const Chat = () => {
                     </>
                 ) : (
                     <div className="chat-empty-state centered">
-                        <div style={{ fontSize: 56, opacity: 0.15 }}>💬</div>
+                        <div style={{ opacity: 0.15, display: 'flex', justifyContent: 'center' }}><MessageCircle size={52} /></div>
                         <p style={{ fontWeight: 700, color: 'var(--color-text-secondary)', marginTop: 16 }}>Select a conversation</p>
                         <p style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Choose from the list to start messaging</p>
                     </div>
