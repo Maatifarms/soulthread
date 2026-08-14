@@ -53,7 +53,7 @@ const SENSITIVE_TOPICS = [
 
 // ── Crisis resources ───────────────────────────────────────────────────────────
 export const CRISIS_RESOURCES = {
-    headline: '💙 We care about you',
+    headline: 'We care about you',
     message:
         'It sounds like you might be going through something really difficult. ' +
         'You\'re not alone — please reach out to someone who can help.',

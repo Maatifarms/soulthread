@@ -78,31 +78,47 @@ export default function Landing() {
                 
                 {/* SECTION 2: Hero */}
                 <section className="relative pt-[120px] md:pt-[160px] pb-[96px] md:pb-[140px] px-6">
-                    <div className="max-w-[880px] mx-auto relative z-10">
-                        <span className="text-teal-700 font-semibold tracking-[0.02em] text-[14px] uppercase mb-6 block">
-                            Clinical Care meets Peer Support
-                        </span>
-                        <h1 className="text-[48px] sm:text-[64px] md:text-[80px] lg:text-[88px] font-black leading-[1.05] tracking-[-0.04em] mb-8 text-[#111827] max-w-[900px]">
-                            You don't have to carry it all alone.
-                        </h1>
-                        <p className="text-[18px] md:text-[20px] font-normal leading-[1.6] tracking-[-0.01em] text-[#6B7280] mb-12 max-w-xl">
-                            A completely anonymous sanctuary for your mental health. Journal privately, connect with a supportive community, and consult verified clinical psychologists.
-                        </p>
+                    <div className="max-w-[1280px] mx-auto relative z-10">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
 
-                        <div className="flex flex-col sm:flex-row items-center gap-4 mb-12">
-                            <Link to="/signup" className="w-full sm:w-auto">
-                                <Button variant="primary" className="w-full sm:w-auto px-10 py-5 text-[18px] font-semibold rounded-full bg-[#111827] text-white hover:bg-black transition-all">
-                                    Start Healing Now
-                                </Button>
-                            </Link>
-                            <Link to="/experts" className="w-full sm:w-auto group flex items-center justify-center gap-2 px-8 py-5 font-semibold text-[18px] text-[#374151] bg-white border border-gray-200 hover:border-gray-300 rounded-full shadow-sm hover:shadow-md transition-all">
-                                Browse Therapists <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-gray-400 group-hover:text-gray-900" />
-                            </Link>
-                        </div>
+                            {/* Left Column: Copy & Actions */}
+                            <div className="lg:col-span-7 flex flex-col items-start text-left">
+                                <span className="text-teal-700 font-semibold tracking-[0.02em] text-[14px] uppercase mb-6 block">
+                                    Anonymous Peer Community & Verified Clinical Care
+                                </span>
+                                <h1 className="text-[48px] sm:text-[56px] md:text-[64px] lg:text-[64px] xl:text-[72px] font-black leading-[1.05] tracking-[-0.04em] mb-8 text-[#111827]">
+                                    Share your struggle anonymously. Consult real doctors when you're ready.
+                                </h1>
+                                <p className="text-[18px] md:text-[20px] font-normal leading-[1.6] tracking-[-0.01em] text-[#6B7280] mb-12 max-w-xl">
+                                    SoulThread is a safe, anonymous sanctuary built for mental wellbeing. Vent freely in peer circles, track thoughts in a private local journal, and schedule secure consultations with verified clinical psychologists.
+                                </p>
 
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-[14px] font-medium text-[#6B7280]">
-                            <div className="flex items-center gap-2"><Shield className="w-4 h-4 text-teal-600" /> RCI Verified Psychologists</div>
-                            <div className="flex items-center gap-2"><Lock className="w-4 h-4 text-emerald-500" /> 100% On-Device Privacy</div>
+                                <div className="flex flex-col sm:flex-row items-center gap-4 mb-12 w-full sm:w-auto">
+                                    <Link to="/signup" className="w-full sm:w-auto">
+                                        <Button variant="primary" className="w-full sm:w-auto px-10 py-5 text-[18px] font-semibold rounded-full bg-[#111827] text-white hover:bg-black transition-all">
+                                            Start Healing Now
+                                        </Button>
+                                    </Link>
+                                    <Link to="/experts" className="w-full sm:w-auto group flex items-center justify-center gap-2 px-8 py-5 font-semibold text-[18px] text-[#374151] bg-white border border-gray-200 hover:border-gray-300 rounded-full shadow-sm hover:shadow-md transition-all">
+                                        Browse Therapists <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform text-gray-400 group-hover:text-gray-900" />
+                                    </Link>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-[14px] font-medium text-[#6B7280]">
+                                    <div className="flex items-center gap-2"><Shield className="w-4 h-4 text-teal-600" /> RCI Verified Psychologists</div>
+                                    <div className="flex items-center gap-2"><Lock className="w-4 h-4 text-emerald-500" /> 100% On-Device Privacy</div>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Hero Visual Asset */}
+                            <div className="lg:col-span-5 w-full flex justify-center lg:justify-end mt-12 lg:mt-0">
+                                <img
+                                    src="/assets/home/hero_visual.png"
+                                    alt="SoulThread Safe Sanctuary Overview"
+                                    className="w-full max-w-[500px] lg:max-w-none h-auto rounded-3xl border border-gray-100 shadow-2xl hover:scale-[1.01] transition-transform duration-300"
+                                />
+                            </div>
+
                         </div>
                     </div>
                 </section>
@@ -134,11 +150,16 @@ export default function Landing() {
                             {/* Left: 40% (Sticky) */}
                             <div className="lg:col-span-5 lg:sticky lg:top-40 mb-12 lg:mb-0">
                                 <h2 className="text-[48px] font-bold text-[#111827] mb-6 tracking-[-0.03em] leading-tight">
-                                    Your complete care toolkit.
+                                    A connected ecosystem for mental wellbeing.
                                 </h2>
                                 <p className="text-[20px] text-[#6B7280] leading-[1.6] font-normal tracking-[-0.01em]">
-                                    Everything you need to process trauma, manage anxiety, and find peace—built into one seamless ecosystem.
+                                    Empathetic peer support circles, secure private journaling, and direct access to clinical professionals—all in one safe space.
                                 </p>
+                                <img
+                                    src="/assets/home/connection_visual.png"
+                                    alt="SoulThread Peer Support Connection Flow"
+                                    className="w-full max-w-[400px] lg:max-w-none h-auto rounded-2xl border border-gray-100 shadow-lg mt-8 object-contain"
+                                />
                             </div>
 
                             {/* Right: 60% (Scrolling) */}
@@ -149,9 +170,9 @@ export default function Landing() {
                                     <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mb-6">
                                         <BookOpen className="w-6 h-6 text-teal-600" />
                                     </div>
-                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Private Journaling</h3>
+                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Private Local Journaling</h3>
                                     <p className="text-[16px] text-[#6B7280] leading-relaxed">
-                                        Your journal is yours alone. Stored locally on your device. Track your mood and reflect without worrying about prying eyes.
+                                        Process your thoughts privately. Your journal is encrypted and stored locally on your device, ensuring complete data ownership and security.
                                     </p>
                                 </div>
 
@@ -160,9 +181,9 @@ export default function Landing() {
                                     <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center mb-6">
                                         <MessageCircle className="w-6 h-6 text-teal-600" />
                                     </div>
-                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Anonymous Community</h3>
+                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Anonymous Peer Circles</h3>
                                     <p className="text-[16px] text-[#6B7280] leading-relaxed">
-                                        Join an anonymous, supportive community. Share experiences, find healing circles, and connect with people who truly understand.
+                                        Share what you feel without fear of judgment. Connect with moderated, anonymous support circles of peers who are navigating similar life challenges.
                                     </p>
                                 </div>
 
@@ -171,12 +192,12 @@ export default function Landing() {
                                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center mb-6">
                                         <Calendar className="w-6 h-6 text-blue-600" />
                                     </div>
-                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Expert Clinical Care</h3>
+                                    <h3 className="text-[24px] font-semibold text-[#111827] mb-4 tracking-[-0.02em]">Verified Clinical Support</h3>
                                     <p className="text-[16px] text-[#6B7280] leading-relaxed mb-6">
-                                        When peer support isn't enough, connect with verified psychologists. Book secure video consultations instantly.
+                                        Get professional clinical care when you need it. Book secure one-on-one video consultations with verified, RCI-licensed psychologists and therapists.
                                     </p>
                                     <Link to="/experts" className="text-teal-700 font-medium hover:text-teal-800 flex items-center gap-2">
-                                        Find a Therapist <ArrowRight className="w-4 h-4" />
+                                        Consult a Psychologist <ArrowRight className="w-4 h-4" />
                                     </Link>
                                 </div>
 
@@ -196,13 +217,13 @@ export default function Landing() {
                                 justify-between left a large empty gap before the link. */}
                             <div className="lg:col-span-6 bg-[#FAFAFA] rounded-3xl p-12 border border-gray-100 flex flex-col justify-between lg:min-h-[400px]">
                                 <div>
-                                    <h2 className="text-[48px] font-bold text-[#111827] tracking-[-0.03em] leading-tight mb-4">Support for every mind.</h2>
-                                    <p className="text-[20px] text-[#6B7280] leading-[1.6]">Whether dealing with a diagnosis or a tough phase, we have specialized resources ready.</p>
+                                    <h2 className="text-[48px] font-bold text-[#111827] tracking-[-0.03em] leading-tight mb-4">Professional guidance for your wellbeing.</h2>
+                                    <p className="text-[20px] text-[#6B7280] leading-[1.6]">Connect with specialists trained in anxiety, depression, relationships, and burnout.</p>
                                 </div>
                                 {/* Was linking to /explore, which isn't a registered route (404) —
                                     /experts is the real page this content maps to. */}
                                 <Link to="/experts" className="text-teal-700 font-medium hover:text-teal-800 flex items-center gap-2 mt-8">
-                                    See all specializations <ArrowRight className="w-4 h-4" />
+                                    Explore expert specializations <ArrowRight className="w-4 h-4" />
                                 </Link>
                             </div>
 
@@ -235,7 +256,7 @@ export default function Landing() {
                 </section>
 
                 {/* SECTION 6: The Privacy Pledge */}
-                <section className="py-[160px] bg-[#0F172A] text-white flex flex-col items-center justify-center">
+                <section className="py-[160px] bg-[#062F2C] text-white flex flex-col items-center justify-center">
                     <div className="max-w-[800px] mx-auto px-6 text-center">
                         <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-800 rounded-2xl mb-8 shadow-inner border border-gray-700">
                             <Lock className="w-8 h-8 text-white" />
