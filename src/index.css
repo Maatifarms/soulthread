@@ -259,42 +259,44 @@ body.dark-mode {
 }
 
 /* --- Premium Utility Classes --- */
-.premium-card {
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
-  border: 1.5px solid var(--color-border);
-  box-shadow: var(--shadow-premium);
-  transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
-  padding: 24px;
-}
+@layer components {
+  .premium-card {
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--color-border);
+    box-shadow: var(--shadow-premium);
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+    padding: 24px;
+  }
 
-.premium-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-lg);
-  border-color: var(--color-primary-light);
-}
+  .premium-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--color-primary-light);
+  }
 
-.glass-surface {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-}
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+  }
 
-.dark-mode .glass-surface {
-  background: rgba(15, 23, 42, 0.88);
-  border-color: rgba(255, 255, 255, 0.1);
-}
+  .dark-mode .glass-surface {
+    background: rgba(15, 23, 42, 0.88);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
 
-.text-gradient {
-  background: var(--grad-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
+  .text-gradient {
+    background: var(--grad-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 
-.soft-glow {
-  box-shadow: var(--shadow-glow);
+  .soft-glow {
+    box-shadow: var(--shadow-glow);
+  }
 }
 
 /* --- Motion & Animations --- */
@@ -326,16 +328,18 @@ body.dark-mode {
   100% { box-shadow: 0 0 0 0 rgba(61, 139, 127, 0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn var(--transition-normal) ease-out forwards;
-}
+@layer components {
+  .animate-fade-in {
+    animation: fadeIn var(--transition-normal) ease-out forwards;
+  }
 
-.animate-fade-up {
-  animation: fadeInUp var(--transition-slow) ease-out forwards;
-}
+  .animate-fade-up {
+    animation: fadeInUp var(--transition-slow) ease-out forwards;
+  }
 
-.animate-float {
-  animation: softFloat 5s ease-in-out infinite;
+  .animate-float {
+    animation: softFloat 5s ease-in-out infinite;
+  }
 }
 
 /* @layer base: this name collides with Tailwind's real animate-pulse (a
@@ -958,24 +962,28 @@ label {
   }
 }
 
-.animate-fadeInUp {
-  animation: fadeInUp 0.4s ease both;
-}
+@layer components {
+  .animate-fadeInUp {
+    animation: fadeInUp 0.4s ease both;
+  }
 
-.animate-popIn {
-  animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
-}
+  .animate-popIn {
+    animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
 
-.animate-slideInBottom {
-  animation: slideInBottom 0.4s ease both;
+  .animate-slideInBottom {
+    animation: slideInBottom 0.4s ease both;
+  }
 }
 
 /* ─── SKELETON LOADING ──────────────────────────────────── */
-.skeleton {
-  background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: var(--radius-sm);
+@layer components {
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-surface-2) 25%, var(--color-border) 50%, var(--color-surface-2) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
 }
 
 /* ─── UTILITY CLASSES ───────────────────────────────────── */
@@ -1148,42 +1156,47 @@ label {
     display: block !important;
   }
 
-  .mobile-bottom-nav {
-    display: flex !important;
+  @layer components {
+    .mobile-bottom-nav {
+      display: flex !important;
+    }
+
+    .container {
+      padding: 0;
+      max-width: 100%;
+    }
+
+    .card {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+    }
+
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost {
+      min-height: 44px;
+    }
   }
 
-  .container {
-    padding: 0;
-    max-width: 100%;
-  }
+  @layer base {
+    h1 {
+      font-size: 1.5rem;
+    }
 
-  .card {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-  }
-
-  /* Touch targets */
-  button,
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost {
-    min-height: 44px;
-  }
-
-  h1 {
-    font-size: 1.5rem;
-  }
-
-  h2 {
-    font-size: 1.25rem;
+    h2 {
+      font-size: 1.25rem;
+    }
   }
 }
 
 /* ─── TABLET ────────────────────────────────────────────── */
 @media (min-width: 769px) and (max-width: 1024px) {
-  .container {
-    padding: 0 24px;
+  @layer components {
+    .container {
+      padding: 0 24px;
+    }
   }
 }
 

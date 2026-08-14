@@ -391,23 +391,25 @@ video {
     --max-width-feed: 100%;
   }
 
-  .container {
-    padding: 0;
-    max-width: 100%;
-  }
+  @layer components {
+    .container {
+      padding: 0;
+      max-width: 100%;
+    }
 
-  .card {
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    margin-bottom: 8px;
-  }
+    .card {
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      margin-bottom: 8px;
+    }
 
-  button,
-  .btn-primary,
-  .btn-secondary,
-  .btn-ghost {
-    min-height: 46px;
+    button,
+    .btn-primary,
+    .btn-secondary,
+    .btn-ghost {
+      min-height: 46px;
+    }
   }
 }
 
