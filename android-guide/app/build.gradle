@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+// Read local properties for signing configs
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file('local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
 android {
     namespace = "in.soulthread.guide"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -18,10 +27,15 @@ android {
     }
     signingConfigs {
         release {
-            storeFile file('../../android/app/soulthread_upload.jks')
-            storePassword 'soulthread123'
-            keyAlias 'soulthread_upload'
-            keyPassword 'soulthread123'
+            def keystorePath = localProperties.getProperty('release.signing.storeFile') ?: System.getenv('RELEASE_SIGNING_STORE_FILE') ?: 'release.keystore'
+            def keystorePassword = localProperties.getProperty('release.signing.storePassword') ?: System.getenv('RELEASE_SIGNING_STORE_PASSWORD') ?: ''
+            def keyAliasName = localProperties.getProperty('release.signing.keyAlias') ?: System.getenv('RELEASE_SIGNING_KEY_ALIAS') ?: ''
+            def keyPass = localProperties.getProperty('release.signing.keyPassword') ?: System.getenv('RELEASE_SIGNING_KEY_PASSWORD') ?: ''
+
+            storeFile file(keystorePath)
+            storePassword keystorePassword
+            keyAlias keyAliasName
+            keyPassword keyPass
         }
     }
     buildTypes {
