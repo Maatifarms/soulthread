@@ -185,16 +185,37 @@ exports.createPaymentOrder = functions.runWith({ secrets: SECRETS }).https.onCal
         throw new functions.https.HttpsError('unauthenticated', 'You must be logged in to make a payment.');
     }
 
-    const { amount, currency, customerName, customerEmail, customerPhone, orderNote, userId, orderType } = data || {};
+    const { amount, currency, customerName, customerEmail, customerPhone, orderNote, userId, orderType, metadata } = data || {};
 
     if (userId && userId !== context.auth.uid) {
         throw new functions.https.HttpsError('permission-denied', 'userId does not match the authenticated user.');
     }
-    if (typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0) {
-        throw new functions.https.HttpsError('invalid-argument', 'amount must be a positive number.');
-    }
     if (!VALID_ORDER_TYPES.includes(orderType)) {
         throw new functions.https.HttpsError('invalid-argument', `orderType must be one of: ${VALID_ORDER_TYPES.join(', ')}.`);
+    }
+
+    let finalAmount = amount;
+    let validatedPlan = null;
+
+    if (orderType === 'subscription') {
+        const planId = metadata?.plan || metadata?.tierId || data?.plan || data?.tierId;
+        if (!planId) {
+            throw new functions.https.HttpsError('invalid-argument', 'Missing subscription plan ID in request.');
+        }
+
+        const tier = getPayableTier(planId);
+        if (!tier) {
+            throw new functions.https.HttpsError('invalid-argument', `Invalid subscription plan: ${planId}.`);
+        }
+
+        finalAmount = tier.price;
+        validatedPlan = planId;
+    } else if (orderType === 'guide_session') {
+        finalAmount = SESSION_FEE;
+    }
+
+    if (typeof finalAmount !== 'number' || !Number.isFinite(finalAmount) || finalAmount <= 0) {
+        throw new functions.https.HttpsError('invalid-argument', 'amount must be a positive number.');
     }
 
     const db = getDb();
@@ -205,7 +226,7 @@ exports.createPaymentOrder = functions.runWith({ secrets: SECRETS }).https.onCal
 
     const orderPayload = {
         order_id: orderId,
-        order_amount: amount,
+        order_amount: finalAmount,
         order_currency: orderCurrency,
         customer_details: {
             customer_id: uid,
@@ -253,17 +274,19 @@ exports.createPaymentOrder = functions.runWith({ secrets: SECRETS }).https.onCal
         customerEmail: customerEmail || null,
         customerPhone: customerPhone || null,
         orderNote: orderNote || null,
-        amount,
+        amount: finalAmount,
         currency: orderCurrency,
         status: 'created',
         cashfreeOrderId: result.cf_order_id || null,
+        plan: validatedPlan,
+        tierId: validatedPlan,
         createdAt: admin.firestore.FieldValue.serverTimestamp()
     });
 
     return {
         orderId,
         paymentSessionId: result.payment_session_id,
-        orderAmount: amount,
+        orderAmount: finalAmount,
         orderCurrency
     };
 });

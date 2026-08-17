@@ -10,19 +10,26 @@ import { Spinner } from '../components/common/Spinner';
 import AvatarImage from '../components/common/AvatarImage';
 
 export default function GuideProfile() {
-    const { guideId } = useParams();
+    const { guideId, userId } = useParams();
     const navigate = useNavigate();
     const [guide, setGuide] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const activeId = guideId || userId;
+
     useEffect(() => {
         let cancelled = false;
         const fetchGuide = async () => {
+            if (!activeId) {
+                setLoading(false);
+                setError('No profile identifier specified.');
+                return;
+            }
             setLoading(true);
             setError(null);
             try {
-                const result = await GuideRepository.findById(guideId);
+                const result = await GuideRepository.findById(activeId);
                 if (!cancelled) setGuide(result);
             } catch (err) {
                 console.error('[GuideProfile] Failed to fetch guide:', err);
@@ -33,7 +40,7 @@ export default function GuideProfile() {
         };
         fetchGuide();
         return () => { cancelled = true; };
-    }, [guideId]);
+    }, [activeId]);
 
     if (loading) {
         return (
@@ -50,7 +57,7 @@ export default function GuideProfile() {
             <DesktopLayoutWrapper>
                 <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
                     <p className="text-gray-600 mb-4">{error}</p>
-                    <Button variant="secondary" onClick={() => navigate('/experts')}>Back to Discover</Button>
+                    <Button variant="secondary" onClick={() => navigate('/more')}>Back to Workspace</Button>
                 </div>
             </DesktopLayoutWrapper>
         );
@@ -62,7 +69,7 @@ export default function GuideProfile() {
                 <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
                     <h1 className="text-2xl font-bold text-gray-900 mb-2">Profile not found</h1>
                     <p className="text-gray-500 mb-6">This guide may no longer be available.</p>
-                    <Button variant="secondary" onClick={() => navigate('/experts')}>Back to Discover</Button>
+                    <Button variant="secondary" onClick={() => navigate('/more')}>Back to Workspace</Button>
                 </div>
             </DesktopLayoutWrapper>
         );
@@ -78,8 +85,8 @@ export default function GuideProfile() {
             <SEO title={`${guide.name} | SoulThread`} description={guide.bio} />
             <div className="bg-[#fafafa] min-h-screen pb-24 pt-8 px-6">
                 <div className="max-w-3xl mx-auto">
-                    <button onClick={() => navigate('/experts')} className="flex items-center text-sm text-gray-500 hover:text-gray-900 mb-6">
-                        <ArrowLeft className="w-4 h-4 mr-1" /> Back to Discover
+                    <button onClick={() => navigate('/more')} className="flex items-center text-sm text-gray-500 hover:text-gray-900 mb-6">
+                        <ArrowLeft className="w-4 h-4 mr-1" /> Back to Workspace
                     </button>
 
                     <Card className="p-8">

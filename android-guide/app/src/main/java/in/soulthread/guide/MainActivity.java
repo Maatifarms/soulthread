@@ -44,6 +44,28 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Programmatically initialize Firebase using reflection if google-services.json was not applied at build time
+        try {
+            Class<?> firebaseAppClass = Class.forName("com.google.firebase.FirebaseApp");
+            java.util.List<?> apps = (java.util.List<?>) firebaseAppClass.getMethod("getApps", android.content.Context.class).invoke(null, this);
+            if (apps != null && apps.isEmpty()) {
+                Class<?> builderClass = Class.forName("com.google.firebase.FirebaseOptions$Builder");
+                Object builder = builderClass.getConstructor().newInstance();
+
+                builderClass.getMethod("setApiKey", String.class).invoke(builder, "AIzaSyBcpOg9-ZKbEDkPGI3hHlrvekwh4PPHrCY");
+                builderClass.getMethod("setProjectId", String.class).invoke(builder, "soulthread-15a72");
+                builderClass.getMethod("setGcmSenderId", String.class).invoke(builder, "813685915255");
+                builderClass.getMethod("setStorageBucket", String.class).invoke(builder, "soulthread-15a72.firebasestorage.app");
+                builderClass.getMethod("setApplicationId", String.class).invoke(builder, "1:813685915255:web:553165fc25cc38f5121072");
+
+                Object options = builderClass.getMethod("build").invoke(builder);
+                Class<?> optionsClass = Class.forName("com.google.firebase.FirebaseOptions");
+                firebaseAppClass.getMethod("initializeApp", android.content.Context.class, optionsClass).invoke(null, this, options);
+            }
+        } catch (Exception e) {
+            android.util.Log.w("MainActivity", "Firebase fallback initialization skipped or failed: " + e.getMessage());
+        }
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {

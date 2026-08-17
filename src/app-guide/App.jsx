@@ -17,7 +17,7 @@ const GuideMore      = lazy(() => import('../pages/GuideMore'));
 const GuideLedger    = lazy(() => import('../pages/GuideLedger'));
 const GuideSessionWorkspace = lazy(() => import('../pages/GuideSessionWorkspace'));
 const GuideResourceLibrary = lazy(() => import('../pages/GuideResourceLibrary'));
-const GuideProfile   = lazy(() => import('../pages/Profile'));
+const GuideProfile   = lazy(() => import('../pages/GuideProfile'));
 const Crisis         = lazy(() => import('../pages/Crisis'));
 const Privacy        = lazy(() => import('../pages/Privacy'));
 const Terms          = lazy(() => import('../pages/Terms'));

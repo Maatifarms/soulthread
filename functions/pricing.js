@@ -9,12 +9,16 @@
 const SUBSCRIPTION_TIERS = {
     FREE: 'free',
     BASIC: 'soul_basic',
-    PRO: 'soul_pro'
+    PRO: 'soul_pro',
+    PLUS_MONTHLY: 'plus_monthly',
+    PLUS_ANNUAL: 'plus_annual'
 };
 
 const TIERS = {
     [SUBSCRIPTION_TIERS.BASIC]: { name: 'Soul Basic', price: 199 },
-    [SUBSCRIPTION_TIERS.PRO]: { name: 'Soul Pro', price: 499 }
+    [SUBSCRIPTION_TIERS.PRO]: { name: 'Soul Pro', price: 499 },
+    [SUBSCRIPTION_TIERS.PLUS_MONTHLY]: { name: 'Soul Plus Monthly', price: 199 },
+    [SUBSCRIPTION_TIERS.PLUS_ANNUAL]: { name: 'Soul Plus Annual', price: 1499 }
 };
 
 // Flat fee for a one-time guide session booking (src/pages/GuideList.jsx).

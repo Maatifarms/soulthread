@@ -24,9 +24,9 @@ const staticRoutes = [
     { path: '/terms', priority: '0.5', changefreq: 'monthly' },
 ];
 
-async function fetchDynamicPosts() {
+async function fetchDynamicGuides() {
     return new Promise((resolve) => {
-        const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/posts?pageSize=1000`;
+        const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/guides?pageSize=1000`;
         
         https.get(url, (res) => {
             let data = '';
@@ -36,25 +36,25 @@ async function fetchDynamicPosts() {
                     const json = JSON.parse(data);
                     if (!json.documents) return resolve([]);
                     
-                    const postRoutes = json.documents.map(doc => {
+                    const guideRoutes = json.documents.map(doc => {
                         const id = doc.name.split('/').pop();
-                        return { path: `/post/${id}`, priority: '0.6', changefreq: 'monthly' };
+                        return { path: `/experts/${id}`, priority: '0.8', changefreq: 'weekly' };
                     });
-                    resolve(postRoutes);
+                    resolve(guideRoutes);
                 } catch (e) {
-                    console.error('Failed to parse dynamic posts:', e);
+                    console.error('Failed to parse dynamic guides:', e);
                     resolve([]);
                 }
             });
         }).on('error', (e) => {
-            console.error('Error fetching dynamic posts:', e);
+            console.error('Error fetching dynamic guides:', e);
             resolve([]);
         });
     });
 }
 
 async function generateSitemap() {
-    const dynamicRoutes = await fetchDynamicPosts();
+    const dynamicRoutes = await fetchDynamicGuides();
     const allRoutes = [...staticRoutes, ...dynamicRoutes];
 
     const sitemapContent = `<?xml version="1.0" encoding="UTF-8"?>
@@ -75,7 +75,7 @@ ${allRoutes.map(route => `  <url>
     }
     
     fs.writeFileSync(outputPath, sitemapContent);
-    console.log(`✅ Sitemap generated at ${outputPath} with ${dynamicRoutes.length} dynamic stories.`);
+    console.log(`✅ Sitemap generated at ${outputPath} with ${dynamicRoutes.length} dynamic expert profiles.`);
 }
 
 generateSitemap();
