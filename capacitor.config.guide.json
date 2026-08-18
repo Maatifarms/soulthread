@@ -2,6 +2,9 @@
   "appId": "in.soulthread.guide",
   "appName": "SoulGuide",
   "webDir": "dist-guide",
+  "android": {
+    "path": "android-guide"
+  },
   "server": {
     "androidScheme": "https"
   },
